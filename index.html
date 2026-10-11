@@ -75,6 +75,17 @@ section{display:flex;flex-direction:column;gap:12px}
 .grid4c select{padding-left:10px}
 .pick>summary{font-family:var(--f-disp);font-size:1.1rem;font-style:italic}
 label.inl{display:inline-flex;align-items:center}
+.qcol{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.prix{border:0;background:none;padding:2px 0;font:600 .78rem var(--f-body);color:var(--mute);font-variant-numeric:tabular-nums;text-decoration:underline dotted;text-underline-offset:3px}
+.prix.mine{color:var(--ink);text-decoration-style:solid}
+input.prin{width:92px;min-height:36px;padding:4px 8px;font-size:16px;text-align:right}
+.cmp{color:var(--warn)!important;font-weight:600}
+.budget{display:flex;flex-direction:column;gap:6px}
+.budget b{font-family:var(--f-disp);font-size:1.2rem}
+.bar.over i{background:var(--danger)}
+b.over{color:var(--danger);font-family:var(--f-body);font-size:inherit}
+.aub{box-shadow:inset 0 0 0 2px var(--tag)}
+.cmpc{box-shadow:inset 0 0 0 2px var(--warn-soft)}
 .pk_sel{display:flex;flex-direction:column;gap:10px;background:var(--soft);border-radius:14px;padding:12px}
 .sidepick{display:flex;flex-direction:column;gap:8px;background:var(--chip);border-radius:14px;padding:12px}
 .sidepick .grid2{grid-template-columns:1fr}
@@ -383,7 +394,7 @@ function loadLocal(){
   const st = {}; Object.values(S.stock||{}).forEach(o => { const [q,u] = normQU(o.name,o.q,o.u); const k = keyOf(o.name,u); if(st[k]) st[k].q += q; else st[k] = Object.assign({}, o, {q,u}); }); S.stock = st;
 }
 function save(){
-  _AR = _ND = _BL = _CAT = null; _DF = new Map(); _AS = null; S.maj = Date.now();
+  _AR = _ND = _BL = _CAT = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); S.maj = Date.now();
   try{ localStorage.setItem('menu_epicerie_v1', JSON.stringify(S)); setSync('Enregistré sur cet appareil'); }
   catch(e){ setSync("Enregistrement impossible : mode privé ou stockage plein"); }
 }
@@ -915,7 +926,7 @@ function needs(){
   if(S.menu.items.length){
     S.snacks.forEach(s => add(s.q*S.p.jours, s.u, s.name, s.r, 'Collations'));
     S.ess.forEach(s => add(s.q, s.u, s.name, s.r, s.c || 'Essentiels'));
-    (S.menu.sn||[]).forEach(s => add(s.q, s.u, s.name, s.r, 'Collations en spécial'));
+    (S.menu.sn||[]).forEach(s => add(s.q, s.u, s.name, s.r, s.src || 'Collations en spécial'));
   }
   return (_ND = [...map.values()]);
 }
@@ -945,10 +956,245 @@ const cap = t => { t = String(t); return t.charAt(0).toUpperCase()+t.slice(1); }
 const goStores = () => S.stores.filter(s => !(S.skip||[]).includes(s));
 function autoItems(){ if(!S.auto) return []; const d = shopISO(), go = goStores(); return S.auto.items.filter(i => (!i.vt || i.vt >= d) && (!i.vf || i.vf <= d) && (!S.stores.length || go.includes(i.s))); }
 let _AS = null;
-const allSpec = () => _AS || (_AS = S.spec.filter(s => !s.s || !(S.skip||[]).includes(s.s)).map(s => ({s:s.s, t:s.t, p:''})).concat(autoItems().map(i => ({s:i.s, t:nice(i.t), p:i.p||''}))));
+const allSpec = () => _AS || (_AS = S.spec.filter(s => !s.s || !(S.skip||[]).includes(s.s)).map(s => ({s:s.s, t:s.t, p:''})).concat(autoItems().map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0}))));
 const specTxt = s => s.t+(s.p ? ' à '+s.p : '')+' ('+s.s+')';
 /* Mots composés qui changent d'aliment : « Pommes » ne doit pas prendre le spécial « Pommes de terre ». */
 const COMPOUNDS = ['pomme de terre','beurre d\'arachide','creme glacee','creme sure','lait de coco','noix de coco','fromage a la creme','pain de viande','sucre a glacer','pate a tarte'];
+
+/* ---------- prix habituels (estimations québécoises) ----------
+   Prix moyens au Québec de Statistique Canada (juillet 2026) quand ils existent, sinon prix courants estimés.
+   kg : prix au kilo, L : au litre, un : à l'unité ou au paquet. L'application remplace ces estimations
+   par les prix réguliers déduits des circulaires (rabais en %) et par les prix que tu corriges dans la liste. */
+const PRIX = [
+  /* formats de la liste de départ (sac, régime, paquet, emballage…) */
+  [/pommes \(sac\)|sac de pommes/, {un:5}], [/bananes \(regime\)/, {un:2.2}], [/(clementines|oranges).*\(sac\)/, {un:5.5}],
+  [/yogourt \(dejeuners\)/, {un:0.75}], [/fromage tranche \(paquet\)/, {un:5}], [/fromage ficelle \(sac\)/, {un:7}],
+  [/compotes? de pommes \(emballage\)/, {un:3.5}], [/boites de jus/, {un:4}], [/croustilles \(gros sac\)/, {un:4.5}],
+  [/oignons? verts?/, {un:0.3}],
+  [/poulets? (bbq|rotis?)|poulets rotis|poulet roti du comptoir/, {un:13}],
+  [/poulet.*(cuit|effiloche)|poulet cuit/, {kg:22}],
+  [/poitrines? de poulet panee|filets de poulet panes|doigts de poulet/, {kg:15, un:2.5}],
+  [/poitrines? de poulet/, {kg:14.03, un:4.5}],
+  [/ailes de poulet surgelees|sac d.ailes/, {un:13}],
+  [/ailes de poulet/, {kg:13}],
+  [/hauts? de cuisses?|cuisses? de poulet|pilons/, {kg:9.5, un:1.8}],
+  [/poulets? entiers?/, {kg:8.57, un:14}],
+  [/(poulet|dinde) hache/, {kg:13}],
+  [/dinde tranchee/, {kg:28}],
+  [/poulet/, {kg:13, un:4}],
+  [/boeuf hache|orignal|chevreuil/, {kg:15.59}],
+  [/filets? mignons?|tournedos/, {kg:45, un:9}],
+  [/steaks?/, {kg:30, un:9}],
+  [/contre-filet|surlonge|bavette/, {kg:26}],
+  [/boeuf (emince|en lanieres|en tranches)/, {kg:26}],
+  [/rosbif|boeuf cuit/, {kg:32}],
+  [/ragout/, {kg:22.51}],
+  [/roti|palette|epaule de boeuf/, {kg:20}],
+  [/porc hache/, {kg:9}],
+  [/cotelettes? de porc/, {kg:11, un:2.5}],
+  [/filet de porc/, {kg:12}],
+  [/cotes levees/, {kg:20}],
+  [/epaule de jambon/, {kg:7}],
+  [/jambon fume desosse/, {kg:11}],
+  [/jambon/, {kg:18}],
+  [/epaule de porc|porc effiloche|cubes de porc|lanieres de porc|porc emince|pattes de porc/, {kg:8.8}],
+  [/bacon cuit/, {kg:45}],
+  [/bacon|lardons|lard sale/, {kg:17.5}],
+  [/prosciutto/, {kg:60}],
+  [/pepperoni|salami/, {kg:30}],
+  [/bologne/, {kg:12}],
+  [/saucisses? a hot-dog/, {un:0.6, kg:11}],
+  [/saucisses?/, {kg:13, un:1.3}],
+  [/agneau/, {kg:28}], [/veau/, {kg:25}],
+  [/crevettes/, {kg:23}],
+  [/boites? de saumon/, {un:4}],
+  [/saumon/, {kg:28}], [/truite/, {kg:26}], [/aiglefin|morue/, {kg:25}], [/petoncles/, {kg:50}],
+  [/poisson|tilapia/, {kg:18}],
+  [/sushis/, {un:12}],
+  [/thon/, {un:2.3}],
+  [/lait de coco/, {L:6.25, un:2.5}],
+  [/babeurre/, {L:3.2}],
+  [/creme glacee|sorbet/, {un:6, L:3}],
+  [/creme 35/, {L:11}], [/creme 15|creme a cuisson|creme 10/, {L:9}], [/creme sure/, {L:7}],
+  [/yogourt grec/, {L:8, un:6}], [/yogourt/, {L:5.5, un:5}],
+  [/lait/, {L:2.7}],
+  [/beurre d.arachide/, {L:5.8, kg:5.51}],
+  [/beurre/, {kg:14.5}],
+  [/fromage a la creme/, {kg:16}], [/ricotta/, {kg:13}], [/feta/, {kg:24}], [/parmesan/, {kg:38}],
+  [/mozzarella fraiche/, {kg:30}], [/fromage ficelle|batonnets de fromage/, {un:0.7}],
+  [/tranches? de (fromage|cheddar)|fromage tranche/, {un:0.35, kg:22}],
+  [/chevre|fromage bleu/, {kg:35}], [/fromage en grains/, {kg:20}],
+  [/mozzarella|cheddar|fromage|gruyere|emmental|suisse|provolone/, {kg:22}],
+  [/oeufs?/, {un:0.38}],
+  [/tofu/, {kg:9}],
+  [/tzatziki/, {L:12}], [/trempette|sauce ranch/, {L:9, un:4}],
+  [/(pommes de terre|patates) grelots/, {kg:4.4}],
+  [/patates? douces?/, {kg:4.4, un:1.6}],
+  [/pommes de terre|patates/, {kg:1.8, un:0.45}],
+  [/oignons? verts?|ciboulette/, {un:1.3}],
+  [/echalote/, {un:0.7}],
+  [/oignon/, {un:0.55, kg:2.2}],
+  [/gousses? d.ail|\bail\b/, {un:0.2, kg:13}],
+  [/carottes mini/, {un:3}],
+  [/carottes?/, {un:0.3, kg:2.2}],
+  [/celeri/, {un:0.5}],
+  [/brocoli/, {kg:6, un:3}],
+  [/chou-fleur/, {un:4}],
+  [/salade de chou/, {kg:7, un:4}],
+  [/chou/, {kg:2.5, un:3}],
+  [/tomates cerises/, {kg:9}],
+  [/tomates? (sechees)/, {kg:30, L:25}],
+  [/tomates (broyees|en des)|puree de tomates|sauce tomate|marinara/, {L:3.2, un:2}],
+  [/pate de tomates/, {L:8}],
+  [/boites? de tomates/, {un:2}],
+  [/tomates?/, {un:1.1, kg:6.18}],
+  [/poivrons?/, {un:1.9}], [/jalapenos?/, {un:0.3}],
+  [/concombre/, {un:1.5}], [/courgettes?/, {un:1.3}], [/courge/, {kg:2.8}],
+  [/champignons|pleurotes/, {kg:11}],
+  [/epinards surgeles/, {kg:5}],
+  [/epinards|jeunes pousses|roquette|laitue melangee|chou frise/, {kg:16, un:5}],
+  [/coeurs de romaine/, {un:1.7}], [/sac de salade/, {un:5}], [/laitue/, {un:3.5}],
+  [/haricots verts/, {kg:7}], [/feves germees|pousses de soya/, {kg:5}], [/pak-choi/, {un:1.5}],
+  [/avocats?/, {un:1.54}], [/citrons?/, {un:0.9}], [/limes?/, {un:0.6}],
+  [/bananes?/, {un:0.33, kg:1.7}],
+  [/jus d.orange/, {L:3.5}], [/jus de pomme|jus/, {L:3, un:4}],
+  [/compotes? de pommes/, {un:0.6}],
+  [/pommes/, {un:0.8, kg:4.4}],
+  [/clementines|oranges/, {un:0.6, kg:3.09}],
+  [/poires/, {un:1, kg:5.65}], [/peches/, {un:1}], [/mangues?/, {un:1.8}],
+  [/raisins secs|canneberges sechees|dattes/, {kg:12}],
+  [/raisins/, {un:5, kg:6}],
+  [/fraises/, {kg:12.5}], [/bleuets|framboises|petits fruits/, {kg:9}], [/rhubarbe/, {kg:6}], [/barquette de fruits/, {un:6}],
+  [/basilic|coriandre|persil frais|aneth|menthe|bouquet|botte/, {un:2.5, L:40}],
+  [/gingembre/, {L:20, kg:9}],
+  [/pains? (a hamburger|a hot-dog|kaiser)|petits pains|sliders/, {un:0.6}],
+  [/pains? sous-marin/, {un:1.2}], [/baguettes?/, {un:3}], [/pain croute/, {un:4}],
+  [/tranches? de pain/, {un:0.2}], [/pain tranche/, {un:3.8}],
+  [/tortillas?|coquilles a tacos/, {un:0.45, kg:10}],
+  [/naan/, {un:1}], [/pitas?/, {un:0.6}], [/croissants?/, {un:1.2}], [/bagels|muffins anglais/, {un:4.5}],
+  [/pates? a pizza/, {un:3.5}], [/croutons/, {kg:15}], [/brownies/, {un:1}],
+  [/frites|rissolees/, {kg:2.2}],
+  [/pizzas?/, {un:7}], [/lasagne surgelee/, {un:14}], [/pate chinois surgele/, {un:12}],
+  [/pates au poulet|tourtieres?/, {un:6}], [/egg rolls/, {un:6}], [/edamames/, {un:4}],
+  [/gateau au fromage|tarte aux pommes/, {un:9}],
+  [/abaisses|fonds de tartelettes|rondelles a empanadas/, {un:4.5}],
+  [/pogo/, {un:1.2}], [/pain a l.ail/, {un:4}],
+  [/legumes melanges|pois et carottes|pois verts|petits pois|mais en grains|mais surgele|legumes pour saute/, {kg:4, un:3}],
+  [/boites? de (mais|haricots|pois chiches|coeurs|ananas|soupe|creme de)|ananas en conserve|boite de soupe/, {un:2}],
+  [/tortellinis|gnocchi/, {kg:12}],
+  [/paquets de nouilles ramen|ramen/, {un:0.8}],
+  [/feuilles de riz|feuilles de lasagne/, {un:4}],
+  [/spaghetti|linguine|fettuccine|penne|rotini|macaroni|pates|tagliatelles|nouilles|vermicelles/, {kg:4}],
+  [/riz/, {kg:3.5}],
+  [/flocons d.avoine|gruau/, {kg:4, un:4.5}], [/cereales/, {un:5.5, kg:12}], [/granola/, {kg:12}],
+  [/farine/, {kg:2.4, L:1.3}], [/sucre a glacer/, {kg:3}], [/cassonade/, {kg:3.5, L:2.2}], [/sucre/, {kg:1.4, L:1.2}],
+  [/cacao/, {kg:20}], [/chocolat|pepites/, {kg:15}],
+  [/fecule/, {L:4}],
+  [/huile d.olive/, {L:12}], [/huile de sesame/, {L:20}], [/huile/, {L:3.35}],
+  [/vinaigre balsamique|vinaigrette/, {L:10}], [/vinaigre/, {L:4}],
+  [/sirop d.erable/, {L:18.5}], [/miel/, {L:14}],
+  [/ketchup aux fruits/, {un:4.5}], [/ketchup/, {L:4.8}], [/mayonnaise/, {L:6.7}],
+  [/moutarde/, {L:6, un:3}], [/relish/, {L:6}], [/raifort/, {L:20}],
+  [/sauce soya|sauce soja/, {L:6}], [/sriracha/, {L:12}], [/salsa/, {L:9}], [/pesto/, {L:25}],
+  [/pate de (cari|chili|piment|tikka)|gochujang/, {L:20}], [/tahini/, {L:20}], [/tartinade/, {L:14}],
+  [/sauce|marinade/, {L:10, un:4}],
+  [/lentilles en conserve/, {L:3.5}], [/lentilles|pois (jaunes|verts)/, {kg:4}],
+  [/bouillon/, {L:3.3}],
+  [/cornichons|betteraves|olives/, {kg:10, un:4}],
+  [/confiture|cerises|airelles/, {un:4.5, L:10}],
+  [/croustilles|chips|mais souffle/, {un:3.8, kg:15}], [/craquelins/, {un:2.6}],
+  [/barres tendres/, {un:4}], [/biscuits/, {un:4}], [/melange de noix/, {un:8}],
+  [/noix|arachides|pignons|pacanes/, {kg:25}], [/guimauves|bonbons/, {kg:10}], [/tapioca/, {kg:8}],
+  [/boisson gazeuse|cola|eau petillante/, {un:6, L:2.5}], [/biere/, {L:8}], [/vin blanc|vin rouge/, {L:15}], [/cognac/, {L:45}],
+  [/cafe (chaud|fort)/, {L:1}], [/cafe/, {un:9.39}],
+  [/sachets?/, {un:1.5}], [/chapelure|panko/, {kg:6, L:3}],
+  [/vanille/, {L:150}],
+  [/cannelle|cumin|paprika|origan|cari|chili|muscade|girofle|herbes|assaisonnement|poivre|cayenne|piment|persil seche|sesame|chipotle/, {L:80}]
+];
+const PRIX_DEF = {'viandes':{kg:15}, 'poissonnerie':{kg:22}, 'produits laitiers':{kg:15, L:6, un:4}, 'fruits et légumes':{kg:5, un:1.5}, 'boulangerie':{un:3, kg:8}, 'surgelés':{un:6, kg:6}, 'épicerie':{un:4, kg:8, L:6}, 'garde-manger':{L:20, kg:5, un:4}};
+const BASE = {g:['kg',1000], ml:['L',1000], un:['un',1]};
+/* prix par unité de base (par g, par ml ou à l'unité) */
+function prixBase(name, u, ray){
+  const n = norm(name), hit = PRIX.find(([re]) => re.test(n)), [b, f] = BASE[u] || ['un',1];
+  if(hit && hit[1][b] !== undefined) return hit[1][b]/f;
+  const d = PRIX_DEF[ray] || PRIX_DEF['épicerie'];
+  return (d[b] !== undefined ? d[b] : (d.un || 4))/f;
+}
+let _ECO = new Map(), _ASA = null, _CMP = new Map(), prEdit = '';
+/* coût d'un spécial pour la quantité de la ligne : format lu dans le nom, sinon à la livre pour la viande et le poisson */
+function dealCost(s, row){
+  const pr = priceOf(s); if(!isFinite(pr)) return null;
+  const t = norm(s.t), sz = t.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|lb|l|ml)\b/);
+  if(sz && row.u!=='un'){
+    let size = parseFloat(sz[1].replace(',','.')) * ({kg:1000, g:1, lb:454, l:1000, ml:1})[sz[2]];
+    if((sz[2]==='l' || sz[2]==='ml') !== (row.u==='ml')) size = 0;
+    if(size) return pr * Math.max(1, Math.ceil(row.buy/size - 0.05));
+  }
+  if(row.u==='un') return pr * row.buy;
+  if(row.u==='g' && /viandes|poissonnerie/.test(row.rayon||'')) return pr * row.buy/454;
+  return pr;
+}
+/* prix habituel de la ligne : ton prix noté, sinon l'estimation */
+function costEst(r){ const L = (S.prices||{})[r.k]; return (L && !L.sp ? L.pu : prixBase(r.name, r.u, r.rayon)) * r.buy; }
+function rowEco(r){
+  if(_ECO.has(r.k)) return _ECO.get(r.k);
+  const L = (S.prices||{})[r.k], d = dealFor(r.name), est = costEst(r);
+  let cost = est, reg = est;
+  if(d){ const dc = dealCost(d, r); if(dc != null){ cost = dc; reg = d.d > 0 && d.d < 95 ? dc/(1 - d.d/100) : Math.max(est, dc); } }
+  const o = {cost, reg, save:Math.max(0, reg-cost), mine: !!(L && !L.sp), deal: d};
+  _ECO.set(r.k, o); return o;
+}
+function listTotals(rows){ let cost = 0, save = 0; rows.forEach(r => { const e = rowEco(r); cost += e.cost; save += e.save; }); return {cost, save}; }
+/* toutes les circulaires de tes épiceries, même celles où tu ne vas pas cette semaine (pour comparer) */
+const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d:0})).concat(S.auto ? S.auto.items.filter(i => { const d = shopISO(); return (!i.vt || i.vt >= d) && (!i.vf || i.vf <= d) && (!S.stores.length || S.stores.includes(i.s)); }).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0})) : []));
+function matchesFor(name, list){
+  const words = sigWords(name).filter(w => !GENERIC.includes(w)); if(!words.length) return [];
+  const nb = baseOf(name);
+  return list.filter(s => { const t = norm(s.t), tb = baseOf(s.t); if(!words.every(w => t.includes(w))) return false; return !COMPOUNDS.some(c => tb.includes(c) && !nb.includes(c) && nb.split(' ').includes(c.split(' ')[0])); });
+}
+/* moins cher dans une autre de tes épiceries ? */
+function cheaper(r){
+  if(_CMP.has(r.k)) return _CMP.get(r.k);
+  let out = null;
+  const A = storeOf(r), list = matchesFor(r.name, allSpecAll()).filter(s => isFinite(priceOf(s)));
+  if(list.length){
+    const atA = list.filter(s => s.s===A).map(s => dealCost(s, r)).filter(x => x != null);
+    const costA = atA.length ? Math.min(...atA) : costEst(r);
+    let best = null; list.filter(s => s.s!==A).forEach(s => { const c = dealCost(s, r); if(c != null && (!best || c < best.c)) best = {s, c}; });
+    if(best && best.c < costA*0.9 && costA - best.c >= 0.5) out = {store:best.s.s, cost:best.c, costA, A, aDeal: atA.length>0, save: costA - best.c};
+  }
+  _CMP.set(r.k, out); return out;
+}
+/* vraies aubaines : rabais d'au moins 35 % sur un produit qui se garde ou se congèle */
+function stockTip(n, ray){
+  if(ray==='viandes' || ray==='poissonnerie') return 'À congeler en portions dans des sacs hermétiques : environ 3 mois pour la viande hachée et le poisson, 6 mois pour les pièces.';
+  if(ray==='surgelés') return 'Se garde plusieurs mois au congélateur.';
+  if(/beurre|fromage/.test(n)) return 'Le beurre et le fromage râpé se congèlent bien.';
+  if(/garde-manger|épicerie/.test(ray) && !/pain|jus|lait|yogourt|creme|sushi|salade/.test(n)) return 'Se garde longtemps au garde-manger.';
+  return '';
+}
+function aubaines(){
+  const seen = new Set(), out = [];
+  allSpecAll().forEach(s => {
+    const pr = priceOf(s); if(!isFinite(pr)) return;
+    const n = norm(s.t), ray = guessRayon(s.t), tip = stockTip(n, ray); if(!tip) return;
+    let disc = s.d || 0;
+    if(!disc && (ray==='viandes' || ray==='poissonnerie')){
+      const hit = PRIX.find(([re]) => re.test(n)); const kg = hit && hit[1].kg;
+      const sz = n.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|lb)\b/);
+      const perKg = sz ? pr / (parseFloat(sz[1].replace(',','.')) * ({kg:1, g:0.001, lb:0.454})[sz[2]]) : pr*2.2046;
+      if(kg) disc = Math.round((1 - perKg/kg)*100);
+    }
+    if(disc >= 35 && disc < 90 && !seen.has(n)){ seen.add(n); out.push({s, disc, tip}); }
+  });
+  return out.sort((a,b) => b.disc - a.disc).slice(0, 6);
+}
+function renderAubaines(){
+  const L = aubaines(); if(!L.length) return '';
+  const added = new Set((S.menu.sn||[]).map(x => x.t)), dis = S.menu.achete ? 'disabled' : '';
+  return `<div class="card aub"><h3>Vraies aubaines : fais des réserves</h3><p class="small">Ces rabais sont rares : au moins 35 % sous le prix habituel. Bon moment pour en acheter plus et les garder.</p><div class="list">${L.map(x => `<div class="item"><span class="t"><span class="tags">${tagHtml(x.s)}<span class="flag w">−${x.disc} %</span></span><small>${esc(x.tip)}${goStores().includes(x.s.s) ? '' : ` Chez ${esc(x.s.s)}, où tu ne vas pas cette semaine.`}</small></span>${added.has(x.s.t) ? '<span class="small">Dans la liste</span>' : `<button class="btn s p" data-a="aubadd" data-t="${esc(x.s.t)}" ${dis}>En ajouter</button>`}</div>`).join('')}</div></div>`;
+}
+
 function dealFor(name){
   if(_DF.has(name)) return _DF.get(name);
   const words = sigWords(name).filter(w => !GENERIC.includes(w)); let best = null;
@@ -1338,7 +1584,7 @@ function snackSugg(){
 }
 function renderSnacks(){
   if(S.p.snk===false) return '';
-  const m = S.menu, add = m.sn||[], sug = snackSugg(); if(!add.length && !sug.length) return '';
+  const m = S.menu, add = (m.sn||[]).filter(x => !x.src), sug = snackSugg(); if(!add.length && !sug.length) return '';
   const dis = m.achete ? 'disabled' : '';
   return `<div class="card"><h3>Collations en spécial</h3><p class="small">Des collations annoncées dans tes circulaires. « Ajouter » en met un paquet dans la liste d'épicerie, pour cette semaine seulement.</p><div class="list">`
     + add.map((x,j) => `<div class="item"><span class="t">${tagHtml({t:x.t, p:x.p, s:x.s})}<small>Dans la liste</small></span><button class="btn s" data-a="snrm" data-i="${j}" ${dis}>Retirer</button></div>`).join('')
@@ -1471,7 +1717,7 @@ function renderMenu(){
   } else {
     const {rows} = buyList(), nDeal = rows.filter(r => dealFor(r.name)).length;
     if(m.achete) h += `<p class="note">Épicerie faite : le menu est verrouillé jusqu'à la fin de la semaine.</p>`;
-    h += `<div class="card tally"><p><b>${rows.length}</b> article${rows.length>1?'s':''} à acheter${nDeal?`, dont <b>${nDeal}</b> en spécial`:''}</p><button class="btn s p" id="go_liste">Voir la liste</button></div>`;
+    h += `<div class="card tally"><p><b>${rows.length}</b> article${rows.length>1?'s':''} à acheter${nDeal?`, dont <b>${nDeal}</b> en spécial`:''}<br><span class="small" style="color:inherit;opacity:.85">≈ ${money(listTotals(rows).cost)}${S.p.budget ? ` sur ${money(+S.p.budget)} de budget` : ''}</span></p><button class="btn s p" id="go_liste">Voir la liste</button></div>`;
     h += renderPicker();
     h += renderOcc();
     LISTS.forEach(l => { const L = mlist(l); if(!L.length && !nOf(l)) return;
@@ -1479,6 +1725,7 @@ function renderMenu(){
       const ord = L.map((it,i) => [it,i]); if(l==='items') ord.sort((a,b) => (a[0].d||'9').localeCompare(b[0].d||'9'));
       if(ord.length) h += `<div class="sheet">${ord.map(([it,i]) => carte(it,i,l)).join('')}</div>`; });
     h += renderReport();
+    h += renderAubaines();
     h += renderPP();
     h += renderSnacks();
     h += renderUtiliser();
@@ -1513,10 +1760,33 @@ function rowHtml(r, m){
   const d = dealFor(r.name);
   return `<label class="item ${m.chk[r.k]?'done':''}"><input type="checkbox" data-a="chk" data-k="${esc(r.k)}" ${m.chk[r.k]?'checked':''}>
     <span class="t"><b>${esc(cap(r.name))}</b>${d?`<span class="tags">${tagHtml(d)}</span>`:''}${!storeMode && r.st>0?`<small>Il en faut ${fq(r.q,r.u)}, il y en a déjà ${fq(r.st,r.u)} à la maison</small>`:''}${!storeMode && r.src.length?`<small>${esc(r.src.slice(0,3).join(', '))}${r.src.length>3?'…':''}</small>`:''}</span>
-    <span class="q">${fq(r.buy,r.u)}</span></label>`;
+    ${cmpLine(r)}</span>
+    <span class="qcol"><span class="q">${fq(r.buy,r.u)}</span>${priceBtn(r)}</span></label>`;
+}
+function cmpLine(r){ const c = cheaper(r); if(!c) return '';
+  return `<small class="cmp">${c.aDeal ? `Moins cher chez ${esc(c.store)} : ${money(c.cost)} (${esc(c.A)} : ${money(c.costA)})` : `En spécial chez ${esc(c.store)} : ${money(c.cost)} (≈ ${money(c.costA)} au prix habituel)`}</small>`; }
+function priceBtn(r){
+  const e = rowEco(r);
+  if(prEdit===r.k) return `<input type="text" inputmode="decimal" class="num prin" data-a="pr_in" data-k="${esc(r.k)}" placeholder="Prix payé" aria-label="Prix payé pour ${esc(r.name)}" autofocus>`;
+  return `<button type="button" class="prix${e.mine?' mine':''}" data-a="pr_edit" data-k="${esc(r.k)}" aria-label="Corriger le prix">${e.deal || e.mine ? '' : '≈ '}${money(e.cost)}</button>`;
 }
 const groupHtml = (gs, m) => gs.map(g => `<h2 class="sec">${esc(g.title)}<span>${g.sub.reduce((a,s) => a+s.rows.length, 0)}</span></h2><div class="card list">` + g.sub.map(s => (s.ray ? `<p class="aisle">${esc(cap(s.ray))}</p>` : '') + s.rows.map(r => rowHtml(r,m)).join('')).join('') + `</div>`).join('');
 const paidField = m => `<label class="f">Total payé à la caisse ($)<input type="text" inputmode="decimal" class="num" id="paid" value="${m.paid||''}" placeholder="0,00"></label>`;
+function budgetHtml(rows){
+  const t = listTotals(rows), b = +S.p.budget || 0, rest = b - t.cost;
+  return `<div class="budget"><p><span class="small">Total estimé</span> <b>≈ ${money(t.cost)}</b>${t.save >= 1 ? `<span class="small"> · ≈ ${money(t.save)} économisés en spéciaux</span>` : ''}</p>
+    ${b ? `<div class="bar ${rest<0?'over':''}"><i style="width:${Math.min(100, t.cost/b*100)}%"></i></div><p class="small">Budget ${money(b)} : ${rest >= 0 ? `il reste ≈ <b>${money(rest)}</b>` : `<b class="over">dépasse de ≈ ${money(-rest)}</b>`}</p>` : ''}
+    <p class="small">Prix habituels estimés (moyennes du Québec), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
+}
+function cmpCard(rows){
+  const C = rows.filter(r => !S.menu.chk[r.k]).map(r => ({r, c:cheaper(r)})).filter(x => x.c); if(!C.length) return '';
+  const by = new Map(); C.forEach(x => { const o = by.get(x.c.store) || {n:0, save:0}; o.n++; o.save += x.c.save; by.set(x.c.store, o); });
+  const tot = C.reduce((a,x) => a + x.c.save, 0);
+  return `<div class="card cmpc"><h3>Moins cher ailleurs</h3><p class="small">D'après les circulaires de tes épiceries, même celles où tu ne vas pas cette semaine.</p>
+    <ul class="todo">${[...by.entries()].sort((a,b) => b[1].save - a[1].save).map(([s,o]) => `<li><b>${esc(s)}</b> : ${o.n} article${o.n>1?'s':''}, ≈ ${money(o.save)} de moins</li>`).join('')}</ul>
+    <p class="small">${tot >= 10 ? `≈ ${money(tot)} en tout : ça vaut peut-être le détour.` : `≈ ${money(tot)} en tout : probablement pas assez pour un détour.`} Le détail est sous chaque article.</p>
+    ${S.stores.length < 2 ? '' : ''}</div>`;
+}
 function renderEpicerie(){
   const el = $('#tab-epicerie'); const m = S.menu;
   if(!m.date || (m.achete && m.snap)){ storeMode = false; lockScreen(false); }
@@ -1541,9 +1811,11 @@ function renderEpicerie(){
   const st = specTotal(rows);
   h += `<div class="card"><h2 style="font-size:1.25rem">Épicerie du ${esc(fmtDate(shopISO()))}</h2><p class="small" id="pg-t">${done} sur ${rows.length} dans le panier</p><div class="bar"><i id="pg-b" style="width:${pct}%"></i></div>
     <div class="seg" role="group" aria-label="Regrouper la liste"><button class="${S.p.grp!=='magasin'?'on':''}" data-a="grp" data-v="rayon">Par rayon</button><button class="${S.p.grp==='magasin'?'on':''}" data-a="grp" data-v="magasin">Par magasin</button></div>
-    ${st.n ? `<p class="small">Articles en spécial : environ <b>${money(st.t)}</b> pour ${st.n} article${st.n>1?'s':''}, selon les prix des circulaires.</p>` : ''}${S.p.budget ? `<p class="small">Budget de la semaine : <b>${money(S.p.budget)}</b>.</p>` : ''}
+    ${budgetHtml(rows)}
     <button class="btn p" id="store_on">Mode magasin</button></div>`;
   if(S.p.grp==='magasin') h += `<p class="small">Chaque article va au magasin où il est le moins cher en spécial; le reste va à ${esc(mainStore())}. Les prix des circulaires ne sont pas toujours pour le même format.</p>`;
+  h += cmpCard(rows);
+  h += renderAubaines();
   h += groupHtml(groupsOf(rows), m);
   if(verify.length){
     h += `<h2 class="sec">Vérifier avant de partir<span>${verify.length}</span></h2><div class="card list"><p class="small">Ces articles sont censés être déjà à la maison. S'il en manque un, touche « Il manque » : il passe dans la liste.</p>`;
@@ -1955,7 +2227,7 @@ function applyTheme(){
 }
 function render(){
   applyTheme();
-  _AR = _ND = _BL = _AS = null; _DF = new Map();
+  _AR = _ND = _BL = _AS = null; _DF = new Map(); _ASA = null; _ECO = new Map(); _CMP = new Map();
   ({menu:renderMenu, epicerie:renderEpicerie, maison:renderMaison, recettes:renderRecettes, reglages:renderReglages, aide:renderAide})[tab]();
   ['menu','epicerie','maison','recettes','reglages','aide'].forEach(t => $('#tab-'+t).hidden = t!==tab);
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t===tab));
@@ -2099,6 +2371,8 @@ document.addEventListener('click', e => {
   if(a==='sdel2'){ S.sidesx = (S.sidesx||[]).filter(x => x.id!==t.dataset.id); save(); render(); return; }
   if(a==='theme'){ S.p.theme = t.dataset.v; save(); render(); return; }
   if(a==='stx_rm'){ e.preventDefault(); const s = t.dataset.s; S.storesx = (S.storesx||[]).filter(x => x!==s); S.stores = S.stores.filter(x => x!==s); save(); render(); return; }
+  if(a==='aubadd'){ const s = allSpecAll().find(x => x.t===t.dataset.t); if(s){ S.menu.sn = S.menu.sn||[]; S.menu.sn.push({t:s.t, p:s.p, s:s.s, name:s.t, q:1, u:'un', r:guessRayon(s.t), src:'Réserves (aubaine)'}); save(); render(); } return; }
+  if(a==='pr_edit'){ e.preventDefault(); prEdit = t.dataset.k; render(); const inp = document.querySelector('input.prin'); if(inp) inp.focus(); return; }
   if(a==='snadd'){ const s = allSpec().find(x => x.t===t.dataset.t); if(s){ S.menu.sn = S.menu.sn||[]; S.menu.sn.push({t:s.t, p:s.p, s:s.s, name:s.t, q:1, u:'un', r:guessRayon(s.t)}); save(); render(); } return; }
   if(a==='snrm'){ (S.menu.sn||[]).splice(+t.dataset.i, 1); save(); render(); return; }
   if(a==='ib_add' || a==='ib_rm'){ const d = drafts[t.dataset.ib]; if(d){ if(a==='ib_add') d.rows.push({n:'', q:'', u:'un', ray:''}); else { d.rows.splice(+t.dataset.j,1); if(!d.rows.length) d.rows.push({n:'', q:'', u:'un', ray:''}); } render(); } return; }
@@ -2147,6 +2421,9 @@ document.addEventListener('change', e => {
   if(t.dataset.ps){ S.p[t.dataset.ps] = t.value; save(); render(); return; }
   if(t.dataset.pb){ S.p[t.dataset.pb] = t.checked; save(); render(); return; }
   if(t.dataset.off!==undefined){ const d = +t.dataset.off, o = new Set(S.p.off||[0,6]); if(t.checked) o.add(d); else o.delete(d); S.p.off = [...o]; save(); return; }
+  if(t.dataset.a==='pr_in'){ const v = parseFloat(String(t.value).replace(',','.').replace(/[^0-9.]/g,'')), r = buyList().rows.find(x => x.k===t.dataset.k);
+    if(r && v > 0){ S.prices = S.prices||{}; S.prices[r.k] = {pu: v/r.buy, d: isoToday(), s: storeOf(r), sp: !!dealFor(r.name)}; }
+    prEdit = ''; save(); render(); return; }
   if(t.dataset.a==='pk_v'){ pick.v = +t.value; return; }
   if(t.dataset.a==='occ_n'){ occ().n = +t.value; save(); render(); return; }
   if(t.dataset.a==='occ_home'){ occ().home = t.checked; save(); render(); return; }
@@ -2256,6 +2533,9 @@ function renderAide(){
     <li><b>Mode magasin</b> : gros texte, écran qui reste allumé quand le téléphone le permet, et les articles cochés descendent dans « Dans le panier ». Touche <b>Quitter</b> pour revenir.</li>
     <li>« Vérifier avant de partir » rappelle les articles toujours à la maison : touche <b>Il manque</b> au besoin.</li>
     <li>Avec un <b>budget</b> (Réglages), l'onglet montre ton budget et le coût estimé des articles en spécial. Au retour, inscris le <b>total payé</b> à la caisse : la moyenne payée s'affiche dans Réglages, carte Historique.</li>
+    <li><b>Prix et budget</b> : chaque article montre un prix. « ≈ » veut dire un prix habituel estimé (moyennes du Québec de Statistique Canada quand elles existent). Un spécial donne le prix de la circulaire; quand la circulaire indique le rabais en %, l'application en déduit le prix régulier. Touche un prix pour noter ce que tu as payé : l'application le retient pour les semaines suivantes. Le total estimé se compare à ton budget.</li>
+    <li><b>Moins cher ailleurs</b> : l'application lit les circulaires de toutes tes épiceries, même celles décochées pour la semaine. Si un article est nettement moins cher ailleurs, c'est écrit sous l'article, et une carte résume l'économie possible par épicerie.</li>
+    <li><b>Vraies aubaines</b> : un rabais d'au moins 35 % sur un produit qui se garde (viande et poisson à congeler, surgelés, garde-manger, beurre, fromage) apparaît dans « Vraies aubaines : fais des réserves », avec un conseil de conservation et « En ajouter ».</li>
     <li>Coche les articles dans le panier, puis touche <b>Épicerie terminée</b> au retour : ils entrent dans Maison.</li></ol>`)
   + D('10. Terminer la semaine', `<p><b>Terminer la semaine</b> (Menu) retire de Maison ce qui a été utilisé, garde les restes et range les plats dans l'historique. Exemple : 12 oeufs achetés, 8 utilisés, il en reste 4 pour la semaine suivante.</p>`)
   + D('11. Copier, envoyer et importer', `<ul><li>Rien n'est partagé automatiquement. La carte <b>Copier pour envoyer</b> copie la liste d'épicerie, le menu de la semaine ou le menu détaillé. Colle le texte dans un message ou dans Notes.</li>
