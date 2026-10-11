@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Menu Dulac"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0b6b57">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADaklEQVR4nO3dQVbUQBiFUfA4w/3hHnA5LsIFugAHTDzoI92dVOpVzr1jTlsdvvoTQmyeX95en+B/vsxeAL3EQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYPo64gX/f3z11Ev9e3H96NeinuZHETLxHHgNOJGQ04rx5LFLO2T4+8yVHKy9jiYaLE4DI8zLRYHZ1ovDsPjNEN+Wtl/50oBDdabHE/SOUtpHO6aNyiNY5PhcYLeOAyP6Xrj2GR4jFYdh+ExV3UcmwyPodrjMDwmao9jk+ExzgJxGB6zLBDHJsNjkDXiMDymWCOOTYbHCM8vb6+z13CrVIC5Msi0OOz1u0zZABc5rTCCOIimxeFC4XazjpXJQSQOInEQzYzDZcctJh4lk4NIHEQLfATDYz5M480bsqO/fkWTJ4fLjs/NPT5OK0TiIBIH0fw4Bp1WP1whbv4ro7/+AdMvyObHQS1xEImDqCKO6SfXQg3HpCIOOomDSBxELXE0nGJ7lByNljgodOU4LnCTdK4rx8FORXFcb+c9puc4FMVBG3EQiYNIHERdcfRci81SdQS64qDKxeNwH2yPi8fBHnVxXGzz3aXtvdfFQQ9xEImDqDGOtlPvOQrfdWMclBAHkTiISuM48AS8xE3SwguOp9o4aCAOInEQ9cbReRoeofadVv+lpkt+fuO/auPonRxMJw6i6jhq5+2Bmt9jdRzMJQ4icRC1x9F8St6v/N21x8FE4iCqvkPKXCYHkTiIxEEkDqLl/zpk2/9zb1vPHgv/tPLJ0x5TviVt69lvyThufAjotG9J23qOst41x+2Ph53zIFnbeg60XhycZrE47t18ozdr23qOtVgcnGmlOB7bduM2a9t6DrdSHJxMHETiIBIH0UpxtH30Rdt6DrdSHJxssTju3Xajt2nbeo61WBycab04bt9852zTtvUcaMlf2b9re36ibT37LRzHu7Ynr9rWs8fycTDOetccnEYcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxEfwAd7r97p5PDBgAAAABJRU5ErkJggg==">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADaklEQVR4nO3dQVbUQBiFUfA4w/3hHnA5LsIFugAHTDzoI92dVOpVzr1jTlsdvvoTQmyeX95en+B/vsxeAL3EQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYPo64gX/f3z11Ev9e3H96NeinuZHETLxHHgNOJGQ04rx5LFLO2T4+8yVHKy9jiYaLE4DI8zLRYHZ1ovDsPjNEN+Wtl/50oBDdabHE/SOUtpHO6aNyiNY5PhcYLeOAyP6Xrj2GR4jFYdh+ExV3UcmwyPodrjMDwmao9jk+ExzgJxGB6zLBDHJsNjkDXiMDymWCOOTYbHCM8vb6+z13CrVIC5Msi0OOz1u0zZABc5rTCCOIimxeFC4XazjpXJQSQOInEQzYzDZcctJh4lk4NIHEQLfATDYz5M480bsqO/fkWTJ4fLjs/NPT5OK0TiIBIH0fw4Bp1WP1whbv4ro7/+AdMvyObHQS1xEImDqCKO6SfXQg3HpCIOOomDSBxELXE0nGJ7lByNljgodOU4LnCTdK4rx8FORXFcb+c9puc4FMVBG3EQiYNIHERdcfRci81SdQS64qDKxeNwH2yPi8fBHnVxXGzz3aXtvdfFQQ9xEImDqDGOtlPvOQrfdWMclBAHkTiISuM48AS8xE3SwguOp9o4aCAOInEQ9cbReRoeofadVv+lpkt+fuO/auPonRxMJw6i6jhq5+2Bmt9jdRzMJQ4icRC1x9F8St6v/N21x8FE4iCqvkPKXCYHkTiIxEEkDqLl/zpk2/9zb1vPHgv/tPLJ0x5TviVt69lvyThufAjotG9J23qOst41x+2Ph53zIFnbeg60XhycZrE47t18ozdr23qOtVgcnGmlOB7bduM2a9t6DrdSHJxMHETiIBIH0UpxtH30Rdt6DrdSHJxssTju3Xajt2nbeo61WBycab04bt9852zTtvUcaMlf2b9re36ibT37LRzHu7Ynr9rWs8fycTDOetccnEYcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxEfwAd7r97p5PDBgAAAABJRU5ErkJggg==">
+<style>html{color-scheme:light dark}body{margin:0;padding-top:env(safe-area-inset-top,0px)}[hidden]{display:none!important}</style>
+<title>Menu Dulac</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Mise en page : une colonne mobile, barre d'onglets en bas, cartes de souper empilées. */
+:root{
+  --bg:#f3f6f4; --card:#ffffff; --ink:#14221f; --mute:#5b6b66; --line:#dbe3df;
+  --accent:#0b6b57; --accent-ink:#ffffff; --soft:#e2f0eb;
+  --deal:#c8341f; --deal-soft:#fbe6e2; --ok:#1c7a3d; --warn:#9a6700;
+  --f-disp:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1715; --card:#18231f; --ink:#e8f0ed; --mute:#98aaa3; --line:#2a3a35;
+  --accent:#4fc3a1; --accent-ink:#06231b; --soft:#1d3029;
+  --deal:#ff8a75; --deal-soft:#3a1f1a; --ok:#6fd08c; --warn:#e3b341; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1715; --card:#18231f; --ink:#e8f0ed; --mute:#98aaa3; --line:#2a3a35;
+  --accent:#4fc3a1; --accent-ink:#06231b; --soft:#1d3029;
+  --deal:#ff8a75; --deal-soft:#3a1f1a; --ok:#6fd08c; --warn:#e3b341; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 var(--f-body);padding-inline:16px;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.app{max-width:640px;margin:0 auto;padding-block:14px 96px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+header h1{font-size:1.6rem;line-height:1.05}
+.sync{font-size:.75rem;color:var(--mute);text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.hbtn{min-height:36px;padding:0 14px;border-radius:99px;border:1px solid var(--accent);background:var(--card);color:var(--accent);font-weight:700;font-size:.85rem}
+details.help>summary{font-family:var(--f-disp);font-size:1.02rem;color:var(--ink)}
+.help p,.help li{font-size:.93rem}
+.help ol,.help ul{margin:6px 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.help .tip{background:var(--soft);border-radius:10px;padding:8px 10px;margin:6px 0}
+.help .warn{background:var(--deal-soft);border-radius:10px;padding:8px 10px;margin:6px 0}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+.tabs button{flex:1;min-height:48px;background:none;border:0;border-radius:12px;font-weight:600;font-size:.82rem;color:var(--mute);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tabs button[aria-selected="true"]{color:var(--accent);background:var(--soft)}
+.tabs .ic{font-size:1.2rem;line-height:1}
+.badge{display:inline-block;min-width:1.3em;padding:0 .4em;border-radius:99px;background:var(--accent);color:var(--accent-ink);font-size:.7rem;line-height:1.5;margin-left:4px}
+section{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{font-size:1.1rem;line-height:1.2}
+.kids{font-size:1.15rem;margin-right:6px}
+.acc,.small{color:var(--mute);font-size:.88rem;margin:0}
+.var{margin:0;font-size:.9rem;background:var(--soft);padding:6px 10px;border-radius:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;padding:3px 9px;border-radius:99px;background:var(--deal-soft);color:var(--deal);font-weight:600;max-width:100%;overflow-wrap:anywhere}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{min-height:38px;padding:0 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);font-size:.88rem;font-weight:600}
+.seg button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg button:disabled{opacity:.6}
+.chip.st{background:var(--soft);color:var(--accent)}
+.chip.n{background:var(--soft);color:var(--accent)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.btn{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600}
+.btn.p{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.s{min-height:38px;padding:0 12px;font-size:.88rem}
+.btn.d{color:var(--deal)}
+.btn:disabled{opacity:.45}
+details>summary{cursor:pointer;font-weight:600;color:var(--accent);min-height:36px;display:flex;align-items:center}
+ul.ing{list-style:none;margin:6px 0;padding:0;display:flex;flex-direction:column}
+ul.ing li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+ul.ing li span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--mute)}
+.steps{font-size:.9rem;margin:6px 0}
+.rayon{font-family:var(--f-disp);font-size:1rem;margin:10px 0 0;display:flex;justify-content:space-between;align-items:baseline}
+.rayon span{font:500 .78rem var(--f-body);color:var(--mute)}
+.item{display:flex;align-items:center;gap:12px;min-height:50px;padding:6px 0;border-bottom:1px solid var(--line)}
+.item input[type=checkbox]{width:26px;height:26px;accent-color:var(--accent);flex:none}
+.item .t{flex:1;min-width:0}
+.item .t b{font-weight:500;overflow-wrap:anywhere}
+.item .q{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.item.done .t b{text-decoration:line-through;color:var(--mute)}
+.item small{display:block;color:var(--mute);font-size:.78rem}
+.item .deal{color:var(--deal);font-weight:600}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:1.2rem;line-height:1}
+.step output{min-width:64px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px}
+textarea{min-height:96px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid4{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;align-items:center}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--mute);min-width:0}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.empty{padding:22px 14px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:14px}
+.sum{display:flex;gap:8px;flex-wrap:wrap}
+.sum div{flex:1 1 90px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.sum b{display:block;font:700 1.3rem var(--f-disp);font-variant-numeric:tabular-nums}
+.sum span{font-size:.76rem;color:var(--mute)}
+a{color:var(--accent)}
+.note{font-size:.85rem;color:var(--warn);margin:0}
+@media (max-width:380px){.grid4{grid-template-columns:1.6fr 1fr 1fr auto}}
+</style>
+
+<div class="app">
+  <header>
+    <h1 id="titre">Menu Dulac</h1>
+    <div class="sync"><button class="hbtn" id="help_btn" aria-label="Aide">? Aide</button><div id="sync">Chargement…</div></div>
+  </header>
+
+  <section id="tab-menu"></section>
+  <section id="tab-epicerie" hidden></section>
+  <section id="tab-maison" hidden></section>
+  <section id="tab-recettes" hidden></section>
+  <section id="tab-reglages" hidden></section>
+  <section id="tab-aide" hidden></section>
+</div>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-t="menu" aria-selected="true"><span class="ic">🍽️</span>Menu</button>
+  <button role="tab" data-t="epicerie" aria-selected="false"><span class="ic">🛒</span>Épicerie<span class="badge" id="bgl" hidden></span></button>
+  <button role="tab" data-t="maison" aria-selected="false"><span class="ic">🏠</span>Maison</button>
+  <button role="tab" data-t="recettes" aria-selected="false"><span class="ic">📖</span>Recettes</button>
+  <button role="tab" data-t="reglages" aria-selected="false"><span class="ic">⚙️</span>Réglages</button>
+</nav>
+
+<script>
+const RECIPES = [{"n":"Pâté à la viande (tourtière, 2 pâtés)","e":"","m":["porc haché","boeuf haché"],"nw":false,"i":[[700.0,"g","porc haché","viandes"],[450.0,"g","boeuf haché","viandes"],[2.0,"un","oignon","fruits et légumes"],[2.0,"un","pomme de terre","fruits et légumes"],[4.0,"un","abaisse de pâte à tarte","surgelés"],[1.0,"un","oeuf","produits laitiers"],[5.0,"ml","cannelle","garde-manger"],[2.0,"ml","clou de girofle moulu","garde-manger"],[1.0,"un","pot de ketchup aux fruits","épicerie"]],"s":"Faire revenir viandes et oignon hachés, ajouter pommes de terre cuites écrasées, épices et 125 ml d'eau, mijoter 15 min. Garnir 2 assiettes à tarte, couvrir, badigeonner d'oeuf. 400°F 40 min.","v":[["Pâté de gibier : remplacer le porc par 350 g d'orignal ou de chevreuil haché","-porc haché ; +700 g orignal ou chevreuil haché|viandes"],["Version mini : cuire en moules à muffins (cuisson 25 min) pour les lunchs",""]],"t":"viande","sf":"","sv":"salade_chou","tm":90},{"n":"Spaghetti boulettes","e":"👿☃️","m":["boeuf haché","pâtes"],"nw":false,"i":[[900.0,"g","boeuf haché","viandes"],[600.0,"g","spaghetti","épicerie"],[1.0,"un","oeuf","produits laitiers"],[120.0,"g","chapelure","épicerie"],[1500.0,"ml","sauce tomate","épicerie"],[1.0,"un","oignon","fruits et légumes"],[100.0,"g","parmesan râpé","produits laitiers"]],"s":"Boulettes (boeuf, oeuf, chapelure, oignon, sel/poivre), 400°F 20 min; mijoter dans la sauce. Servir sur les pâtes avec parmesan.","v":[["Boulettes suédoises : sauce crème et bouillon de boeuf, servir sur nouilles aux oeufs","-sauce tomate ; -spaghetti ; -parmesan ; -pain à l'ail ; +500 ml crème 15%|produits laitiers ; +500 ml bouillon de boeuf|épicerie ; +600 g nouilles aux oeufs|épicerie"],["Sous-marin boulettes : mettre les boulettes et la sauce dans un pain, fromage, gratiner","-spaghetti ; +6 un pains sous-marin|boulangerie ; +300 g mozzarella râpée|produits laitiers ; @f=aucun"]],"t":"pates","sf":"pain_ail","sv":"salade_verte","tm":40},{"n":"Pâtes poulet sauce Alfredo","e":"👿","m":["poulet","pâtes"],"nw":false,"i":[[900.0,"g","poitrines de poulet","viandes"],[600.0,"g","fettuccine","épicerie"],[500.0,"ml","crème 35%","produits laitiers"],[150.0,"g","parmesan râpé","produits laitiers"],[4.0,"un","gousses d'ail","fruits et légumes"],[60.0,"g","beurre","produits laitiers"]],"s":"Saisir le poulet en lanières. Ail au beurre, crème, parmesan, réduire 5 min. Mélanger aux pâtes et au poulet.","v":[["Alfredo au bacon et brocoli : ajouter 200 g de bacon cuit","+200 g bacon|viandes"],["Version rosée : remplacer 250 ml de crème par 250 ml de sauce tomate","-250 ml crème 35% ; +250 ml sauce tomate|épicerie"]],"t":"pates","sf":"pain_ail","sv":"brocoli","tm":30},{"n":"Burgers de poulet","e":"👿☃️","m":["poulet","pain à hamburger"],"nw":false,"i":[[6.0,"un","poitrines de poulet panées (ou 900 g poitrines + chapelure)","viandes"],[6.0,"un","pain à hamburger","boulangerie"],[6.0,"un","feuilles de laitue","fruits et légumes"],[2.0,"un","tomates","fruits et légumes"],[150.0,"ml","mayonnaise","épicerie"],[6.0,"un","tranches de fromage","produits laitiers"]],"s":"Cuire le poulet pané 400°F 25 min. Monter avec fromage, laitue, tomate, mayo. Frites au four.","v":[["Burger Buffalo : badigeonner de sauce piquante et ajouter de la sauce ranch","+125 ml sauce piquante (Buffalo)|épicerie ; +125 ml sauce ranch|produits laitiers"],["Burger hawaïen : ananas grillé, bacon et sauce teriyaki","+1 un boîte d'ananas en rondelles|épicerie ; +200 g bacon|viandes ; +100 ml sauce teriyaki|épicerie"],["Burger épicé : poulet mariné au babeurre et au piment, mayo sriracha","+250 ml babeurre|produits laitiers ; +15 ml poivre de Cayenne|garde-manger ; +60 ml sauce piquante|épicerie ; +45 ml sriracha|épicerie"],["Burger Nashville : poulet croustillant enrobé d'huile de Cayenne, cornichons et salade de chou","+250 ml babeurre|produits laitiers ; +45 ml poivre de Cayenne|garde-manger ; +60 ml cassonade|garde-manger ; +125 ml huile végétale|garde-manger ; +1 un pot de cornichons à l'aneth|épicerie"]],"t":"sandwich","sf":"frites_four","sv":"salade_chou","tm":30},{"n":"Burgers de viande","e":"👿","m":["boeuf haché","pain à hamburger"],"nw":false,"i":[[1000.0,"g","boeuf haché","viandes"],[6.0,"un","pain à hamburger","boulangerie"],[6.0,"un","tranches de cheddar","produits laitiers"],[2.0,"un","tomates","fruits et légumes"],[1.0,"un","oignon","fruits et légumes"],[6.0,"un","cornichons à l'aneth","épicerie"]],"s":"Galettes de 165 g, BBQ ou poêle 4-5 min par côté. Garnir au goût.","v":[["Burger BBQ bacon : oignons frits, bacon et sauce BBQ","+300 g bacon|viandes ; +2 un oignons|fruits et légumes ; +125 ml sauce BBQ|épicerie"],["Burger au fromage fondu : cheddar fort, sauce secrète (mayo, ketchup, relish)","-tranches de cheddar ; +300 g cheddar fort|produits laitiers ; +100 ml mayonnaise|épicerie ; +60 ml relish|épicerie"]],"t":"sandwich","sf":"frites_four","sv":"crudites","tm":25},{"n":"Mac n cheese au bacon","e":"👿☃️","m":["bacon","fromage","macaroni"],"nw":false,"i":[[600.0,"g","macaroni","épicerie"],[400.0,"g","bacon","viandes"],[400.0,"g","cheddar râpé","produits laitiers"],[1000.0,"ml","lait","produits laitiers"],[60.0,"g","beurre","produits laitiers"],[60.0,"g","farine","garde-manger"],[100.0,"g","chapelure panko","épicerie"]],"s":"Béchamel (beurre, farine, lait), fromage fondu, mélanger aux pâtes et au bacon croustillant. Gratiner avec panko 10 min à 400°F.","v":[["Mac n cheese au poulet BBQ : ajouter 500 g de poulet effiloché","-bacon ; +500 g poulet effiloché cuit|viandes ; +125 ml sauce BBQ|épicerie"],["Mac n cheese aux saucisses fumées : tranches de saucisses dorées","-bacon ; +500 g saucisses fumées|viandes"]],"t":"pates","sf":"","sv":"salade_concombre","tm":30},{"n":"Tacos ou quesadillas","e":"👿","m":["boeuf haché","poulet","tortillas"],"nw":false,"i":[[900.0,"g","boeuf haché ou poulet haché","viandes"],[2.0,"un","sachets d'épices à tacos","épicerie"],[12.0,"un","tortillas ou coquilles à tacos","boulangerie"],[400.0,"g","fromage mexicain râpé","produits laitiers"],[250.0,"ml","crème sure","produits laitiers"],[250.0,"ml","salsa","épicerie"],[2.0,"un","avocats","fruits et légumes"]],"s":"Cuire la viande avec les épices. Garnir tacos ou quesadillas (poêle, 3 min par côté). Salade mexicaine avec jus de lime.","v":[["Tacos au poulet effiloché : poulet à la mijoteuse avec salsa et épices à tacos","-boeuf haché ou poulet haché ; +900 g poitrines de poulet|viandes"],["Burritos : même farce roulée avec riz et haricots noirs, gratinés","+300 g riz|épicerie"]],"t":"mex","sf":"","sv":"salade_mexicaine","tm":25},{"n":"Côtes levées","e":"👿","m":["côtes levées","porc"],"nw":false,"i":[[2400.0,"g","côtes levées de dos","viandes"],[250.0,"ml","sauce BBQ","épicerie"]],"s":"Côtes enrobées d'épices, four 300°F 2 h 15 couvertes, puis sauce BBQ 15 min à 425°F. Wedges 425°F 35 min.","v":[["Côtes sauce érable et moutarde : remplacer la sauce BBQ","-sauce BBQ ; +125 ml sirop d'érable|épicerie ; +60 ml moutarde de Dijon|épicerie"],["Côtes à la mijoteuse : 8 h à basse température, finir 10 min au four",""]],"t":"viande","sf":"wedges","sv":"salade_chou","tm":150},{"n":"Poulet BBQ tourne-broche","e":"👿☃️","m":["poulet","patates grelots"],"nw":false,"i":[[2.0,"un","poulets BBQ rôtis cuits (rôtisserie du magasin)","viandes"],[1.0,"un","sauce brune ou BBQ","épicerie"]],"s":"Patates grelots au four avec huile et sel, 425°F 35 min. Poulet acheté chaud ou cuit sur tourne-broche 1 h 15.","v":[["Poulet BBQ en pièces au four 400°F 45 min, sauce BBQ maison","-poulets BBQ rôtis ; +2000 g pilons et cuisses de poulet|viandes ; +250 ml sauce BBQ|épicerie"],["Poulet rôti à l'érable et à l'ail avec carottes au four","-poulets BBQ rôtis ; +2 un poulets entiers|viandes ; +60 ml sirop d'érable|épicerie ; +500 g carottes|fruits et légumes ; +4 un gousses d'ail|fruits et légumes"]],"t":"viande","sf":"grelots","sv":"salade_verte","tm":75},{"n":"Brochettes de poulet","e":"","m":["poulet","riz"],"nw":false,"i":[[1000.0,"g","poitrines de poulet","viandes"],[2.0,"un","poivrons","fruits et légumes"],[1.0,"un","oignon rouge","fruits et légumes"],[200.0,"ml","marinade teriyaki","épicerie"]],"s":"Mariner le poulet 1 h, brochettes BBQ 12 min. Riz frit au wok avec oeufs, légumes et soya.","v":[["Brochettes de boeuf et poivrons, sauce soya et miel","-poitrines de poulet ; +1000 g surlonge de boeuf|viandes ; +60 ml miel|épicerie"],["Brochettes de porc à l'ananas et riz frit","-poitrines de poulet ; +1000 g filet de porc|viandes ; +1 un boîte d'ananas|épicerie"]],"t":"riz","sf":"riz_frit","sv":"legumes_sautes","tm":35},{"n":"Tournedos","e":"👿","m":["tournedos","bacon","boeuf"],"nw":false,"i":[[6.0,"un","tournedos (filet de boeuf enrobé de bacon)","viandes"]],"s":"Tournedos poêle 4 min par côté puis four 400°F 8 min. Patates bouillies, pilées avec beurre et lait.","v":[["Tournedos sauce au poivre ou sauce aux champignons","+250 ml crème 35%|produits laitiers ; +30 ml poivre concassé|garde-manger"],["Filets mignons au bacon à la poêle avec patates grelots","-tournedos ; +6 un filets mignons|viandes ; +200 g bacon|viandes ; @f=grelots"]],"t":"viande","sf":"patates_pilees","sv":"haricots_verts","tm":30},{"n":"Plaque de saucisses","e":"👿☃️","m":["saucisses","pommes de terre"],"nw":false,"i":[[12.0,"un","saucisses (italiennes ou bratwurst)","viandes"],[1000.0,"g","pommes de terre grelots","fruits et légumes"],[3.0,"un","poivrons","fruits et légumes"],[2.0,"un","oignons","fruits et légumes"],[45.0,"ml","huile d'olive","garde-manger"],[1.0,"un","moutarde à l'ancienne","épicerie"]],"s":"Tout sur une plaque, huile et épices, 425°F 35 min en retournant à mi-cuisson.","v":[["Plaque à la saucisse fumée, pommes de terre et chou-fleur","-saucisses ; +1000 g saucisses fumées|viandes ; +1 un chou-fleur|fruits et légumes"],["Plaque à la saucisse italienne, poivrons, oignons et pâtes courtes","-pommes de terre grelots ; +400 g pâtes courtes (penne)|épicerie ; +500 ml sauce tomate|épicerie"]],"t":"complet","sf":"","sv":"","tm":40},{"n":"Nouilles chinoises","e":"👿","m":["egg rolls","nouilles","poulet"],"nw":false,"i":[[600.0,"g","nouilles lo mein","épicerie"],[600.0,"g","poulet ou porc émincé","viandes"],[2.0,"un","poivrons","fruits et légumes"],[300.0,"g","chou ou mélange à salade de chou","fruits et légumes"],[3.0,"un","carottes","fruits et légumes"],[80.0,"ml","sauce soya","épicerie"],[60.0,"ml","sauce hoisin","épicerie"]],"s":"Sauter viande et légumes, ajouter nouilles et sauces. Egg rolls au four selon l'emballage.","v":[["Nouilles à la sauce arachide et au poulet","+125 ml beurre d'arachide|épicerie"],["Nouilles au boeuf, brocoli et sauce aux huîtres","-poulet ou porc émincé ; +600 g boeuf émincé|viandes ; +500 g brocoli|fruits et légumes ; +60 ml sauce aux huîtres|épicerie"]],"t":"riz","sf":"egg_rolls","sv":"","tm":25},{"n":"Mini burger pizza","e":"👿☃️","m":["pizza","pepperoni","fromage"],"nw":false,"i":[[12.0,"un","petits pains sliders","boulangerie"],[500.0,"g","boeuf haché","viandes"],[250.0,"ml","sauce à pizza","épicerie"],[200.0,"g","pepperoni tranché","viandes"],[300.0,"g","mozzarella râpée","produits laitiers"]],"s":"Galettes mini cuites, déposer sauce, pepperoni et mozzarella dans le pain, gratiner 10 min à 375°F.","v":[["Version poulet : galettes de poulet haché avec sauce marinara","-boeuf haché ; +500 g poulet haché|viandes"],["Pochettes pizza : pâte à pizza, pepperoni et fromage, cuites 15 min","-petits pains sliders ; -boeuf haché ; +2 un pâtes à pizza|boulangerie"]],"t":"sandwich","sf":"","sv":"crudites","tm":25},{"n":"Sous-marins style Subway, poulet teriyaki","e":"👿☃️","m":["poulet","pain sous-marin"],"nw":false,"i":[[6.0,"un","pains sous-marin 12 po (coupés en 2 = 12 portions)","boulangerie"],[900.0,"g","poitrines de poulet","viandes"],[200.0,"ml","sauce teriyaki","épicerie"],[300.0,"g","mozzarella ou provolone","produits laitiers"],[2.0,"un","tomates","fruits et légumes"],[1.0,"un","laitue","fruits et légumes"],[1.0,"un","concombre","fruits et légumes"],[1.0,"un","oignon vert ou rouge","fruits et légumes"]],"s":"Poulet en lanières saisi, enrobé de teriyaki. Garnir le pain, fromage, passer au four 3 min.","v":[["Sous-marin steak et fromage (boeuf émincé, poivrons, oignons)","-poitrines de poulet ; -sauce teriyaki ; +700 g boeuf émincé|viandes ; +2 un poivrons|fruits et légumes ; +1 un oignon|fruits et légumes"],["Sous-marin italien (salami, jambon, pepperoni, vinaigrette)","-poitrines de poulet ; -sauce teriyaki ; +200 g salami|viandes ; +200 g jambon tranché|viandes ; +150 g pepperoni|viandes ; +100 ml vinaigrette italienne|épicerie"]],"t":"sandwich","sf":"chips","sv":"crudites","tm":25},{"n":"Ramen, lanières de poulet","e":"👿","m":["poulet","nouilles ramen"],"nw":false,"i":[[6.0,"un","paquets de nouilles ramen","épicerie"],[700.0,"g","poitrines de poulet","viandes"],[2000.0,"ml","bouillon de poulet","épicerie"],[6.0,"un","oeufs","produits laitiers"],[1.0,"un","boîte de maïs","épicerie"],[2.0,"un","oignons verts","fruits et légumes"],[60.0,"ml","sauce soya","épicerie"]],"s":"Bouillon + soya, poulet saisi en lanières, nouilles 3 min, oeufs mollets 6 min 30.","v":[["Ramen au porc : tranches de porc braisé à la place du poulet","-poitrines de poulet ; +700 g filet de porc|viandes"],["Ramen épicé : ajouter pâte de chili et pak-choï","+30 ml pâte de chili|épicerie ; +2 un pak-choï|fruits et légumes"]],"t":"pates","sf":"","sv":"","tm":20},{"n":"Bologne BBQ","e":"☃️","m":["bologne","pommes de terre"],"nw":false,"i":[[1500.0,"g","bologne en un morceau","viandes"],[250.0,"ml","sauce BBQ","épicerie"]],"s":"Bologne entaillée, badigeonnée de BBQ, 375°F 40 min en arrosant. Patates pilées.","v":[["Bologne glacée à l'érable et à la moutarde","-sauce BBQ ; +125 ml sirop d'érable|épicerie ; +60 ml moutarde|épicerie"],["Sandwich de bologne frite avec fromage et oignons","+12 un tranches de pain|boulangerie ; +6 un tranches de fromage|produits laitiers ; +2 un oignons|fruits et légumes ; @f=aucun ; @v=aucun"]],"t":"viande","sf":"patates_pilees","sv":"mais","tm":25},{"n":"Ailes de poulet","e":"👿☃️","m":["ailes de poulet","fromage"],"nw":false,"i":[[1800.0,"g","ailes de poulet","viandes"],[125.0,"ml","sauce piquante ou BBQ miel","épicerie"]],"s":"Ailes 425°F 45 min en retournant. Nachos : chips, fromage, 8 min à 400°F.","v":[["Ailes ail-parmesan au four","-sauce piquante ; +100 g parmesan râpé|produits laitiers ; +6 un gousses d'ail|fruits et légumes ; +60 g beurre|produits laitiers"],["Ailes miel et soya, nachos au poulet effiloché","-sauce piquante ; +125 ml miel|épicerie ; +60 ml sauce soya|épicerie"]],"t":"viande","sf":"nachos","sv":"crudites","tm":50},{"n":"Lasagne à la viande","e":"👿","m":["boeuf haché","fromage","pâtes"],"nw":false,"i":[[700.0,"g","boeuf haché","viandes"],[12.0,"un","feuilles de lasagne","épicerie"],[1500.0,"ml","sauce tomate","épicerie"],[500.0,"g","fromage ricotta","produits laitiers"],[400.0,"g","mozzarella râpée","produits laitiers"],[1.0,"un","oeuf","produits laitiers"]],"s":"Superposer sauce à la viande, pâtes, ricotta et oeuf, mozzarella. 375°F 55 min; reposer 10 min.","v":[["Lasagne au poulet et épinards sauce blanche","-boeuf haché ; -sauce tomate ; +700 g poulet haché|viandes ; +500 g épinards|fruits et légumes ; +1000 ml sauce blanche|épicerie"],["Lasagne en casserole (nouilles non cuites, même goût, moins de travail)",""]],"t":"pates","sf":"pain_ail","sv":"salade_cesar","tm":90},{"n":"Mini pains de viande","e":"👿","m":["boeuf haché","pommes de terre"],"nw":false,"i":[[1000.0,"g","boeuf haché","viandes"],[1.0,"un","oeuf","produits laitiers"],[120.0,"g","chapelure","épicerie"],[125.0,"ml","ketchup","épicerie"],[1.0,"un","oignon","fruits et légumes"]],"s":"Mélange en 12 mini pains en moules à muffins, glacer au ketchup, 375°F 25 min.","v":[["Mini pains de viande farcis au fromage","+200 g mozzarella râpée|produits laitiers"],["Pain de viande enrobé de bacon, glaçage érable-ketchup","+300 g bacon|viandes ; +60 ml sirop d'érable|épicerie"]],"t":"viande","sf":"patates_pilees","sv":"mais","tm":45},{"n":"Bavette de boeuf","e":"👿☃️","m":["bavette","boeuf"],"nw":false,"i":[[1500.0,"g","bavette de boeuf","viandes"],[2.0,"un","gousses d'ail","fruits et légumes"]],"s":"Bavette marinée huile/ail/soya, BBQ 4 min par côté, reposer 8 min, trancher à contre-fil.","v":[["Bavette marinée chimichurri","+1 un bouquet de persil|fruits et légumes ; +60 ml vinaigre de vin rouge|épicerie"],["Bavette en salade de steak avec fromage bleu ou parmesan","+1 un sac de roquette|fruits et légumes ; +100 g parmesan|produits laitiers ; +2 un tomates|fruits et légumes ; @f=aucun ; @v=aucun"]],"t":"viande","sf":"frites_maison","sv":"salade_verte","tm":25},{"n":"Steak au poivre","e":"👿","m":["steak","boeuf"],"nw":false,"i":[[6.0,"un","steaks (faux-filet ou contre-filet 200 g)","viandes"],[30.0,"ml","poivre concassé","garde-manger"],[250.0,"ml","crème 35%","produits laitiers"],[60.0,"ml","cognac ou bouillon de boeuf","épicerie"]],"s":"Poivre pressé sur les steaks, poêle 4 min/côté, déglacer, crème, réduire. Patates 425°F 1 h.","v":[["Sauce aux champignons et à l'ail, même cuisson","-poivre concassé ; -cognac ; +400 g champignons|fruits et légumes ; +4 un gousses d'ail|fruits et légumes"],["Steak sauce BBQ chipotle, patates farcies","+125 ml sauce BBQ chipotle|épicerie ; +250 ml crème sure|produits laitiers"]],"t":"viande","sf":"patates_four","sv":"haricots_verts","tm":25},{"n":"Côtelettes de porc","e":"👿","m":["côtelettes de porc","pommes de terre"],"nw":false,"i":[[6.0,"un","côtelettes de porc","viandes"]],"s":"Patates cuites 1 h, évidées, regarnies de fromage et bacon, gratinées. Côtelettes poêle 5 min par côté.","v":[["Côtelettes panées à la poêle","+120 g chapelure panko|épicerie ; +2 un oeufs|produits laitiers"],["Côtelettes sauce moutarde et miel, patates en quartiers","+60 ml moutarde|épicerie ; +60 ml miel|épicerie"]],"t":"viande","sf":"pelures","sv":"brocoli","tm":30},{"n":"Poulet au beurre","e":"👿","m":["poulet","riz"],"nw":false,"i":[[1000.0,"g","cuisses de poulet désossées","viandes"],[400.0,"ml","crème 35%","produits laitiers"],[400.0,"ml","purée de tomates","épicerie"],[60.0,"g","beurre","produits laitiers"],[45.0,"ml","pâte de cari ou garam masala","épicerie"],[6.0,"un","pains naan","boulangerie"]],"s":"Poulet saisi, sauce tomate/crème/épices 20 min. Riz frit avec oeufs.","v":[["Poulet tikka masala : ajouter yogourt et plus d'épices","+250 ml yogourt nature|produits laitiers"],["Poulet au beurre en cocotte avec pois chiches et épinards","+1 un boîte de pois chiches|épicerie ; +300 g épinards|fruits et légumes"]],"t":"riz","sf":"riz_frit","sv":"","tm":35},{"n":"Chili con carne, poivrons farcis","e":"","m":["boeuf haché","poivrons"],"nw":false,"i":[[900.0,"g","boeuf haché","viandes"],[2.0,"un","boîtes de tomates en dés","épicerie"],[2.0,"un","boîtes de haricots rouges","épicerie"],[1.0,"un","oignon","fruits et légumes"],[45.0,"ml","poudre de chili","garde-manger"],[6.0,"un","gros poivrons","fruits et légumes"],[250.0,"g","fromage râpé","produits laitiers"],[1.0,"un","pain croûté","boulangerie"]],"s":"Chili mijoté 45 min. Poivrons évidés, farcis, fromage, 375°F 30 min.","v":[["Chili au poulet et haricots blancs","-boeuf haché ; -haricots rouges ; +900 g poulet haché|viandes ; +2 un boîtes de haricots blancs|épicerie"],["Chili sur patate douce au four ou sur nachos","-poivrons ; +6 un patates douces|fruits et légumes"]],"t":"complet","sf":"","sv":"","tm":60},{"n":"Jambon mijoté à l'érable","e":"☃️","m":["jambon","pommes de terre"],"nw":false,"i":[[2000.0,"g","jambon fumé désossé","viandes"],[125.0,"ml","sirop d'érable","épicerie"]],"s":"Jambon à la mijoteuse 6 h avec érable et moutarde. Gratin 350°F 1 h.","v":[["Jambon à l'ananas et à la cassonade","-sirop d'érable ; +1 un boîte d'ananas|épicerie ; +125 g cassonade|garde-manger"],["Restes de jambon en pâté de jambon ou en sandwichs gratinés","+4 un abaisses de pâte à tarte|surgelés ; +300 g fromage râpé|produits laitiers"]],"t":"viande","sf":"gratin","sv":"carottes","tm":120},{"n":"Coq au porc (poulet et porc braisés)","e":"👿","m":["poulet","porc"],"nw":false,"i":[[700.0,"g","cubes de porc","viandes"],[700.0,"g","cuisses de poulet","viandes"],[200.0,"g","lardons","viandes"],[250.0,"g","champignons","fruits et légumes"],[2.0,"un","oignons","fruits et légumes"],[500.0,"ml","vin blanc ou bouillon","épicerie"]],"s":"Brunir viandes et lardons, ajouter légumes et liquide, mijoter 1 h 30.","v":[["Version tout poulet : cuisses de poulet, bacon et champignons","-cubes de porc ; +700 g cuisses de poulet|viandes"],["Version mijoteuse : 6 h à basse température",""]],"t":"viande","sf":"patates_pilees","sv":"","tm":120},{"n":"Poulet général Tao","e":"","m":["poulet","riz"],"nw":false,"i":[[1000.0,"g","poitrines de poulet","viandes"],[150.0,"g","fécule de maïs","garde-manger"],[125.0,"ml","sauce général Tao (du commerce ou maison)","épicerie"],[2.0,"un","oeufs","produits laitiers"]],"s":"Poulet en cubes pané, frit ou four 425°F 25 min, enrobé de sauce.","v":[["Poulet à l'orange et au sésame","-sauce général Tao ; +250 ml jus d'orange|épicerie ; +60 ml sauce soya|épicerie ; +30 ml graines de sésame|garde-manger ; +60 ml miel|épicerie"],["Poulet aigre-doux au four avec ananas et poivrons","-sauce général Tao ; +250 ml sauce aigre-douce|épicerie ; +1 un boîte d'ananas|épicerie ; +2 un poivrons|fruits et légumes"]],"t":"riz","sf":"riz_blanc","sv":"brocoli","tm":35},{"n":"Hot-dogs et Pogo","e":"☃️","m":["hot-dog","saucisses"],"nw":false,"i":[[12.0,"un","saucisses à hot-dog","viandes"],[12.0,"un","pains à hot-dog","boulangerie"],[6.0,"un","Pogo (corn dogs surgelés)","surgelés"],[1.0,"un","moutarde, relish, ketchup","épicerie"]],"s":"Saucisses BBQ ou bouillies. Pogo au four 20 min à 375°F.","v":[["Hot-dogs enroulés dans du bacon","+300 g bacon|viandes"],["Hot-dogs chili cheese avec un chili rapide","+400 g boeuf haché|viandes ; +250 ml sauce tomate|épicerie ; +250 g cheddar râpé|produits laitiers ; +15 ml poudre de chili|garde-manger"]],"t":"sandwich","sf":"chips","sv":"crudites","tm":15},{"n":"Escalopes de poulet, fromage et olives","e":"👿","m":["poulet","fromage"],"nw":false,"i":[[1000.0,"g","poitrines de poulet (en escalopes)","viandes"],[300.0,"g","mozzarella","produits laitiers"],[150.0,"g","olives vertes ou noires","épicerie"],[250.0,"ml","sauce tomate","épicerie"]],"s":"Escalopes poêlées, sauce, olives et fromage, gratiner 8 min à 400°F.","v":[["Escalopes parmigiana (sauce tomate, mozzarella) sur spaghetti","-olives vertes ; +500 ml sauce tomate|épicerie ; +600 g spaghetti|épicerie ; @f=aucun"],["Escalopes à la crème et aux champignons","-olives vertes ; -sauce tomate ; +400 g champignons|fruits et légumes ; +250 ml crème 35%|produits laitiers"]],"t":"viande","sf":"riz_blanc","sv":"salade_verte","tm":35},{"n":"Hot chicken","e":"👿☃️","m":["poulet","pain","sauce brune"],"nw":false,"i":[[900.0,"g","poitrines de poulet cuites","viandes"],[6.0,"un","tranches de pain blanc","boulangerie"],[750.0,"ml","sauce brune","épicerie"]],"s":"Pain, poulet, frites, pois, noyer de sauce chaude.","v":[["Hot chicken au porc effiloché","-poitrines de poulet cuites ; +900 g porc effiloché cuit|viandes"],["Hot chicken en sandwich ouvert sur toast avec fromage","+200 g fromage râpé|produits laitiers"]],"t":"sandwich","sf":"frites_four","sv":"pois","tm":25},{"n":"Club sandwich","e":"👿","m":["poulet","bacon","pain"],"nw":false,"i":[[18.0,"un","tranches de pain","boulangerie"],[600.0,"g","poitrine de poulet cuite","viandes"],[400.0,"g","bacon","viandes"],[3.0,"un","tomates","fruits et légumes"],[1.0,"un","laitue","fruits et légumes"],[150.0,"ml","mayonnaise","épicerie"]],"s":"Triple étage : pain grillé, poulet, bacon, tomate, laitue.","v":[["Club à la dinde et au bacon avec avocat","-poitrine de poulet cuite ; +600 g dinde tranchée|viandes ; +2 un avocats|fruits et légumes"],["Club en wrap grillé, sauce ranch","-tranches de pain ; +6 un grandes tortillas|boulangerie ; +125 ml sauce ranch|produits laitiers"]],"t":"sandwich","sf":"chips","sv":"salade_fruits","tm":20},{"n":"Empanadas","e":"👿","m":["boeuf haché","fromage"],"nw":false,"i":[[12.0,"un","rondelles à empanadas ou abaisses","surgelés"],[600.0,"g","boeuf haché","viandes"],[200.0,"g","fromage","produits laitiers"],[1.0,"un","oignon","fruits et légumes"],[250.0,"ml","salsa","épicerie"]],"s":"Farce de boeuf à l'oignon et cumin, cuire 25 min à 400°F. Chips en fines tranches, 400°F 25 min.","v":[["Empanadas au poulet et fromage","-boeuf haché ; +600 g poulet haché|viandes"],["Empanadas sucrées-salées à la dinde et aux canneberges","-boeuf haché ; +600 g dinde hachée|viandes ; +125 ml sauce aux canneberges|épicerie"]],"t":"viande","sf":"chips_maison","sv":"","tm":50},{"n":"Gnocchi, mini burgers, porc effiloché","e":"","m":["porc","gnocchi"],"nw":false,"i":[[1800.0,"g","épaule de porc","viandes"],[1.0,"un","sauce BBQ","épicerie"],[12.0,"un","petits pains","boulangerie"]],"s":"Porc 8 h à la mijoteuse, effiloché, BBQ. Gnocchi poêlés au beurre.","v":[["Gnocchi sauce rosée au porc effiloché","+500 ml sauce tomate|épicerie ; +125 ml crème 15%|produits laitiers"],["Gnocchi gratinés au four avec bacon","+300 g bacon|viandes ; +250 g mozzarella râpée|produits laitiers"]],"t":"pates","sf":"gnocchi_poeles","sv":"salade_chou","tm":40},{"n":"Tortellinis, sauce rosée","e":"☃️","m":["pâtes","fromage"],"nw":false,"i":[[1000.0,"g","tortellinis au fromage","épicerie"],[750.0,"ml","sauce tomate","épicerie"],[250.0,"ml","crème 15%","produits laitiers"],[100.0,"g","parmesan","produits laitiers"]],"s":"Sauce tomate + crème, mijoter. Tortellinis 4 min.","v":[["Tortellinis sauce Alfredo ou pesto","-sauce tomate ; -crème 15% ; +500 ml sauce Alfredo|épicerie"],["Gratin de tortellinis : sauce, mozzarella, four 15 min","+300 g mozzarella râpée|produits laitiers"]],"t":"pates","sf":"pain_ail","sv":"salade_verte","tm":20},{"n":"Filets de poulet, salade César","e":"👿☃️","m":["poulet","filets de poulet"],"nw":false,"i":[[900.0,"g","filets de poulet panés","surgelés"],[2.0,"un","coeurs de romaine","fruits et légumes"],[150.0,"g","croûtons","épicerie"],[125.0,"ml","sauce César","épicerie"],[100.0,"g","parmesan","produits laitiers"],[80.0,"g","bacon cuit","viandes"]],"s":"Filets au four selon l'emballage. Salade garnie.","v":[["Salade César au poulet croustillant en wrap","+6 un grandes tortillas|boulangerie"],["Filets avec trempette miel-moutarde et salade de pâtes","-coeurs de romaine ; -croûtons ; -sauce César ; +400 g pâtes rotini|épicerie ; +250 ml vinaigrette italienne|épicerie ; +1 un concombre|fruits et légumes"]],"t":"complet","sf":"","sv":"","tm":30},{"n":"Wraps au poulet","e":"👿","m":["poulet","tortillas"],"nw":false,"i":[[6.0,"un","grandes tortillas","boulangerie"],[800.0,"g","poulet cuit en lanières","viandes"],[250.0,"g","fromage râpé","produits laitiers"],[1.0,"un","laitue","fruits et légumes"],[3.0,"un","tomates","fruits et légumes"],[125.0,"ml","sauce ranch","produits laitiers"]],"s":"Garnir, rouler, griller 2 min par côté.","v":[["Wraps César au poulet et au bacon","-sauce ranch ; +125 ml sauce César|épicerie ; +200 g bacon|viandes ; +100 g parmesan|produits laitiers"],["Wraps BBQ au poulet croustillant et au cheddar","-sauce ranch ; +125 ml sauce BBQ|épicerie"]],"t":"sandwich","sf":"","sv":"crudites","tm":20},{"n":"Pizza maison pepperoni","e":"","m":["pepperoni","fromage","pizza"],"nw":true,"i":[[3.0,"un","pâtes à pizza","boulangerie"],[750.0,"ml","sauce à pizza","épicerie"],[600.0,"g","mozzarella râpée","produits laitiers"],[300.0,"g","pepperoni","viandes"],[2.0,"un","poivrons","fruits et légumes"]],"s":"Étaler, garnir, cuire 475°F 12 min.","v":[["Pizza blanche au poulet, bacon et sauce ranch","-sauce à pizza ; -pepperoni ; +500 ml sauce ranch|produits laitiers ; +600 g poulet cuit|viandes ; +300 g bacon|viandes"],["Pizza hawaïenne ou pizza déjeuner (oeufs et bacon)","-pepperoni ; +300 g jambon|viandes ; +1 un boîte d'ananas|épicerie"]],"t":"complet","sf":"","sv":"salade_cesar","tm":45},{"n":"Pâté chinois","e":"","m":["boeuf haché","pommes de terre"],"nw":true,"i":[[900.0,"g","boeuf haché","viandes"],[1.0,"un","oignon","fruits et légumes"],[2.0,"un","boîtes de maïs en grains","épicerie"],[1500.0,"g","pommes de terre","fruits et légumes"],[60.0,"g","beurre","produits laitiers"]],"s":"Boeuf et oignon, maïs, purée. Four 375°F 30 min.","v":[["Pâté chinois au poulet haché","-boeuf haché ; +900 g poulet haché|viandes"],["Pâté chinois à la patate douce ou au chou-fleur","-pommes de terre ; +1500 g patates douces|fruits et légumes"]],"t":"complet","sf":"","sv":"salade_chou","tm":75},{"n":"Croquettes de poulet maison","e":"","m":["poulet","croquettes"],"nw":true,"i":[[1000.0,"g","poitrines de poulet","viandes"],[150.0,"g","chapelure panko","épicerie"],[2.0,"un","oeufs","produits laitiers"],[100.0,"g","farine","garde-manger"],[1.0,"un","trempette miel-moutarde","épicerie"]],"s":"Paner les cubes de poulet, 425°F 20 min.","v":[["Croquettes au parmesan, trempette marinara","-trempette miel-moutarde ; +100 g parmesan râpé|produits laitiers ; +250 ml sauce marinara|épicerie"],["Croquettes en sandwich avec salade de chou","+6 un pains à hamburger|boulangerie ; +1 un sac de salade de chou|fruits et légumes"]],"t":"sandwich","sf":"frites_four","sv":"","tm":35},{"n":"Fajitas de boeuf","e":"","m":["boeuf","bavette"],"nw":true,"i":[[1000.0,"g","bavette ou surlonge de boeuf","viandes"],[3.0,"un","poivrons tricolores","fruits et légumes"],[2.0,"un","oignons","fruits et légumes"],[12.0,"un","tortillas","boulangerie"],[300.0,"g","fromage râpé","produits laitiers"],[250.0,"ml","crème sure","produits laitiers"]],"s":"Boeuf mariné lime/épices, sauter avec les poivrons.","v":[["Fajitas au poulet et poivrons","-bavette ou surlonge de boeuf ; +1000 g poitrines de poulet|viandes"],["Bol fajita : riz, haricots noirs, boeuf et salsa, sans tortilla","-tortillas ; +1 un boîte de haricots noirs|épicerie ; +250 ml salsa|épicerie"]],"t":"mex","sf":"riz_blanc","sv":"guacamole","tm":30},{"n":"Soupe-repas poulet et nouilles, sandwich fromage fondu","e":"","m":["poulet","nouilles"],"nw":true,"i":[[800.0,"g","poitrines de poulet","viandes"],[2500.0,"ml","bouillon de poulet","épicerie"],[4.0,"un","carottes","fruits et légumes"],[3.0,"un","branches de céleri","fruits et légumes"],[250.0,"g","nouilles aux oeufs","épicerie"],[12.0,"un","tranches de pain","boulangerie"],[300.0,"g","cheddar","produits laitiers"]],"s":"Mijoter 30 min. Sandwichs grillés.","v":[["Soupe poulet et riz sauvage","-nouilles aux oeufs ; +250 g riz sauvage|épicerie"],["Soupe poulet et tortellinis, sandwich au jambon","-nouilles aux oeufs ; +500 g tortellinis|épicerie ; +200 g jambon tranché|viandes"]],"t":"complet","sf":"","sv":"","tm":40},{"n":"Poutine au poulet","e":"","m":["poulet","fromage en grains"],"nw":true,"i":[[900.0,"g","poulet effiloché cuit","viandes"],[1200.0,"g","frites surgelées","surgelés"],[500.0,"g","fromage en grains","produits laitiers"],[750.0,"ml","sauce brune","épicerie"]],"s":"Frites four, fromage, poulet, sauce brune.","v":[["Poutine italienne : saucisses italiennes et sauce tomate","-poulet effiloché cuit ; -sauce brune ; +6 un saucisses italiennes|viandes ; +500 ml sauce tomate|épicerie"],["Poutine au porc effiloché","-poulet effiloché cuit ; +900 g porc effiloché cuit|viandes"]],"t":"complet","sf":"","sv":"salade_chou","tm":40},{"n":"Pâtes carbonara au bacon","e":"","m":["bacon","pâtes"],"nw":true,"i":[[700.0,"g","spaghetti","épicerie"],[400.0,"g","bacon","viandes"],[5.0,"un","oeufs","produits laitiers"],[150.0,"g","parmesan","produits laitiers"]],"s":"Bacon croustillant, pâtes, oeufs et parmesan hors feu.","v":[["Carbonara aux petits pois et au jambon","+300 g pois verts surgelés|surgelés ; +200 g jambon tranché|viandes"],["Pâtes au bacon et à la crème, version rapide","+250 ml crème 35%|produits laitiers"]],"t":"pates","sf":"pain_croute","sv":"salade_verte","tm":25},{"n":"Poitrines de poulet farcies jambon et fromage","e":"","m":["poulet","jambon"],"nw":true,"i":[[1200.0,"g","poitrines de poulet","viandes"],[200.0,"g","jambon tranché","viandes"],[200.0,"g","fromage suisse","produits laitiers"],[120.0,"g","chapelure","épicerie"]],"s":"Ouvrir, farcir, paner, 400°F 30 min.","v":[["Poulet cordon-bleu (jambon, suisse, panure)",""],["Poulet farci aux épinards, feta et tomates séchées","-jambon tranché ; -fromage suisse ; +300 g épinards|fruits et légumes ; +200 g feta|produits laitiers ; +100 g tomates séchées|épicerie"]],"t":"viande","sf":"riz_blanc","sv":"brocoli","tm":45},{"n":"Boeuf Stroganov","e":"","m":["boeuf","steak"],"nw":true,"i":[[1000.0,"g","boeuf en lanières (surlonge)","viandes"],[400.0,"g","champignons","fruits et légumes"],[250.0,"ml","crème sure","produits laitiers"],[500.0,"ml","bouillon de boeuf","épicerie"]],"s":"Saisir, champignons, bouillon, crème sure.","v":[["Version au poulet","-boeuf en lanières ; +1000 g poitrines de poulet|viandes"],["Version mijoteuse : 4 h à basse température, nouilles ou riz",""]],"t":"viande","sf":"nouilles_oeufs","sv":"haricots_verts","tm":35},{"n":"Poisson pané (fish & chips)","e":"","m":["poisson","filets de poisson"],"nw":true,"i":[[1000.0,"g","filets de poisson (aiglefin ou morue)","poissonnerie"],[200.0,"g","chapelure panko","épicerie"],[2.0,"un","oeufs","produits laitiers"],[1.0,"un","sauce tartare","épicerie"]],"s":"Paner, four 425°F 18 min.","v":[["Fish tacos au chou et à la sauce chipotle","-sauce tartare ; +12 un tortillas|boulangerie ; +125 ml sauce chipotle|épicerie ; @f=aucun"],["Sandwich au poisson pané avec sauce tartare","+6 un pains à hamburger|boulangerie"]],"t":"sandwich","sf":"frites_four","sv":"salade_chou","tm":25},{"n":"Souvlaki de poulet, pitas","e":"","m":["poulet","pain pita"],"nw":true,"i":[[1000.0,"g","poitrines de poulet","viandes"],[12.0,"un","pitas","boulangerie"],[500.0,"ml","tzatziki","produits laitiers"]],"s":"Mariner citron/origan, BBQ 12 min.","v":[["Souvlaki de porc","-poitrines de poulet ; +1000 g filet de porc|viandes"],["Assiette grecque : riz, salade, tzatziki, pita grillé","@f=riz_blanc"]],"t":"viande","sf":"grelots","sv":"salade_grecque","tm":35},{"n":"Sloppy joes","e":"","m":["boeuf haché","pain à hamburger"],"nw":true,"i":[[1000.0,"g","boeuf haché","viandes"],[6.0,"un","pains à hamburger","boulangerie"],[500.0,"ml","sauce sloppy joe","épicerie"],[1.0,"un","oignon","fruits et légumes"]],"s":"Boeuf à la sauce 15 min, servir en pain.","v":[["Sloppy joes au poulet haché","-boeuf haché ; +1000 g poulet haché|viandes"],["Sloppy joes servis sur patates au four","-pains à hamburger ; @f=patates_four"]],"t":"sandwich","sf":"patates_douces","sv":"crudites","tm":30},{"n":"Steak haché sauce brune","e":"","m":["boeuf haché","pommes de terre"],"nw":true,"i":[[1000.0,"g","boeuf haché","viandes"],[500.0,"ml","sauce brune","épicerie"],[1.0,"un","oignon","fruits et légumes"]],"s":"Galettes poêlées, sauce brune, patates pilées.","v":[["Steak haché aux oignons caramélisés et fromage","+3 un oignons|fruits et légumes ; +200 g fromage suisse|produits laitiers"],["Boulettes de boeuf à la sauce brune sur nouilles aux oeufs","-pommes de terre ; +500 g nouilles aux oeufs|épicerie"]],"t":"viande","sf":"patates_pilees","sv":"pois","tm":35},{"n":"Pâtes à la saucisse italienne","e":"","m":["saucisse","pâtes","sauce tomate"],"nw":true,"t":"pates","sf":"pain_ail","sv":"salade_verte","tm":25,"i":[[700,"g","saucisses italiennes","viandes"],[600,"g","penne","épicerie"],[750,"ml","sauce tomate","épicerie"],[1,"un","oignon","fruits et légumes"],[100,"g","parmesan râpé","produits laitiers"]],"s":"Cuire les saucisses coupées en rondelles avec l'oignon, ajouter la sauce tomate, mijoter 10 min. Cuire les pâtes, mélanger, parsemer de parmesan.","v":[["Rosée : ajouter de la crème à la sauce","+250 ml crème 15%|produits laitiers"],["Piquante : saucisses fortes et flocons de piment","+5 ml flocons de piment|garde-manger"]]},{"n":"Riz sauté au poulet et aux oeufs","e":"","m":["poulet","oeufs"],"nw":true,"t":"riz","sf":"","sv":"","tm":25,"i":[[900,"g","poitrines de poulet","viandes"],[500,"g","riz","épicerie"],[4,"un","oeufs","produits laitiers"],[600,"g","légumes mélangés surgelés","surgelés"],[60,"ml","sauce soya","épicerie"],[3,"un","oignons verts","fruits et légumes"]],"s":"Cuire le riz (idéalement la veille). Saisir le poulet en dés, ajouter les légumes, pousser sur le côté et brouiller les oeufs. Ajouter le riz et la sauce soya, chauffer 5 min.","v":[["Épicé : sriracha","+30 ml sauce sriracha|épicerie"],["À l'ananas : ananas en dés","+1 un ananas en conserve|épicerie"]]},{"n":"Filets de porc moutarde et miel","e":"","m":["porc","filet de porc"],"nw":true,"t":"viande","sf":"patates_pilees","sv":"haricots_verts","tm":30,"i":[[1000,"g","filets de porc","viandes"],[60,"ml","moutarde de Dijon","épicerie"],[60,"ml","miel","épicerie"],[30,"ml","huile végétale","garde-manger"]],"s":"Saisir les filets dans l'huile, napper du mélange moutarde-miel, finir au four 400°F 15 min. Laisser reposer 5 min et trancher.","v":[["À l'érable : sirop d'érable au lieu du miel","-miel ; +60 ml sirop d'érable|épicerie"]]},{"n":"Déjeuner pour souper","e":"","m":["oeufs","bacon"],"nw":true,"t":"complet","sf":"","sv":"salade_fruits","tm":20,"i":[[12,"un","oeufs","produits laitiers"],[400,"g","bacon","viandes"],[800,"g","pommes de terre rissolées surgelées","surgelés"],[6,"un","muffins anglais","boulangerie"]],"s":"Cuire le bacon et les patates rissolées au four (425°F, 20 min). Oeufs brouillés ou miroir. Servir sur muffins anglais grillés.","v":[["Saucisses : saucisses déjeuner au lieu du bacon","-bacon ; +600 g saucisses déjeuner|viandes"]]},{"n":"Pizzas naan","e":"","m":["pepperoni","mozzarella","naan"],"nw":true,"t":"sandwich","sf":"","sv":"crudites","tm":20,"i":[[6,"un","naan","boulangerie"],[500,"ml","sauce à pizza","épicerie"],[400,"g","mozzarella râpée","produits laitiers"],[200,"g","pepperoni","viandes"]],"s":"Garnir les naans de sauce, fromage et garnitures. Four 425°F 8 à 10 min.","v":[["Hawaïenne : jambon et ananas","-pepperoni ; +250 g jambon en dés|viandes ; +1 un ananas en conserve|épicerie"]]},{"n":"Sandwichs grillés jambon-fromage et soupe tomate","e":"","m":["jambon","cheddar","soupe"],"nw":true,"t":"complet","sf":"","sv":"crudites","tm":15,"i":[[12,"un","tranches de pain","boulangerie"],[400,"g","jambon tranché","viandes"],[400,"g","cheddar tranché","produits laitiers"],[3,"un","boîtes de soupe aux tomates (540 ml)","épicerie"],[60,"g","beurre","produits laitiers"]],"s":"Beurrer le pain, monter les sandwichs et griller à la poêle. Réchauffer la soupe avec un peu de lait.","v":[["Pizza grilled cheese : sauce à pizza et pepperoni","+250 ml sauce à pizza|épicerie ; +150 g pepperoni|viandes ; -jambon tranché"]]}];
+const SIDES = [{"id":"frites_four","n":"Frites au four","sl":"f","ty":["viande","sandwich"],"i":[[1200,"g","frites surgelées","surgelés"]]},{"id":"frites_maison","n":"Frites maison au four","sl":"f","ty":["viande","sandwich"],"i":[[1500,"g","pommes de terre","fruits et légumes"],[30,"ml","huile d'olive","garde-manger"]]},{"id":"patates_pilees","n":"Patates pilées","sl":"f","ty":["viande"],"i":[[1500,"g","pommes de terre","fruits et légumes"],[60,"g","beurre","produits laitiers"],[125,"ml","lait","produits laitiers"]]},{"id":"patates_four","n":"Patates au four","sl":"f","ty":["viande"],"i":[[6,"un","grosses pommes de terre","fruits et légumes"]]},{"id":"grelots","n":"Patates grelots rôties","sl":"f","ty":["viande","complet"],"i":[[1200,"g","patates grelots","fruits et légumes"],[30,"ml","huile d'olive","garde-manger"]]},{"id":"wedges","n":"Potato wedges","sl":"f","ty":["viande","sandwich"],"i":[[1500,"g","pommes de terre","fruits et légumes"],[30,"ml","huile d'olive","garde-manger"]]},{"id":"patates_douces","n":"Frites de patates douces","sl":"f","ty":["viande","sandwich"],"i":[[1500,"g","patates douces","fruits et légumes"],[30,"ml","huile d'olive","garde-manger"]]},{"id":"pelures","n":"Pelures de pommes de terre gratinées","sl":"f","ty":["viande"],"i":[[6,"un","grosses pommes de terre","fruits et légumes"],[250,"g","cheddar râpé","produits laitiers"],[150,"g","bacon","viandes"],[250,"ml","crème sure","produits laitiers"]]},{"id":"gratin","n":"Gratin dauphinois","sl":"f","ty":["viande"],"i":[[1500,"g","pommes de terre","fruits et légumes"],[500,"ml","crème 35%","produits laitiers"],[200,"g","gruyère ou cheddar râpé","produits laitiers"]]},{"id":"chips_maison","n":"Chips maison au four","sl":"f","ty":["viande","sandwich"],"i":[[1000,"g","pommes de terre","fruits et légumes"],[30,"ml","huile d'olive","garde-manger"]]},{"id":"chips","n":"Chips","sl":"f","ty":["sandwich"],"i":[[1,"un","sac de chips","épicerie"]]},{"id":"riz_blanc","n":"Riz vapeur","sl":"f","ty":["viande","riz","mex"],"i":[[300,"g","riz","épicerie"]]},{"id":"riz_frit","n":"Riz frit","sl":"f","ty":["viande","riz"],"i":[[300,"g","riz","épicerie"],[3,"un","oeufs","produits laitiers"],[200,"g","pois et carottes surgelés","surgelés"],[60,"ml","sauce soya","épicerie"]]},{"id":"naan","n":"Pain naan","sl":"f","ty":["viande","riz"],"i":[[6,"un","pains naan","boulangerie"]]},{"id":"pain_ail","n":"Pain à l'ail","sl":"f","ty":["pates","viande","complet"],"i":[[1,"un","pain à l'ail","surgelés"]]},{"id":"pain_croute","n":"Pain croûté","sl":"f","ty":["pates","complet","viande"],"i":[[1,"un","pain croûté","boulangerie"]]},{"id":"gnocchi_poeles","n":"Gnocchi poêlés au beurre","sl":"f","ty":["pates"],"i":[[1000,"g","gnocchi","épicerie"],[30,"g","beurre","produits laitiers"]]},{"id":"nouilles_oeufs","n":"Nouilles aux oeufs","sl":"f","ty":["pates"],"i":[[500,"g","nouilles aux oeufs","épicerie"]]},{"id":"egg_rolls","n":"Egg rolls","sl":"f","ty":["riz"],"i":[[12,"un","egg rolls surgelés","surgelés"],[1,"un","sauce aux prunes","épicerie"]]},{"id":"nachos","n":"Nachos gratinés","sl":"f","ty":["mex"],"i":[[400,"g","croustilles tortillas","épicerie"],[300,"g","fromage mexicain râpé","produits laitiers"],[250,"ml","salsa","épicerie"],[250,"ml","crème sure","produits laitiers"]]},{"id":"salade_verte","n":"Salade verte","sl":"v","ty":["all"],"i":[[1,"un","sac de laitue mélangée","fruits et légumes"]]},{"id":"salade_chou","n":"Salade de chou","sl":"v","ty":["all"],"i":[[1,"un","sac de salade de chou","fruits et légumes"]]},{"id":"salade_cesar","n":"Salade César","sl":"v","ty":["all"],"i":[[1,"un","sac de salade César","fruits et légumes"]]},{"id":"salade_concombre","n":"Salade de concombre","sl":"v","ty":["all"],"i":[[2,"un","concombres","fruits et légumes"]]},{"id":"crudites","n":"Crudités et trempette","sl":"v","ty":["all"],"i":[[1,"un","sac de carottes mini","fruits et légumes"],[1,"un","concombre","fruits et légumes"],[1,"un","trempette ranch","produits laitiers"]]},{"id":"brocoli","n":"Brocoli vapeur","sl":"v","ty":["viande","riz","pates","complet"],"i":[[600,"g","brocoli","fruits et légumes"]]},{"id":"haricots_verts","n":"Haricots verts","sl":"v","ty":["viande","pates","complet"],"i":[[500,"g","haricots verts","fruits et légumes"]]},{"id":"mais","n":"Maïs","sl":"v","ty":["viande","sandwich","complet"],"i":[[1,"un","sac de maïs surgelé","surgelés"]]},{"id":"pois","n":"Pois verts","sl":"v","ty":["viande","sandwich","complet"],"i":[[1,"un","sac de pois verts","surgelés"]]},{"id":"carottes","n":"Carottes rôties","sl":"v","ty":["viande","complet"],"i":[[500,"g","carottes","fruits et légumes"]]},{"id":"legumes_sautes","n":"Légumes sautés","sl":"v","ty":["viande","riz","mex"],"i":[[2,"un","poivrons","fruits et légumes"],[300,"g","brocoli","fruits et légumes"],[2,"un","carottes","fruits et légumes"]]},{"id":"salade_mexicaine","n":"Salade mexicaine","sl":"v","ty":["mex","viande"],"i":[[1,"un","laitue romaine","fruits et légumes"],[3,"un","tomates","fruits et légumes"],[1,"un","boîte de maïs","épicerie"],[1,"un","boîte de haricots noirs","épicerie"]]},{"id":"salade_grecque","n":"Salade grecque","sl":"v","ty":["viande","mex"],"i":[[2,"un","concombres","fruits et légumes"],[3,"un","tomates","fruits et légumes"],[200,"g","feta","produits laitiers"]]},{"id":"salade_fruits","n":"Salade de fruits","sl":"v","ty":["sandwich","complet"],"i":[[1,"un","barquette de fruits","fruits et légumes"]]},{"id":"guacamole","n":"Guacamole","sl":"v","ty":["mex"],"i":[[2,"un","avocats","fruits et légumes"]]}];
+const BUNDLED = {"maj": "2026-10-10", "valide": "2026-10-15", "source": "Flipp, code postal G0M1Y0", "items": [{"s": "Maxi", "t": "Boeuf haché mi-maigre, 450 g", "p": "3,95 $"}, {"s": "Maxi", "t": "Poitrines de poulet", "p": "4,99 $"}, {"s": "Maxi", "t": "Saucisses de porc Dalisa, 900 g", "p": "6,99 $"}, {"s": "Maxi", "t": "Filet de porc, 2 un.", "p": "3,75 $"}, {"s": "Maxi", "t": "Porc haché maigre, 450 g", "p": "4,00 $"}, {"s": "Maxi", "t": "Saucisses de porc géantes Marcangelo, 500/675 g", "p": "7,99 $"}, {"s": "Maxi", "t": "Saucisses fumées de poulet, 450 g", "p": "2,50 $"}, {"s": "Maxi", "t": "Sauces pour pâtes ou à pizza Classico", "p": "2,97 $"}, {"s": "Maxi", "t": "Sauce pour pâtes PC", "p": "3,00 $"}, {"s": "Maxi", "t": "Fromage en barre 400 g ou râpé 300/320 g P'tit Québec", "p": "4,97 $"}, {"s": "Maxi", "t": "Fromage mozzarella Saputo, 1 kg", "p": "12,00 $"}, {"s": "Maxi", "t": "Pommes de terre russet, rouges ou jaunes, sac de 10 lb", "p": "4,99 $"}, {"s": "IGA", "t": "Côtes levées de dos de porc frais Olymel", "p": "4,99 $"}, {"s": "IGA", "t": "Filets de porc frais assaisonnés Ricardo", "p": "9,99 $"}, {"s": "IGA", "t": "Pâtes alimentaires Catelli", "p": "1,66 $"}, {"s": "IGA", "t": "Fromage râpé Compliments", "p": "6,49 $"}, {"s": "IGA", "t": "Pommes de terre grelots Little Potato Company", "p": "6,99 $"}, {"s": "IGA", "t": "Pommes de terre frites surgelées McCain", "p": "1,99 $"}, {"s": "IGA", "t": "Hauts de cuisse de poulet frais désossés", "p": "8,99 $"}, {"s": "IGA", "t": "Ailes, bouchées, croquettes, filets ou pilons de poulet surgelés Benny & Co.", "p": "13,99 $"}, {"s": "Inter-Marché", "t": "Boeuf haché maigre", "p": "7,99 $"}, {"s": "Inter-Marché", "t": "Saucisses de porc fraîches PC, 500 g", "p": "5,99 $"}, {"s": "Inter-Marché", "t": "Fromage en bloc 400 g ou râpé 325 g Sans Nom", "p": "4,99 $"}, {"s": "Inter-Marché", "t": "Pâtes alimentaires Italpasta, 900 g", "p": "5,00 $"}, {"s": "Walmart", "t": "Paquet de 3 poitrines de poulet désossées Prime Maple Leaf", "p": "6,34 $"}, {"s": "Walmart", "t": "Brochettes de porc ou de poulet Marcangelo", "p": "9,97 $"}, {"s": "Walmart", "t": "Porc haché maigre Olymel", "p": "5,27 $"}, {"s": "Walmart", "t": "Côtes de dos de porc entièrement cuites Great Value", "p": "8,46 $"}, {"s": "Walmart", "t": "Fromage Cracker Barrel en bloc 400 g ou râpé 320 g", "p": "5,98 $"}, {"s": "Walmart", "t": "Pommes de terre tout usage ou oignons jaunes", "p": "3,94 $"}]};
+
+/* ---------- utilitaires ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe');
+const keyOf = (name,u) => norm(name).replace(/\([^)]*\)/g,'').replace(/\b([a-z']{3,}?)s\b/g,'$1').replace(/\s+(rape|romaine)\b/g,'').replace(/\s+/g,' ').trim()+'|'+u;
+function fq(q,u){
+  if(u==='g') return q>=1000 ? (+(q/1000).toFixed(2))+' kg' : Math.round(q)+' g';
+  if(u==='ml') return q>=1000 ? (+(q/1000).toFixed(2))+' L' : Math.round(q)+' ml';
+  return '× '+(Math.round(q*10)/10);
+}
+const RAYONS = ['fruits et légumes','viandes','poissonnerie','produits laitiers','boulangerie','surgelés','épicerie','garde-manger'];
+const GENERIC = ['fromage','pates','pain','riz','nouilles','pizza','sauce','tomate'];
+const PACKS = [
+  [/oeuf/,12,'un'],[/^beurre/,454,'g'],[/^bacon/,400,'g'],[/^lait/,2000,'ml'],
+  [/^creme/,500,'ml'],[/ricotta/,475,'g'],[/^sauce tomate/,680,'ml'],[/^farine/,2500,'g'],
+  [/^(spaghetti|macaroni|fettuccine|rotini|penne|nouilles)/,450,'g'],[/^riz/,900,'g'],
+  [/mozzarella|cheddar|fromage mexicain|fromage rape/,320,'g'],[/^parmesan/,200,'g'],
+  [/^mayonnaise/,445,'ml'],[/^yogourt/,1,'un']
+];
+const packOf = (name,u) => { const n = norm(name); for(const [re,s,uu] of PACKS) if(uu===u && re.test(n)) return s; return 0; };
+
+/* ---------- état et mémoire ---------- */
+const DEFAULT = () => ({
+  v:3, maj:0, help:false, cp:'G0M1Y0', relay:'', dates:{plan:'', shop:''}, auto:null,
+  stock:{}, hist:[], custom:[], varx:{},
+  menu:{date:'', items:[], chk:{}, extra:{}, achete:false, snap:null, useup:{}},
+  spec:[],
+  p:{n:6, cool:4, varMode:'alt', jours:5, souper:5, restes:2, maxTm:35, nLong:1}, sidesx:[], tmx:{}, fav:{},
+  maison:'sel, poivre, huile d\'olive, huile végétale, cannelle, clou de girofle, poudre de chili, ketchup, moutarde, sauce soya',
+  snacks:[
+    {name:'Sac de noix mélangées (portion individuelle)', q:1, u:'un', r:'épicerie'},
+    {name:'Fromage Amooza (portion individuelle)', q:2, u:'un', r:'produits laitiers'},
+    {name:'Yogourt (pot individuel)', q:2, u:'un', r:'produits laitiers'},
+    {name:'Brownie Fibre 1 (ou similaire)', q:1, u:'un', r:'épicerie'}
+  ],
+  ess:[
+    {name:'Oeufs (déjeuners)', q:12, u:'un', r:'produits laitiers', c:'Déjeuners'},
+    {name:'Bacon (déjeuners)', q:400, u:'g', r:'viandes', c:'Déjeuners'},
+    {name:'Céréales (boîte)', q:3, u:'un', r:'épicerie', c:'Déjeuners'},
+    {name:'Gruau instantané (boîte)', q:1, u:'un', r:'épicerie', c:'Déjeuners'},
+    {name:'Bagels ou muffins anglais', q:1, u:'un', r:'boulangerie', c:'Déjeuners'},
+    {name:"Beurre d'arachide", q:1, u:'un', r:'épicerie', c:'Déjeuners'},
+    {name:'Confiture', q:1, u:'un', r:'épicerie', c:'Déjeuners'},
+    {name:'Yogourt (déjeuners, garçons et conjointe)', q:8, u:'un', r:'produits laitiers', c:'Déjeuners'},
+    {name:'Café', q:1, u:'un', r:'épicerie', c:'Déjeuners'},
+    {name:'Pain tranché (lunchs et rôties)', q:3, u:'un', r:'boulangerie', c:'Lunchs'},
+    {name:'Jambon tranché (lunchs)', q:300, u:'g', r:'viandes', c:'Lunchs'},
+    {name:'Fromage tranché (paquet)', q:1, u:'un', r:'produits laitiers', c:'Lunchs'},
+    {name:'Compotes de pommes (emballage)', q:1, u:'un', r:'épicerie', c:'Lunchs'},
+    {name:'Boîtes de jus (lunchs)', q:1, u:'un', r:'épicerie', c:'Lunchs'},
+    {name:'Pommes (sac)', q:1, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Bananes (régime)', q:1, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Clémentines ou oranges (sac)', q:1, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Raisins', q:1, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Carottes mini (collation)', q:1, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Concombres (collation)', q:2, u:'un', r:'fruits et légumes', c:'Fruits et légumes'},
+    {name:'Croustilles (gros sac)', q:3, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Barres tendres (boîte)', q:2, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Biscuits', q:2, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Maïs soufflé', q:1, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Craquelins', q:1, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Fromage ficelle (sac)', q:1, u:'un', r:'produits laitiers', c:'Collations famille'},
+    {name:'Mélange de noix (famille)', q:1, u:'un', r:'épicerie', c:'Collations famille'},
+    {name:'Lait 2%', q:6000, u:'ml', r:'produits laitiers', c:'Boissons'},
+    {name:'Boisson gazeuse (caisse de 12)', q:2, u:'un', r:'épicerie', c:'Boissons'},
+    {name:'Jus (2 L)', q:2, u:'un', r:'épicerie', c:'Boissons'},
+    {name:'Eau pétillante (caisse)', q:1, u:'un', r:'épicerie', c:'Boissons'}
+  ]
+});
+let S = DEFAULT();
+let docRef = null, saveTimer = null, saving = false, dirty = false;
+
+function mergeState(o){ const d = DEFAULT(); const m = Object.assign(d, o); if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(d.p, o.p||{}); m.menu.useup = m.menu.useup||{}; if(!m.dates) m.dates = {plan:'', shop:''}; return m; }
+function loadLocal(){ try{ const j = localStorage.getItem('menu_epicerie_v1'); if(j) S = mergeState(JSON.parse(j)); }catch(e){} }
+function save(){
+  S.maj = Date.now();
+  try{ localStorage.setItem('menu_epicerie_v1', JSON.stringify(S)); setSync('Enregistré sur cet appareil'); }
+  catch(e){ setSync("Enregistrement impossible : mode privé ou stockage plein"); }
+}
+function setSync(t){ const e = $('#sync'); if(e) e.textContent = t; }
+
+/* ---------- recettes : variantes et ingrédients ---------- */
+const allRecipes = () => RECIPES.concat(S.custom);
+const byName = n => allRecipes().find(r => r.n === n);
+const vars = r => (r.v||[]).concat(S.varx[r.n]||[]);
+const vname = t => { const i = t.indexOf(':'); const n = (i>0 ? t.slice(0,i) : t).trim(); return n.length>34 ? n.slice(0,32)+'…' : n; };
+const vdesc = t => { const i = t.indexOf(':'); return i>0 ? t.slice(i+1).trim() : ''; };
+function effective(r, idx){
+  const map = new Map();
+  const add = (q,u,name,rayon) => { const k = keyOf(name,u); const o = map.get(k); if(o) o.q += q; else map.set(k,{q,u,name,rayon:rayon||'épicerie'}); };
+  r.i.forEach(([q,u,name,rayon]) => add(q,u,name,rayon));
+  const d = idx>0 && vars(r)[idx-1] ? vars(r)[idx-1][1] : '';
+  d.split(';').map(x => x.trim()).filter(Boolean).forEach(tok => {
+    if(tok[0]==='+'){
+      const m = tok.match(/^\+\s*([\d.,]+)\s+(g|ml|un)\s+(.*?)(?:\|(.*))?$/);
+      if(m) add(parseFloat(m[1].replace(',','.')), m[2], m[3].trim(), (m[4]||'').trim());
+    } else if(tok[0]==='-'){
+      const m = tok.match(/^-\s*([\d.,]+)\s+(g|ml|un)\s+(.*)$/);
+      if(m){ const k = keyOf(m[3].trim(), m[2]); const o = map.get(k); if(o){ o.q -= parseFloat(m[1].replace(',','.')); if(o.q<=0) map.delete(k); } }
+      else { const w = norm(tok.slice(1).trim()); for(const [k,o] of [...map]) if(norm(o.name).includes(w)) map.delete(k); }
+    }
+  });
+  return [...map.entries()].map(([k,o]) => ({k,...o}));
+}
+
+
+/* ---------- accompagnements, portions, stock ---------- */
+const TYPES = {viande:'Viande',pates:'Pâtes',riz:'Riz et nouilles',sandwich:'Sandwich et burger',mex:'Mexicain',complet:'Repas complet'};
+const ALLS = () => SIDES.concat(S.sidesx||[], stockSides());
+const sideById = id => id ? ALLS().find(s => s.id===id) : null;
+const sidesOf = sl => ALLS().filter(s => s.sl===sl);
+const compat = (s, r) => s.ty.includes('all') || s.ty.includes(r.t||'viande');
+const totalPortions = () => (S.p.souper||4) + (S.p.restes||0);
+const portionsOf = it => it.pt || totalPortions();
+function variantSides(r, idx){
+  const o = {}; const d = idx>0 && vars(r)[idx-1] ? vars(r)[idx-1][1] : '';
+  d.split(';').forEach(tok => { const m = tok.trim().match(/^@([fv])=(\S+)$/); if(m) o[m[1]] = m[2]==='aucun' ? '' : m[2]; });
+  return o;
+}
+const recentSides = () => new Set(S.hist.slice(-2).flatMap(w => w.items.flatMap(x => [x.sf,x.sv])).filter(Boolean));
+const usedSides = items => new Set(items.flatMap(x => [x.sf,x.sv]).filter(Boolean));
+const sigWords = name => norm(name).replace(/\([^)]*\)/g,'').split(/[^a-z]+/).filter(w => w.length>=4 && !['fromage','sauce','pate','pates','pain','tranche','portion','individuel','boite','paquet','emballage','hache','moulu','rape','frais','fume','cuit','gros','grand','mini'].includes(w)).map(w => w.replace(/s$/,''));
+function stockKey(n){
+  if(S.stock[n.k]) return n.k;
+  const nw = sigWords(n.name); if(!nw.length) return null;
+  for(const [k,o] of Object.entries(S.stock)){ if(o.u!==n.u) continue; if(sigWords(o.name).some(w => nw.includes(w))) return k; }
+  return null;
+}
+function stockSideBonus(s){ return s.i.some(([q,u,n]) => !isMaison(n) && stockKey({k:keyOf(n,u),name:n,u})) ? .5 : 0; }
+function chooseSide(r, slot, used){
+  const def = (slot==='f' ? r.sf : r.sv) ?? '';
+  if(def==='') return '';
+  const rec = recentSides();
+  const c = sidesOf(slot).filter(s => compat(s,r) || s.id===def); if(!c.length) return '';
+  let best='', bs=-9;
+  c.forEach(s => { const sc = Math.random() + (s.id===def?.5:0) + (s.id.startsWith('st:')?.9:(s.id[0]==='x'?.3:0)) - (used.has(s.id)?1.5:0) - (rec.has(s.id)?.6:0) + stockSideBonus(s); if(sc>bs){ bs=sc; best=s.id; } });
+  return best;
+}
+function mkItem(r, used, v){
+  const ov = variantSides(r, v);
+  const it = {r:r.n, v, ovr:{f:'f' in ov, v:'v' in ov}, fm:1, vm:1};
+  it.sf = 'f' in ov ? ov.f : chooseSide(r,'f',used);
+  it.sv = 'v' in ov ? ov.v : chooseSide(r,'v',used);
+  return it;
+}
+function scaleQ(q,u,f){
+  if(Math.abs(f-1)<1e-9) return q;
+  const x = q*f;
+  if(u==='un') return x>=3 ? Math.ceil(x-1e-9) : Math.ceil(x*2-1e-9)/2;
+  return x>=100 ? Math.round(x/10)*10 : Math.round(x/5)*5 || 5;
+}
+function fullIngs(it, all){
+  const r = byName(it.r); if(!r) return [];
+  const f = portionsOf(it)/6, ex = it.ex||[];
+  const map = new Map();
+  const put = (g, fac) => { if(fac<=0) return; const q = scaleQ(g.q,g.u,fac); const o = map.get(g.k); if(o) o.q += q; else map.set(g.k,{k:g.k,q,u:g.u,name:g.name,rayon:g.rayon}); };
+  effective(r,it.v).forEach(g => { const out = ex.includes(g.k); if(out && !all) return; if(out){ map.set('x'+g.k,{k:g.k,q:scaleQ(g.q,g.u,f),u:g.u,name:g.name,rayon:g.rayon,x:true}); return; } put(g,f); });
+  [['sf','fm'],['sv','vm']].forEach(([key,mk]) => { const s = sideById(it[key]); if(!s) return;
+    s.i.forEach(([q,u,n,ra]) => { const g = {k:keyOf(n,u),q,u,name:n,rayon:ra}; const out = ex.includes(g.k); if(out && !all) return; if(out){ map.set('x'+g.k,{...g,q:scaleQ(q,u,f),x:true}); return; } put(g, f*(it[mk]??1)); }); });
+  return [...map.values()];
+}
+function stockOf(it){ const out = []; fullIngs(it).forEach(g => { if(isMaison(g.name)) return; const sk = stockKey(g); if(sk){ const nm = S.stock[sk].name; if(!out.includes(nm)) out.push(nm); } }); return out.slice(0,3); }
+function aUtiliser(){
+  if(!Object.keys(S.stock).length) return [];
+  const used = new Set(); needs().forEach(n => { if(n.src.includes('Restes à manger')) return; const sk = stockKey(n); if(sk) used.add(sk); });
+  return Object.entries(S.stock).filter(([k,o]) => !isMaison(o.name) && !used.has(k)).map(([k,o]) => ({k,o,eat:!!S.menu.useup[k]}));
+}
+function ideesPour(o){
+  const w = sigWords(o.name); if(!w.length) return [];
+  const rec = recentSet(), inM = new Set(S.menu.items.map(x => x.r));
+  return allRecipes().filter(r => !rec.has(r.n) && !inM.has(r.n) && effective(r,0).some(g => g.u===o.u && sigWords(g.name).some(x => w.includes(x)))).slice(0,3);
+}
+function sidesLabel(r){ const nm = id => id==='auto' ? 'varié' : (sideById(id)||{}).n; return `${TYPES[r.t||'viande']||''} · Par défaut : ${[nm(r.sf||''),nm(r.sv||'')].filter(Boolean).join(' + ') || 'aucun accompagnement'} (change chaque semaine)`; }
+const qt = (q,u) => fq(q,u).replace('× ','');
+function sideBlock(it,i){
+  const r = byName(it.r), dis = S.menu.achete ? 'disabled' : '';
+  const QO = [[0,'Aucun'],[0.5,'Moins'],[1,'Normal'],[1.5,'Plus'],[2,'Double']];
+  const col = slot => { const key = slot==='f'?'sf':'sv', mk = slot==='f'?'fm':'vm', all = sidesOf(slot);
+    const ok = all.filter(s => compat(s,r)), other = all.filter(s => !compat(s,r)); const cur = it[key]||'';
+    const op = s => `<option value="${esc(s.id)}" ${cur===s.id?'selected':''}>${esc(s.n)}</option>`;
+    return `<div><label class="f">${slot==='f'?'Féculent':'Légume / salade'}<select data-a="sidesel" data-i="${i}" data-s="${slot}" ${dis}><option value="">Aucun</option><optgroup label="Recommandés">${ok.map(op).join('')}</optgroup><optgroup label="Autres">${other.map(op).join('')}</optgroup></select></label>
+      <label class="f">Quantité<select data-a="sideq" data-i="${i}" data-s="${slot}" ${dis}>${QO.map(([v,n]) => `<option value="${v}" ${(it[mk]??1)===v?'selected':''}>${n}</option>`).join('')}</select></label></div>`; };
+  const pt = portionsOf(it);
+  return `<div class="grid2">${col('f')}${col('v')}</div>
+    <label class="f">Portions de ce repas (souper + restes)<select data-a="portions" data-i="${i}" ${dis}>${[4,5,6,7,8,9,10,12].concat([pt]).filter((v,j,a) => a.indexOf(v)===j).sort((a,b)=>a-b).map(v => `<option ${v===pt?'selected':''}>${v}</option>`).join('')}</select></label>`;
+}
+function renderUtiliser(){
+  const L = aUtiliser(); if(!L.length) return '';
+  return `<div class="card"><b>À utiliser cette semaine</b><p class="small">Ce qui est à la maison et que le menu n'utilise pas encore. « Je le mange » le compte comme collation ou lunch (retiré du stock à la fin de la semaine). Ou ajoute un plat qui l'utilise.</p>`
+   + L.map(x => { const id = ideesPour(x.o); return `<div class="item" style="flex-wrap:wrap"><span class="t"><b>${esc(x.o.name)}</b><small>${fq(x.o.q,x.o.u)} en stock</small></span><button class="btn s ${x.eat?'p':''}" data-a="eat" data-k="${esc(x.k)}">${x.eat?'Au menu ✓':'Je le mange'}</button>${id.length?`<div class="chips" style="width:100%">${id.map(r => `<button class="btn s" data-a="addrec" data-r="${esc(r.n)}">+ ${esc(r.n)}</button>`).join('')}</div>`:''}</div>`; }).join('') + `</div>`;
+}
+
+/* ---------- textes à envoyer ---------- */
+function ligneSouper(it,i){
+  const r = byName(it.r); const vs = vars(r), v = it.v>0 && vs[it.v-1] ? vname(vs[it.v-1][0]) : '';
+  const sf = sideById(it.sf), sv = sideById(it.sv);
+  const ac = [sf && sf.n + ((it.fm??1)===1?'':' ('+({0:'aucun',0.5:'moins',1.5:'plus',2:'double'}[it.fm]||'')+')'), sv && sv.n + ((it.vm??1)===1?'':' ('+({0:'aucun',0.5:'moins',1.5:'plus',2:'double'}[it.vm]||'')+')')].filter(Boolean).join(' + ');
+  return {r, v, ac, titre:`${i+1}. ${r.n}${v ? ' - '+v : ''}`};
+}
+function texteMenu(){
+  const m = S.menu; if(!m.items.length) return '';
+  const L = [`MENU DULAC - semaine du ${m.date}`, ''];
+  m.items.forEach((it,i) => { const x = ligneSouper(it,i); L.push(x.titre); if(x.ac) L.push('   Avec : '+x.ac); L.push(`   ${portionsOf(it)} portions`); dealsOf(x.r).slice(0,2).forEach(d => L.push(`   Spécial : ${d.hit.t} (${d.hit.s})`)); });
+  return L.join('\n');
+}
+function texteRecette(it, i){
+  const x = ligneSouper(it, i||0), r = x.r; const L = [x.titre.replace(/^\d+\. /,''), `Pour ${portionsOf(it)} portions (souper + restes du dîner) · environ ${tmOf(r)} min`];
+  const vt = it.v>0 && vars(r)[it.v-1] ? vdesc(vars(r)[it.v-1][0]) : ''; if(vt) L.push('Version : '+vt);
+  if(x.ac) L.push('Accompagnements : '+x.ac);
+  L.push('', 'INGRÉDIENTS');
+  fullIngs(it).sort((a,b) => a.name.localeCompare(b.name,'fr')).forEach(g => L.push(`- ${g.name} : ${qt(g.q,g.u)}`));
+  if(r.s) L.push('', 'PRÉPARATION', r.s);
+  return L.join('\n');
+}
+function texteDetail(){
+  const m = S.menu; if(!m.items.length) return '';
+  return `MENU DULAC DÉTAILLÉ - semaine du ${m.date}\n\n` + m.items.map((it,i) => texteRecette(it,i)).join('\n\n------------------------------\n\n');
+}
+function texteListe(){
+  const m = S.menu; if(!m.items.length) return '';
+  const {rows, verify} = buyList();
+  const L = [`LISTE D'ÉPICERIE - Menu Dulac - ${m.date}`];
+  RAYONS.forEach(ray => {
+    const list = rows.filter(r => r.rayon===ray).sort((a,b) => a.name.localeCompare(b.name,'fr')); if(!list.length) return;
+    L.push('', ray.toUpperCase());
+    list.forEach(r => { const d = dealFor(r.name); L.push(`[ ] ${r.name} : ${qt(r.buy,r.u)}${d ? '   (spécial '+d.s+')' : ''}`); });
+  });
+  if(verify.length) L.push('', 'À VÉRIFIER À LA MAISON', verify.map(v => v.name).sort().join(', '));
+  return L.join('\n');
+}
+
+const CATS = [['','Sans catégorie'],['f','Féculent (accompagnement)'],['v','Légume ou salade (accompagnement)'],['p','Viande ou protéine'],['c','Collation ou lunch'],['o','Autre']];
+function stockSides(){
+  return Object.entries(S.stock).filter(([k,o]) => o.cat==='f' || o.cat==='v').map(([k,o]) => ({id:'st:'+k, n:o.name+' (à la maison)', sl:o.cat, ty:['all'], i:[[Math.max(.5, Math.round(o.q/Math.max(.5,totalPortions()/6)*10)/10), o.u, o.name, o.rayon||'épicerie']]}));
+}
+const tmOf = r => (S.tmx||{})[r.n] ?? r.tm ?? 30;
+const isLong = r => tmOf(r) > (S.p.maxTm||35);
+
+/* ---------- besoins, stock, achats ---------- */
+const maisonList = () => S.maison.split(',').map(x => norm(x).trim()).filter(Boolean);
+const isMaison = name => { const n = norm(name); return maisonList().some(m => n.includes(m)); };
+
+function needs(){
+  const map = new Map();
+  const add = (q,u,name,rayon,src) => { const k = keyOf(name,u); const o = map.get(k); if(o){ o.q += q; if(src && !o.src.includes(src)) o.src.push(src); } else map.set(k,{k,q,u,name,rayon:rayon||'épicerie',src:src?[src]:[]}); };
+  S.menu.items.forEach(it => { fullIngs(it).forEach(g => add(g.q,g.u,g.name,g.rayon,it.r)); });
+  Object.keys(S.menu.useup||{}).forEach(k => { const st = S.stock[k]; if(st) add(st.q, st.u, st.name, st.rayon, 'Restes à manger'); });
+  if(S.menu.items.length){
+    S.snacks.forEach(s => add(s.q*S.p.jours, s.u, s.name, s.r, 'Collations'));
+    S.ess.forEach(s => add(s.q, s.u, s.name, s.r, s.c || 'Essentiels'));
+  }
+  return [...map.values()];
+}
+function buyList(){
+  const rows = [], covered = [], verify = [];
+  const avail = {}; Object.entries(S.stock).forEach(([k,o]) => avail[k] = o.q);
+  for(const n of needs()){
+    const ex = S.menu.extra[n.k];
+    if(isMaison(n.name)){ verify.push({...n, manque: !!ex}); if(!ex) continue; }
+    const sk = ex ? null : stockKey(n); const st = sk ? avail[sk] : 0;
+    if(sk) avail[sk] = Math.max(0, avail[sk] - n.q);
+    let def = ex ? n.q : n.q - st;
+    if(def <= 0.001){ covered.push({...n, st}); continue; }
+    const p = packOf(n.name,n.u);
+    const buy = p ? Math.ceil(def/p - 1e-9)*p : def;
+    rows.push({...n, st, buy});
+  }
+  return {rows, covered, verify};
+}
+const isoToday = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const shopISO = () => S.dates.shop || isoToday();
+const fmtDate = iso => { try{ return new Date(iso+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'}); }catch(e){ return iso; } };
+const nice = t => { t = String(t).trim(); return t.charAt(0).toUpperCase()+t.slice(1).toLowerCase(); };
+function autoItems(){ if(!S.auto) return []; const d = shopISO(); return S.auto.items.filter(i => (!i.vt || i.vt >= d) && (!i.vf || i.vf <= d)); }
+const allSpec = () => S.spec.concat(autoItems().map(i => ({s:i.s, t:nice(i.t)+(i.p?' · '+i.p:'')})));
+function dealFor(name){
+  const words = norm(name).split(/[^a-z]+/).filter(w => w.length>=5 && !GENERIC.includes(w));
+  for(const s of allSpec()){ const t = norm(s.t); if(words.some(w => t.includes(w))) return s; }
+  return null;
+}
+
+/* ---------- génération du menu ---------- */
+const protein = r => { const t = norm(r.n+' '+r.m.join(' ')); for(const p of ['poulet','boeuf','porc','saucisse','jambon','bacon','poisson','bologne']) if(t.includes(p)) return p; return 'autre'; };
+const isPasta = r => /spaghetti|pates|lasagne|tortellini|mac n|gnocchi|carbonara|nouilles|ramen/.test(norm(r.n));
+const uses = n => S.hist.reduce((c,w) => c + w.items.filter(x => x.r===n).length, 0);
+function recentSet(){ return new Set(S.hist.slice(-S.p.cool).flatMap(w => w.items.map(x => x.r))); }
+function pickVar(r){
+  const nv = vars(r).length;
+  if(S.p.varMode==='base' || !nv) return 0;
+  const u = uses(r.n);
+  return S.p.varMode==='var' ? 1 + (u % nv) : u % (nv+1);
+}
+function dealsOf(r){
+  const out = [];
+  for(const mot of r.m){ const nm = norm(mot); const hit = allSpec().find(s => norm(s.t).includes(nm)); if(hit) out.push({mot,hit}); }
+  return out;
+}
+function score(r){
+  let pts = 0;
+  dealsOf(r).forEach(d => pts += GENERIC.includes(norm(d.mot)) ? .3 : 1.2);
+  pts += .35 * [...r.e].filter(c => c!==' ' && c!=='️').length / 2;
+  let hit = 0; effective(r,0).forEach(g => { if(isMaison(g.name)) return; const sk = stockKey(g); if(sk) hit += Math.min(1, S.stock[sk].q/Math.max(g.q,1)); });
+  pts += Math.min(hit,5)*.4;
+  if(S.fav[r.n]) pts += .8;
+  if(tmOf(r)<=25) pts += .25;
+  return pts + Math.random()*.9;
+}
+
+function fill(n, keep){
+  const items = keep.slice();
+  const banned = new Set([...recentSet(), ...items.map(x => x.r)]);
+  const cands = allRecipes().filter(r => !banned.has(r.n)).map(r => ({r, s:score(r)})).sort((a,b) => b.s-a.s);
+  const prot = {}; let pastas = 0, longs = 0; const maxLong = S.p.nLong ?? 1; const taken = new Set();
+  const note = r => { const p = protein(r); prot[p] = (prot[p]||0)+1; pastas += isPasta(r)?1:0; longs += isLong(r)?1:0; };
+  items.forEach(it => { const r = byName(it.r); if(r) note(r); });
+  const pass = lvl => { for(const {r} of cands){
+    if(items.length>=n) break; if(taken.has(r.n)) continue;
+    const p = protein(r);
+    if(lvl===0){ if(p!=='autre' && (prot[p]||0)>=2) continue; if(isPasta(r) && pastas>=2) continue; }
+    if(lvl<2 && isLong(r) && longs>=maxLong) continue;
+    items.push(mkItem(r, usedSides(items), pickVar(r))); taken.add(r.n); note(r);
+  } };
+  pass(0); if(items.length<n) pass(1); if(items.length<n) pass(2);
+  return items;
+}
+function today(){ return fmtDate(shopISO()); }
+function genMenu(){
+  const keep = (S.menu.items||[]).filter(x => x.lock);
+  S.menu = {date:today(), items:fill(S.p.n, keep), chk:{}, extra:{}, achete:false, snap:null, useup:S.menu.useup||{}};
+  save(); render();
+}
+
+
+/* ---------- recherche des spéciaux (Flipp) ---------- */
+const FLIPP = 'https://backflipp.wishabi.com/flipp';
+const MARCHANDS = [[/maxi/,'Maxi'],[/\biga\b/,'IGA'],[/walmart/,'Walmart'],[/inter-?march/,'Inter-Marché']];
+const marchand = n => { const t = norm(n||''); const m = MARCHANDS.find(x => x[0].test(t)); return m ? m[1] : ''; };
+async function jget(u){
+  const url = S.relay ? S.relay + encodeURIComponent(u) : u;
+  const r = await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+}
+function motsCles(){
+  const set = new Set();
+  allRecipes().forEach(r => r.m.forEach(m => { const n = norm(m); if(n.length>=4 && !GENERIC.includes(n)) set.add(n); }));
+  ['lait','oeuf','pain','cereale','jus','croustille','gazeuse','yogourt','beurre','fromage','pates','pizza','bacon','banane','pomme','clementine','biscuit','cafe','jambon','creme','farine','riz','raisin','carotte','concombre','tomate','oignon','laitue','poulet','boeuf','porc','saucisse','frite','poisson','saumon','tortilla','sauce'].forEach(x => set.add(x));
+  return [...set];
+}
+const dayOf = v => v ? String(v).slice(0,10) : '';
+async function chercherSpeciaux(ignorerDate){
+  const st = $('#sp_status'), btn = $('#sp_go');
+  const say = t => { if(st) st.textContent = t; };
+  btn.disabled = true;
+  const cp = (S.cp||'G0M1Y0').replace(/\s/g,'').toUpperCase();
+  const shop = shopISO();
+  try{
+    say('Recherche des circulaires…');
+    const fl = await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${cp}`);
+    const all = (Array.isArray(fl) ? fl : (fl.flyers||[])).filter(f => marchand(f.merchant));
+    if(!all.length){ say("Aucune circulaire Maxi, IGA, Walmart ou Inter-Marché trouvée pour ce code postal."); btn.disabled = false; return; }
+    const mid = new Date(shop+'T12:00:00').getTime();
+    let flyers = all.filter(f => new Date(f.valid_from).getTime() <= mid && new Date(f.valid_to).getTime() >= mid);
+    let note = '';
+    if(!flyers.length){
+      if(!ignorerDate){
+        const fin = all.map(f => dayOf(f.valid_to)).sort().pop();
+        say(`Aucune circulaire ne couvre le ${fmtDate(shop)} pour l'instant (les circulaires actuelles finissent le ${fin}). Les nouvelles sortent le jeudi : relance la recherche plus tard. `);
+        const a = document.createElement('button'); a.className = 'btn s'; a.textContent = 'Utiliser les circulaires actuelles quand même'; a.onclick = () => chercherSpeciaux(true); st.appendChild(a);
+        btn.disabled = false; return;
+      }
+      const now = Date.now(); flyers = all.filter(f => new Date(f.valid_from).getTime() <= now && new Date(f.valid_to).getTime() >= now);
+      note = ' (circulaires actuelles, possiblement expirées à la date de l\'épicerie)';
+    }
+    flyers = flyers.slice(0,12);
+    const mots = motsCles(); const items = []; let ok = 0;
+    for(let k = 0; k < flyers.length; k++){
+      const f = flyers[k]; say(`Lecture de la circulaire ${k+1} / ${flyers.length} : ${marchand(f.merchant)}…`);
+      try{
+        const d = await jget(`${FLIPP}/flyers/${f.id}?locale=fr-ca&postal_code=${cp}`);
+        (Array.isArray(d) ? d : (d.items||[])).forEach(it => {
+          const nn = norm(it.name||''); if(!nn || !mots.some(w => nn.includes(w))) return;
+          const pr = parseFloat(it.price||it.current_price); 
+          items.push({s:marchand(f.merchant), t:it.name, p:isFinite(pr)&&pr>0 ? pr.toFixed(2).replace('.',',')+' $' : '', vf:dayOf(it.valid_from||f.valid_from), vt:dayOf(it.valid_to||f.valid_to), d:it.discount||0});
+        });
+        ok++;
+      }catch(e){}
+    }
+    if(!ok){ say('Les circulaires ont été trouvées, mais leur contenu est illisible. Utilise le collage manuel ci-dessous.'); btn.disabled = false; return; }
+    const uniq = new Map(); items.forEach(i => uniq.set(i.s+'|'+norm(i.t), i));
+    const list = [...uniq.values()].sort((a,b) => (b.d||0)-(a.d||0)).slice(0,250);
+    S.auto = {items:list, maj:isoToday(), src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
+    save(); render();
+    const s2 = $('#sp_status'); if(s2) s2.textContent = `${list.length} spéciaux retenus dans ${ok} circulaires (${S.auto.src}) pour le ${fmtDate(shop)}${note}.`;
+  }catch(e){
+    say(e instanceof TypeError
+      ? "Le navigateur a bloqué la requête vers Flipp ou tu es hors ligne. Ouvre « Si la recherche ne fonctionne pas » : colle le texte d'une circulaire, ou ajoute un relais."
+      : 'La recherche a échoué ('+(e.message||'erreur')+'). Réessaie plus tard ou colle le texte de la circulaire.');
+    btn.disabled = false; return;
+  }
+}
+
+/* ---------- exports : texte, CSV, sauvegarde ---------- */
+let DL = false;
+function semaineCsv(){
+  const {rows} = buyList();
+  const q = x => '"'+String(x).replace(/"/g,'""')+'"';
+  const out = ['Rayon,Article,Quantité,Spécial,Pour'];
+  RAYONS.forEach(ray => rows.filter(r => r.rayon===ray).sort((a,b)=>a.name.localeCompare(b.name,'fr')).forEach(r => {
+    const d = dealFor(r.name); out.push([ray, r.name, fq(r.buy,r.u).replace('× ',''), d ? d.s+' '+d.t : '', r.src.join(' / ')].map(q).join(','));
+  }));
+  return '﻿'+out.join('\n');
+}
+function sauver(filename, data, msgId){
+  const msg = $(msgId);
+  try{
+    const blob = new Blob([data], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    msg.textContent = 'Fichier créé : cherche-le dans les téléchargements.';
+  }catch(e){ msg.textContent = "Impossible de créer le fichier ici. Utilise « Copier »."; }
+}
+async function copier(text, msgId){
+  const msg = $(msgId);
+  try{ await navigator.clipboard.writeText(text); msg.textContent = 'Copié. Colle-le dans un message.'; }
+  catch(e){
+    msg.innerHTML = 'Copie bloquée : sélectionne le texte ci-dessous.<textarea readonly id="exout" style="margin-top:6px;min-height:160px"></textarea>';
+    const ta = $('#exout'); ta.value = text; ta.focus(); ta.select();
+  }
+}
+async function partager(text, msgId){ copier(text, msgId); }
+function exportCard(idp){
+  return `<div class="card"><b>Copier pour envoyer</b><p class="small">Rien n'est synchronisé : touche Copier, puis colle le texte dans un message à ta conjointe (ou dans Notes). Choisis ce que tu veux copier.</p>
+    ${[['l',"Liste d'épicerie seulement"],['m','Menu de la semaine (plats et accompagnements)'],['d','Menu détaillé (ingrédients et préparation)']].map(([c,l]) => `<div class="item"><span class="t"><b>${l}</b></span><div class="acts"><button class="btn s p" id="${idp}${c}_copy">Copier</button></div></div>`).join('')}
+    ${DL?`<div class="acts"><button class="btn s" id="${idp}l_csv">Liste en .csv (Numbers, Excel)</button></div>`:''}
+    <div class="small" id="${idp}msg"></div></div>`;
+}
+
+/* ---------- rendu : menu ---------- */
+function renderMenu(){
+  const el = $('#tab-menu'); const m = S.menu; let h = S.help ? '' : `<div class="card" style="border-color:var(--accent)"><b>Première utilisation ?</b><p class="small">Lis l'aide : elle explique pas à pas comment installer l'application, préparer la première semaine et copier la liste.</p><div class="acts"><button class="btn p" id="help_open">Ouvrir l'aide</button><button class="btn" id="help_hide">Plus tard</button></div></div>`;
+  h += renderSpec();
+  if(!m.items.length){
+    h += `<div class="empty"><b>Pas de menu pour cette semaine.</b><br>${Object.keys(S.stock).length?`Le menu favorisera les plats qui utilisent les ${Object.keys(S.stock).length} articles en stock. `:''}Cherche les spéciaux à la date de ton épicerie, puis crée ${S.p.n} soupers. Les plats servis depuis ${S.p.cool} semaines sont écartés.</div>`;
+    h += `<button class="btn p" id="gen">Créer le menu</button>`;
+  } else {
+    const {rows} = buyList();
+    h += `<div class="sum"><div><b>${m.items.length}</b><span>soupers</span></div><div><b>${rows.length}</b><span>articles à acheter</span></div><div><b>${allSpec().length}</b><span>spéciaux repérés</span></div></div>`;
+    h += `<p class="small">Épicerie : ${esc(m.date)}. Chaque repas est calculé pour ${totalPortions()} portions : ${S.p.souper} au souper, ${S.p.restes} au dîner du lendemain. Change-les dans Réglages ou repas par repas.</p>`;
+    if(m.achete) h += `<p class="note">Épicerie faite : le menu est verrouillé. Termine la semaine pour en préparer une autre.</p>`;
+    m.items.forEach((it,i) => {
+      const r = byName(it.r); if(!r) return;
+      const vs = vars(r);
+      const vtxt = it.v>0 && vs[it.v-1] ? vs[it.v-1][0] : '';
+      const deals = dealsOf(r);
+      const ing = fullIngs(it,true).sort((a,b) => a.name.localeCompare(b.name,'fr'));
+      const sto = stockOf(it);
+      h += `<article class="card"><h3>${esc(r.n)}${r.nw?' <span class="chip n">nouveau</span>':''}${S.fav[r.n]?' <span class="chip n">favori</span>':''}</h3>
+        <p class="small">⏱ environ ${tmOf(r)} min${isLong(r)?' · plutôt pour un congé ou la fin de semaine':''}</p>
+        ${sideBlock(it,i)}
+        ${vs.length?`<div class="seg" role="group" aria-label="Version">${['Normale'].concat(vs.map(x=>vname(x[0]))).map((nm,j)=>`<button class="${j===it.v?'on':''}" data-a="setv" data-i="${i}" data-v="${j}" ${m.achete?'disabled':''}>${esc(nm)}</button>`).join('')}</div>`:''}
+        ${vtxt && vdesc(vtxt) ? `<p class="var">${esc(vdesc(vtxt))}</p>`:''}
+        ${deals.length?`<div class="chips">${deals.map(d=>`<span class="chip">${esc(d.mot)} · ${esc(d.hit.t.slice(0,90))}${d.hit.s?' ('+esc(d.hit.s)+')':''}</span>`).join('')}</div>`:''}
+        ${sto.length?`<div class="chips"><span class="chip st">À la maison : ${esc(sto.join(', '))}</span></div>`:''}
+        <details><summary>Recette et ingrédients (modifiables)</summary>
+          <p class="small">Retire un ingrédient dont vous ne voulez pas (un légume, par exemple) : il sort de la liste d'épicerie.</p>
+          <ul class="ing">${ing.map(g=>`<li style="${g.x?'opacity:.55;text-decoration:line-through':''}"><span>${esc(g.name)}</span><span>${fq(g.q,g.u)} <a href="#" data-a="exing" data-i="${i}" data-k="${esc(g.k)}" style="margin-left:8px;text-decoration:none">${g.x?'remettre':'retirer'}</a></span></li>`).join('')}</ul>
+          <p class="steps">${esc(r.s)}</p>
+
+        </details>
+        <div class="acts">
+          <button class="btn s ${it.lock?'p':''}" data-a="lock" data-i="${i}" ${m.achete?'disabled':''}>${it.lock?'Gardé':'Garder'}</button>
+          <button class="btn s" data-a="swap" data-i="${i}" ${m.achete?'disabled':''}>Autre plat</button>
+          <button class="btn s" data-a="reroll" data-i="${i}" ${m.achete?'disabled':''}>Autres accompagnements</button>
+          <button class="btn s" data-a="rshare" data-i="${i}">Copier</button>
+          <button class="btn s d" data-a="rm" data-i="${i}" ${m.achete?'disabled':''}>Retirer</button>
+        </div><div class="small" id="rmsg_${i}"></div></article>`;
+    });
+    h += renderUtiliser();
+    const dispo = allRecipes().filter(r => !m.items.some(x => x.r===r.n)).sort((a,b)=>a.n.localeCompare(b.n,'fr'));
+    h += `<div class="card"><b>Ajouter un plat</b><p class="small">Choisis un plat de la banque, ou <a href="#" data-a="gorec">crée une nouvelle recette</a>.</p><div class="grid2" style="grid-template-columns:1fr auto"><select id="addsel" aria-label="Plat à ajouter">${dispo.map(r=>`<option value="${esc(r.n)}">${esc(r.n)}</option>`).join('')}</select><button class="btn s" id="addbtn" ${m.achete?'disabled':''}>Ajouter</button></div></div>`;
+    h += `<div class="acts"><button class="btn" id="gen" ${m.achete?'disabled':''}>Refaire le menu (garde les plats « Gardé »)</button></div>`;
+    h += `<div class="card" style="border-color:var(--accent)"><b>Menu terminé ?</b><p class="small">Change les versions, les accompagnements, les quantités et retire les ingrédients dont vous ne voulez pas. La liste d'épicerie se met à jour toute seule.</p><button class="btn p" id="go_liste">Voir la liste d'épicerie</button></div>`;
+    h += exportCard('xm_');
+    h += `<div class="card"><b>Fin de semaine</b><p class="small">Retire du garde-manger ce qui a été utilisé, garde les restes (les oeufs, par exemple) et range les plats dans l'historique pour ne pas les répéter.</p><button class="btn p" id="fin" data-armed="0">Terminer la semaine</button></div>`;
+  }
+  el.innerHTML = h;
+}
+function renderSpec(){
+  const stores = ['Maxi','IGA','Walmart','Intermarché'];
+  const items = autoItems(); const shop = shopISO();
+  const info = S.auto ? `Dernière recherche le ${esc(S.auto.maj)} (${esc(S.auto.src||'Flipp')}). ${items.length} spéciaux valides le ${esc(fmtDate(shop))}.` : "Aucune recherche faite pour l'instant.";
+  return `<div class="card"><b>Dates et spéciaux</b>
+    <div class="grid2"><label class="f">Je planifie le<input type="date" id="d_plan" value="${esc(S.dates.plan||isoToday())}"></label><label class="f">J'achète le<input type="date" id="d_shop" value="${esc(shop)}"></label></div>
+    <p class="small">Les spéciaux retenus sont ceux qui sont valides à la date de l'épicerie. Tu planifies le mardi et tu achètes le jeudi : mets la date du jeudi. Les nouvelles circulaires sortent le jeudi; si elles ne sont pas encore là, relance la recherche plus tard et touche « Refaire le menu ». Les plats « Gardé » restent.</p>
+    <div class="acts"><button class="btn p" id="sp_go">Chercher les spéciaux</button></div>
+    <div class="small" id="sp_status">${info}</div>
+    ${items.length?`<details><summary>Voir les spéciaux (${items.length})</summary>${items.slice(0,150).map(i=>`<div class="item"><span class="t"><b>${esc(nice(i.t))}</b><small>${esc(i.s)}${i.vt?' · jusqu\'au '+esc(i.vt):''}</small></span><span class="q">${esc(i.p||'')}</span></div>`).join('')}</details>`:''}
+    <details><summary>Si la recherche ne fonctionne pas</summary>
+      <label class="f">Code postal<input type="text" id="cp_in" value="${esc(S.cp)}" autocapitalize="characters"></label>
+      <label class="f">Relais (adresse devant le lien, facultatif)<input type="text" id="relay_in" value="${esc(S.relay)}" placeholder="https://…?url="></label>
+      <p class="small">Certains navigateurs bloquent la requête vers Flipp. Dans ce cas, copie le texte d'une circulaire (<a href="https://flipp.com/fr-ca" target="_blank" rel="noopener">Flipp</a>) et colle-le ici.</p>
+      <label class="f">Magasin<select id="spstore">${stores.map(s=>`<option>${s}</option>`).join('')}</select></label>
+      <textarea id="sptxt" placeholder="Poitrines de poulet 4,99 $&#10;Boeuf haché mi-maigre 3,95 $" aria-label="Texte de la circulaire"></textarea>
+      <div class="acts"><button class="btn s p" id="spadd">Ajouter ces spéciaux</button>${S.spec.length?'<button class="btn s d" id="spclr">Vider les ajouts</button>':''}</div>
+      <div id="spmsg" class="small"></div>
+      ${S.spec.length?`<div class="chips">${S.spec.slice(0,60).map((s,i)=>`<span class="chip">${esc(s.t.slice(0,60))} · ${esc(s.s)} <a href="#" data-a="spdel" data-i="${i}" style="color:inherit">×</a></span>`).join('')}</div>`:''}
+    </details>
+  </div>`;
+}
+
+/* ---------- rendu : épicerie ---------- */
+function renderEpicerie(){
+  const el = $('#tab-epicerie'); const m = S.menu;
+  if(!m.items.length){ el.innerHTML = `<div class="empty">Génère d'abord le menu de la semaine. La liste se construit toute seule.</div>`; return; }
+  const {rows, covered, verify} = buyList();
+  let h = '';
+  if(m.achete && m.snap){
+    const got = m.snap.filter(r => r.ok).length;
+    h += `<div class="card"><b>Épicerie faite</b><p class="small">${got} articles ajoutés au garde-manger. ${m.snap.length-got ? (m.snap.length-got)+' pas achetés :':''}</p>${m.snap.filter(r=>!r.ok).map(r=>`<div class="item"><span class="t"><b>${esc(r.name)}</b></span><span class="q">${fq(r.buy,r.u)}</span></div>`).join('')}</div>`;
+    el.innerHTML = h + `<p class="small">Les achats sont dans l'onglet Maison.</p>`; return;
+  }
+  const done = rows.filter(r => m.chk[r.k]).length;
+  h += `<div class="card"><div style="display:flex;justify-content:space-between"><b id="pg-t">${done} / ${rows.length} dans le panier</b><span class="small">une seule épicerie</span></div><div class="bar"><i id="pg-b" style="width:${rows.length?done/rows.length*100:0}%"></i></div></div>`;
+  RAYONS.forEach(ray => {
+    const list = rows.filter(r => r.rayon===ray).sort((a,b) => a.name.localeCompare(b.name,'fr'));
+    if(!list.length) return;
+    h += `<h2 class="rayon">${esc(ray[0].toUpperCase()+ray.slice(1))}<span>${list.length}</span></h2><div class="card" style="padding-block:4px">`;
+    list.forEach(r => {
+      const d = dealFor(r.name);
+      h += `<label class="item ${m.chk[r.k]?'done':''}"><input type="checkbox" data-a="chk" data-k="${esc(r.k)}" ${m.chk[r.k]?'checked':''}>
+        <span class="t"><b>${esc(r.name)}</b>${r.st>0?`<small>Besoin ${fq(r.q,r.u)}, déjà ${fq(r.st,r.u)} à la maison</small>`:''}${d?`<small class="deal">Spécial ${esc(d.s)} : ${esc(d.t.slice(0,90))}</small>`:''}${r.src.length?`<small>${esc(r.src.slice(0,3).join(', '))}${r.src.length>3?'…':''}</small>`:''}</span>
+        <span class="q">${fq(r.buy,r.u)}</span></label>`;
+    });
+    h += `</div>`;
+  });
+  if(verify.length){
+    h += `<h2 class="rayon">Vérifier avant de partir<span>${verify.length}</span></h2><div class="card" style="padding-block:4px"><p class="small">Ces articles sont censés être déjà à la maison. Si l'un manque, touche-le : il passe dans la liste.</p>`;
+    verify.sort((a,b)=>a.name.localeCompare(b.name,'fr')).forEach(v => {
+      h += `<div class="item"><span class="t"><b>${esc(v.name)}</b><small>Pour : ${esc(v.src.slice(0,3).join(', '))}</small></span><button class="btn s ${v.manque?'p':''}" data-a="manque" data-k="${esc(v.k)}">${v.manque?'Ajouté':'Il manque'}</button></div>`;
+    });
+    h += `</div>`;
+  }
+  if(covered.length){
+    h += `<details class="card"><summary>Déjà à la maison (${covered.length})</summary>${covered.sort((a,b)=>a.name.localeCompare(b.name,'fr')).map(c=>`<div class="item"><span class="t"><b>${esc(c.name)}</b></span><span class="q">${fq(c.q,c.u)}</span></div>`).join('')}</details>`;
+  }
+  h += exportCard('xe_');
+  h += `<div class="card"><b>De retour de l'épicerie</b><p class="small">Les articles cochés sont ajoutés au garde-manger. Ce que tu n'as pas utilisé cette semaine reste en stock et sera déduit de la prochaine liste.</p><button class="btn p" id="achete">Épicerie terminée</button></div>`;
+  el.innerHTML = h;
+}
+
+/* ---------- rendu : maison (garde-manger) ---------- */
+let filtre = '';
+function stepOf(u){ return u==='un' ? 1 : 100; }
+function renderMaison(){
+  const el = $('#tab-maison');
+  const items = Object.entries(S.stock).filter(([k,o]) => !filtre || norm(o.name).includes(norm(filtre))).sort((a,b) => a[1].name.localeCompare(b[1].name,'fr'));
+  let h = `<div class="card"><b>Ce qu'il y a à la maison</b><p class="small">Tout ce que tu entres ici compte pour la planification : la prochaine liste le déduit, et le menu favorise les plats qui l'utilisent. Acheté hors liste (du fromage pour un lunch, par exemple) ? Ajoute-le ci-dessous. Tu peux taper une quantité exacte ou utiliser − et +.</p>
+    <input type="text" id="filt" placeholder="Chercher" value="${esc(filtre)}" aria-label="Chercher"></div>`;
+  if(!items.length) h += `<div class="empty">Rien en stock pour l'instant. Après ta première épicerie, les restes apparaissent ici (par exemple 4 oeufs sur 12). Tu peux aussi ajouter ce que tu as déjà.</div>`;
+  else RAYONS.forEach(ray => {
+    const L = items.filter(([k,o]) => (o.rayon||'épicerie')===ray); if(!L.length) return;
+    h += `<h2 class="rayon">${esc(ray[0].toUpperCase()+ray.slice(1))}<span>${L.length}</span></h2><div class="card" style="padding-block:4px">` + L.map(([k,o]) => `<div class="item"><span class="t"><b>${esc(o.name)}</b><small>${fq(o.q,o.u)}</small><select data-a="stcat" data-k="${esc(k)}" aria-label="Catégorie" style="margin-top:4px">${CATS.map(([v,n]) => `<option value="${v}" ${(o.cat||'')===v?'selected':''}>${n}</option>`).join('')}</select>${(o.cat==='f'||o.cat==='v')?`<button class="btn s" data-a="keepside" data-k="${esc(k)}" style="margin-top:4px">Garder comme accompagnement</button>`:''}</span><div class="step"><button data-a="stm" data-k="${esc(k)}" aria-label="Moins">−</button><input type="number" inputmode="decimal" data-a="stq" data-k="${esc(k)}" value="${Math.round(o.q*10)/10}" aria-label="Quantité en ${o.u}" style="width:74px;text-align:center"><span class="small">${o.u}</span><button data-a="stp" data-k="${esc(k)}" aria-label="Plus">+</button></div></div>`).join('') + `</div>`;
+  });
+  const sug = [...new Set(allRecipes().flatMap(r => r.i.map(g => g[2])).concat(S.ess.map(s => s.name)))].sort((a,b)=>a.localeCompare(b,'fr'));
+  h += `<div class="card"><b>Ajouter un article</b><label class="f">Nom<input type="text" id="an" list="dl_ing" placeholder="Fromage cheddar"><datalist id="dl_ing">${sug.map(s => `<option value="${esc(s)}">`).join('')}</datalist></label>
+    <div class="grid2"><label class="f">Quantité<input type="number" inputmode="decimal" id="aq" value="1" min="0"></label><label class="f">Unité<select id="au"><option value="un">unités</option><option value="g">grammes</option><option value="ml">millilitres</option></select></label></div>
+    <label class="f">Rayon<select id="ar">${RAYONS.map(r=>`<option>${r}</option>`).join('')}</select></label>
+    <label class="f">Catégorie<select id="acat">${CATS.map(([v,n]) => `<option value="${v}">${n}</option>`).join('')}</select></label>
+    <p class="small">Féculent ou légume : le menu pourra s'en servir comme accompagnement (par exemple un sac de rouleaux de printemps = féculent). Collation ou lunch : il apparaît dans « À utiliser cette semaine ».</p>
+    <button class="btn p" id="aadd">Ajouter</button><div class="small" id="amsg"></div></div>`;
+  el.innerHTML = h;
+}
+
+
+/* ---------- banque de recettes : ajout de plats et de variantes ---------- */
+const RAY_WORDS = {
+  'viandes':['poulet','boeuf','porc','saucisse','jambon','bacon','dinde','bologne','agneau','steak','cote','pepperoni','salami','bavette','filet mignon'],
+  'poissonnerie':['poisson','saumon','crevette','morue','aiglefin','thon'],
+  'produits laitiers':['lait','creme','fromage','beurre','yogourt','oeuf','mozzarella','cheddar','parmesan','feta','ricotta','babeurre'],
+  'fruits et légumes':['oignon','ail','tomate','laitue','carotte','poivron','brocoli','patate','pomme','concombre','champignon','chou','epinard','avocat','citron','lime','celeri','persil','coriandre','ananas','courgette','mais frais','haricot vert','salade'],
+  'boulangerie':['pain','tortilla','pita','naan','bun','brioche','sous-marin','hamburger','hot-dog'],
+  'surgelés':['surgele','frite','egg roll','pogo','pate a tarte','abaisse'],
+  'garde-manger':['farine','sucre','sel','poivre','epice','cannelle','paprika','cayenne','cumin','origan','huile','fecule','poudre','bicarbonate','cassonade']
+};
+function guessRayon(name){
+  const n = norm(name);
+  for(const [ray,words] of Object.entries(RAY_WORDS)) if(words.some(w => n.includes(w))) return ray;
+  return 'épicerie';
+}
+function parseQty(str){
+  const m = str.trim().match(/^([\d]+(?:[.,]\d+)?)\s*(kg|g|ml|l|un|x|unité|unités)?\s+(.*)$/i);
+  if(!m) return null;
+  let q = parseFloat(m[1].replace(',','.')); let u = (m[2]||'un').toLowerCase(); let rest = m[3].trim();
+  if(u==='kg'){ q*=1000; u='g'; } else if(u==='l'){ q*=1000; u='ml'; } else if(u==='x'||u.startsWith('unit')) u='un';
+  let ray = ''; const bar = rest.indexOf('|'); if(bar>=0){ ray = rest.slice(bar+1).trim(); rest = rest.slice(0,bar).trim(); }
+  if(!RAYONS.includes(ray)) ray = guessRayon(rest);
+  return {q,u,name:rest,ray};
+}
+function parseIngredients(txt){
+  const out = [];
+  txt.split(/\n+/).forEach(l => { l = l.trim().replace(/^[-•*]\s*/,''); if(!l) return; const x = parseQty(l); if(x) out.push([x.q,x.u,x.name,x.ray]); });
+  return out;
+}
+function parseDelta(txt){
+  const parts = [];
+  txt.split(/\n+/).forEach(l => {
+    l = l.trim(); if(!l) return;
+    const sign = l[0]; if(sign!=='+' && sign!=='-') return;
+    const body = l.slice(1).trim();
+    const x = parseQty(body);
+    if(sign==='+' && x) parts.push(`+${x.q} ${x.u} ${x.name}|${x.ray}`);
+    else if(sign==='-') parts.push(x ? `-${x.q} ${x.u} ${x.name}` : `-${body}`);
+  });
+  return parts.join(' ; ');
+}
+let rfiltre = '', openRec = new Set();
+function renderRecettes(){
+  const el = $('#tab-recettes');
+  const list = allRecipes().filter(r => !rfiltre || norm(r.n).includes(norm(rfiltre))).sort((a,b) => a.n.localeCompare(b.n,'fr'));
+  let h = `<details class="card" ${openRec.has('__new')?'open':''} data-rec="__new"><summary>Nouvelle recette</summary>
+    <label class="f">Nom du plat<input type="text" id="nr_n" placeholder="Poulet à la crème"></label>
+    <div class="acts" style="align-items:center"><label><input type="checkbox" id="nr_d"> Les garçons aiment ce plat (il sera choisi plus souvent)</label></div>
+    <label class="f">Type de plat<select id="nr_t">${Object.entries(TYPES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+    <label class="f">Temps total de préparation et cuisson<select id="nr_tm">${[10,15,20,25,30,35,40,45,50,60,75,90,120,150].map(v => `<option value="${v}" ${v===30?'selected':''}>${v} min</option>`).join('')}</select></label>
+    <div class="grid2"><label class="f">Féculent<select id="nr_f"><option value="auto">Auto (varie)</option><option value="">Aucun</option>${sidesOf('f').map(s=>`<option value="${esc(s.id)}">${esc(s.n)}</option>`).join('')}</select></label><label class="f">Légume / salade<select id="nr_v"><option value="auto">Auto (varie)</option><option value="">Aucun</option>${sidesOf('v').map(s=>`<option value="${esc(s.id)}">${esc(s.n)}</option>`).join('')}</select></label></div>
+    <label class="f">Ingrédients pour 6 portions (un par ligne)<textarea id="nr_i" placeholder="900 g poitrines de poulet&#10;500 ml crème 35%&#10;2 oignons&#10;300 g riz"></textarea></label>
+    <label class="f">Mots de la circulaire (virgules, facultatif)<input type="text" id="nr_m" placeholder="poulet, crème"></label>
+    <label class="f">Préparation (facultatif)<textarea id="nr_s2"></textarea></label>
+    <p class="small">Quantité, unité (g, kg, ml, L, ou rien pour des unités), puis le nom. Le rayon est deviné; ajoute « | viandes » à la fin d'une ligne pour le choisir.</p>
+    <div id="nr_msg" class="note"></div>
+    <button class="btn p" id="nr_save">Enregistrer la recette</button></details>`;
+  h += `<details class="card" ${openRec.has('__side')?'open':''} data-rec="__side"><summary>Nouvel accompagnement</summary>
+    <label class="f">Nom<input type="text" id="ns_n" placeholder="Riz aux légumes"></label>
+    <label class="f">Sorte<select id="ns_k"><option value="f">Féculent</option><option value="v">Légume / salade</option></select></label>
+    <label class="f">Ingrédients pour 6 portions (un par ligne)<textarea id="ns_i" placeholder="400 g riz&#10;1 sac de légumes surgelés"></textarea></label>
+    <div id="ns_msg" class="note"></div><button class="btn p" id="ns_save">Enregistrer l'accompagnement</button>
+    ${(S.sidesx||[]).length?`<p class="small">Les tiens : ${S.sidesx.map((s,j)=>`${esc(s.n)} <a href="#" data-a="sdel" data-i="${j}">retirer</a>`).join(' · ')}</p>`:''}</details>`;
+  h += `<input type="text" id="rfilt" placeholder="Chercher dans les ${allRecipes().length} recettes" value="${esc(rfiltre)}" aria-label="Chercher">`;
+  list.forEach(r => {
+    const mine = (S.varx[r.n]||[]), base = (r.v||[]), nv = base.length + mine.length;
+    h += `<details class="card" data-rec="${esc(r.n)}" ${openRec.has(r.n)?'open':''}><summary>${esc(r.n)}${S.fav[r.n]?' (favori)':''}<span class="small" style="margin-left:auto;padding-left:8px">${tmOf(r)} min · ${nv} var.</span></summary>
+      <p class="acc">${esc(sidesLabel(r))}</p>
+      <div class="acts" style="align-items:flex-end"><label class="f" style="flex:1">Temps total<select data-a="tmsel" data-r="${esc(r.n)}">${[10,15,20,25,30,35,40,45,50,60,75,90,120,150].concat([tmOf(r)]).filter((v,j,a) => a.indexOf(v)===j).sort((a,b)=>a-b).map(v => `<option value="${v}" ${tmOf(r)===v?'selected':''}>${v} min</option>`).join('')}</select></label><button class="btn s ${S.fav[r.n]?'p':''}" data-a="fav" data-r="${esc(r.n)}">${S.fav[r.n]?'Favori ✓':'Ajouter aux favoris'}</button></div>
+      <ul class="ing">${r.i.map(g=>`<li><span>${esc(g[2])}</span><span>${fq(g[0],g[1])}</span></li>`).join('')}</ul>
+      ${r.s?`<p class="steps">${esc(r.s)}</p>`:''}
+      <b>Variantes</b>
+      ${nv ? '' : '<p class="small">Aucune pour l\'instant.</p>'}
+      ${base.map(v=>`<p class="small"><b>${esc(vname(v[0]))}</b> ${esc(vdesc(v[0]))}</p>`).join('')}
+      ${mine.map((v,j)=>`<p class="small"><b>${esc(vname(v[0]))}</b> ${esc(vdesc(v[0]))} <a href="#" data-a="vdel" data-r="${esc(r.n)}" data-i="${j}">retirer</a></p>`).join('')}
+      <div class="card" style="background:var(--bg)"><b>Ajouter une variante</b>
+        <label class="f">Nom (ex. : Épicée, Nashville)<input type="text" class="vn_n"></label>
+        <label class="f">Description (facultatif)<input type="text" class="vn_d"></label>
+        <label class="f">Changements aux ingrédients (facultatif)<textarea class="vn_c" placeholder="+ 250 ml babeurre&#10;+ 45 ml sauce piquante&#10;- sauce BBQ"></textarea></label>
+        <button class="btn s p" data-a="vadd" data-r="${esc(r.n)}">Ajouter la variante</button></div>
+      <div class="acts"><button class="btn s" data-a="rshare2" data-r="${esc(r.n)}" data-x="${list.indexOf(r)}">Copier cette recette</button></div><div class="small" id="rm2_${list.indexOf(r)}"></div>
+      ${r.c?`<button class="btn s d" data-a="rdel" data-r="${esc(r.n)}" data-armed="0">Supprimer cette recette</button>`:''}
+    </details>`;
+  });
+  el.innerHTML = h;
+}
+function saveRecette(){
+  const name = $('#nr_n').value.trim(), msg = $('#nr_msg');
+  const ing = parseIngredients($('#nr_i').value);
+  if(!name){ msg.textContent = 'Donne un nom au plat.'; return; }
+  if(allRecipes().some(r => norm(r.n)===norm(name))){ msg.textContent = 'Une recette porte déjà ce nom.'; return; }
+  if(!ing.length){ msg.textContent = 'Ajoute au moins un ingrédient, par exemple « 900 g poitrines de poulet ».'; return; }
+  let mots = $('#nr_m').value.split(',').map(x => x.trim()).filter(Boolean);
+  if(!mots.length) mots = ing.filter(x => x[3]==='viandes' || x[3]==='poissonnerie').map(x => x[2].replace(/\(.*\)/,'').trim().split(/\s+/).slice(-2).join(' '));
+  if(!mots.length) mots = [name.split(/[ ,]+/)[0]];
+  const e = $('#nr_d').checked ? '👿☃️' : '';
+  S.custom.push({n:name, e, m:mots, t:$('#nr_t').value, tm:+$('#nr_tm').value, sf:$('#nr_f').value, sv:$('#nr_v').value, nw:true, c:true, i:ing, s:$('#nr_s2').value.trim(), v:[]});
+  openRec.delete('__new'); openRec.add(name);
+  save(); render();
+}
+function saveSide(){
+  const n = $('#ns_n').value.trim(), msg = $('#ns_msg'), ing = parseIngredients($('#ns_i').value);
+  if(!n || !ing.length){ msg.textContent = 'Donne un nom et au moins un ingrédient.'; return; }
+  S.sidesx = S.sidesx||[]; S.sidesx.push({id:'x'+Date.now().toString(36), n, sl:$('#ns_k').value, ty:['all'], i:ing});
+  openRec.delete('__side'); save(); render();
+}
+function addVariante(btn){
+  const box = btn.closest('details'); const rn = btn.dataset.r;
+  const n = box.querySelector('.vn_n').value.trim(); if(!n) return;
+  const d = box.querySelector('.vn_d').value.trim();
+  const delta = parseDelta(box.querySelector('.vn_c').value);
+  (S.varx[rn] = S.varx[rn] || []).push([d ? n+' : '+d : n, delta]);
+  openRec.add(rn); save(); render();
+}
+
+/* ---------- rendu : réglages ---------- */
+function listEditor(id, arr){
+  return `<div id="${id}">` + arr.map((s,i) => `<div class="grid4" style="margin-bottom:6px"><input type="text" data-l="${id}" data-i="${i}" data-f="name" value="${esc(s.name)}" aria-label="Nom"><input type="number" inputmode="decimal" data-l="${id}" data-i="${i}" data-f="q" value="${s.q}" aria-label="Quantité"><select data-l="${id}" data-i="${i}" data-f="u" aria-label="Unité"><option value="un" ${s.u==='un'?'selected':''}>un</option><option value="g" ${s.u==='g'?'selected':''}>g</option><option value="ml" ${s.u==='ml'?'selected':''}>ml</option></select><button class="btn s d" data-a="ldel" data-l="${id}" data-i="${i}" aria-label="Retirer">×</button></div><select data-l="${id}" data-i="${i}" data-f="r" aria-label="Rayon" style="margin-bottom:10px">${RAYONS.map(r=>`<option ${s.r===r?'selected':''}>${r}</option>`).join('')}</select>`).join('') + `<button class="btn s" data-a="ladd" data-l="${id}">Ajouter une ligne</button></div>`;
+}
+function renderReglages(){
+  const p = S.p;
+  let h = `<div class="card"><b>Menu</b><div class="grid2">
+    <label class="f">Soupers par semaine<select id="p_n">${[3,4,5,6,7].map(n=>`<option ${p.n===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Sans répéter (semaines)<select id="p_cool">${[1,2,3,4,5,6,8].map(n=>`<option ${p.cool===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Variantes<select id="p_var"><option value="alt" ${p.varMode==='alt'?'selected':''}>Alterner avec la base</option><option value="var" ${p.varMode==='var'?'selected':''}>Toujours une variante</option><option value="base" ${p.varMode==='base'?'selected':''}>Recette de base</option></select></label>
+    <label class="f">Portions au souper<select id="p_sou">${[3,4,5,6,7,8].map(n=>`<option ${p.souper===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Portions de restes (dîner du lendemain)<select id="p_res">${[0,1,2,3,4,5].map(n=>`<option ${p.restes===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Temps max. en semaine<select id="p_tm">${[20,30,35,45,60].map(n=>`<option value="${n}" ${p.maxTm===n?'selected':''}>${n} min</option>`).join('')}</select></label>
+    <label class="f">Soupers plus longs (congé, fin de semaine)<select id="p_lg">${[0,1,2,3].map(n=>`<option ${p.nLong===n?'selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="f">Jours de collations<select id="p_j">${[1,2,3,4,5,6,7].map(n=>`<option ${p.jours===n?'selected':''}>${n}</option>`).join('')}</select></label></div></div>
+    <div class="card"><b>Mes collations, par jour</b><p class="small">Multipliées par le nombre de jours, ajoutées à chaque liste.</p>${listEditor('snacks',S.snacks)}</div>
+    <div class="card"><b>Déjeuners, lunchs, collations et boissons</b><p class="small">Tout ce que la famille achète chaque semaine, hors souper. Quantité pour la semaine : si un article dure plus longtemps (confiture, beurre d'arachide), baisse-le à 0 ou ajuste le stock dans Maison.</p>${listEditor('ess',S.ess)}</div>
+    <div class="card"><b>Toujours à la maison</b><p class="small">Séparés par des virgules. Ils ne vont pas dans la liste : ils s'affichent dans « Vérifier avant de partir ».</p><textarea id="maison">${esc(S.maison)}</textarea></div>
+    <div class="card"><b>Historique</b>${S.hist.length ? S.hist.slice().reverse().slice(0,12).map(w=>`<p class="small"><b>${esc(w.date)}</b> : ${w.items.map(x=>esc(x.r)+(x.v?' (variante)':'')).join(', ')}</p>`).join('') : '<p class="small">Aucune semaine terminée pour l\'instant.</p>'}
+    ${S.hist.length?'<button class="btn s d" id="hclr" data-armed="0">Effacer l\'historique</button>':''}</div>
+    <div class="card"><b>Sauvegarde de cet appareil</b><p class="small">Copie les données de CE téléphone (recettes ajoutées, variantes, stock, historique) dans un message à toi-même, pour les restaurer si le navigateur les efface. Ce n'est pas un partage : chaque téléphone garde ses propres données.</p>
+      <div class="acts"><button class="btn s p" id="bk_copy">Copier la sauvegarde</button>${DL?'<button class="btn s" id="bk_file">Enregistrer .json</button>':''}</div>
+      <textarea id="bk_txt" placeholder="Colle ici une sauvegarde" aria-label="Sauvegarde"></textarea>
+      <button class="btn s d" id="bk_imp" data-armed="0">Restaurer cette sauvegarde</button><div class="small" id="bk_msg"></div></div>
+    <div class="card"><b>Tout remettre à zéro</b><p class="small">Efface le menu, le stock et l'historique.</p><button class="btn s d" id="reset" data-armed="0">Réinitialiser</button></div>`;
+  $('#tab-reglages').innerHTML = h;
+}
+
+/* ---------- navigation et rendu global ---------- */
+let tab = 'menu';
+function render(){
+  renderMenu(); renderEpicerie(); renderMaison(); renderRecettes(); renderReglages(); renderAide();
+  ['menu','epicerie','maison','recettes','reglages','aide'].forEach(t => $('#tab-'+t).hidden = t!==tab);
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t===tab));
+  const n = S.menu.items.length && !S.menu.achete ? buyList().rows.filter(r => !S.menu.chk[r.k]).length : 0;
+  const bg = $('#bgl'); bg.hidden = !n; bg.textContent = n;
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; tab = b.dataset.t; render(); window.scrollTo(0,0); });
+
+/* ---------- actions ---------- */
+function arm(btn, label, fn){
+  if(btn.dataset.armed==='1'){ fn(); return; }
+  btn.dataset.armed='1'; const old = btn.textContent; btn.textContent = label;
+  setTimeout(() => { if(btn.isConnected){ btn.dataset.armed='0'; btn.textContent = old; } }, 3500);
+}
+function terminerSemaine(){
+  needs().forEach(n => {
+    if(isMaison(n.name)) return;
+    const sk = stockKey(n); const st = sk ? S.stock[sk] : null; if(!st) return;
+    st.q = Math.max(0, st.q - n.q); if(st.q <= 0.001) delete S.stock[sk];
+  });
+  S.hist.push({date:S.menu.date, items:S.menu.items.map(x => ({r:x.r, v:x.v, sf:x.sf||'', sv:x.sv||''}))});
+  S.hist = S.hist.slice(-26);
+  S.menu = {date:'', items:[], chk:{}, extra:{}, achete:false, snap:null, useup:{}};
+  S.spec = [];
+  save(); tab = 'menu'; render(); window.scrollTo(0,0);
+}
+function epicerieFaite(){
+  const {rows} = buyList();
+  rows.forEach(r => {
+    if(!S.menu.chk[r.k]) return;
+    const o = S.stock[r.k]; if(o) o.q += r.buy; else S.stock[r.k] = {name:r.name, u:r.u, q:r.buy, rayon:r.rayon};
+  });
+  S.menu.snap = rows.map(r => ({name:r.name, u:r.u, buy:r.buy, ok:!!S.menu.chk[r.k]}));
+  S.menu.achete = true; save(); render();
+}
+function ajouterSpeciaux(){
+  const store = $('#spstore').value; const lines = $('#sptxt').value.split(/\n+/).map(x => x.trim()).filter(x => x.length>=4 && x.length<=140);
+  const mots = new Set(allRecipes().flatMap(r => r.m.map(norm)));
+  const keep = lines.filter(l => { const n = norm(l); return [...mots].some(m => m.length>=4 && n.includes(m)); });
+  const known = new Set(S.spec.map(s => s.s+'|'+norm(s.t)));
+  let added = 0;
+  keep.forEach(l => { const k = store+'|'+norm(l); if(!known.has(k)){ S.spec.push({s:store, t:l}); added++; } });
+  S.spec = S.spec.slice(-120);
+  save(); render();
+  const msg = $('#spmsg'); if(msg) msg.textContent = `${added} spéciaux retenus sur ${lines.length} lignes.`;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[id],[data-a]'); if(!t) return;
+  const a = t.dataset.a, id = t.id;
+  if(id==='gen'){ if(S.menu.items.length && t.dataset.armed!=='1'){ arm(t,'Confirmer', ()=>{}); return; } genMenu(); return; }
+  if(id==='addbtn'){ const n = $('#addsel').value; const r = byName(n); if(r){ S.menu.items.push(mkItem(r, usedSides(S.menu.items), pickVar(r))); save(); render(); } return; }
+  if(id==='fin'){ arm(t,'Confirmer : terminer la semaine', terminerSemaine); return; }
+  if(id==='achete'){ epicerieFaite(); return; }
+  if(id==='spadd'){ ajouterSpeciaux(); return; }
+  if(id==='spclr'){ S.spec = []; save(); render(); return; }
+  if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { S = DEFAULT(); save(); render(); }); return; }
+  if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
+  if(id==='help_hide'){ S.help=true; save(); render(); return; }
+  if(id==='help_back'){ tab='menu'; render(); window.scrollTo(0,0); return; }
+  if(id==='sp_go'){ chercherSpeciaux(false); return; }
+  if(id==='nr_save'){ saveRecette(); return; }
+  const mx = id.match(/^(x[me]_)([lmd])_(share|copy|csv)$/);
+  if(mx){ const txt = mx[3]==='csv' ? semaineCsv() : ({l:texteListe,m:texteMenu,d:texteDetail})[mx[2]](); const mid = '#'+mx[1]+'msg';
+    if(mx[3]==='share') partager(txt,mid); else if(mx[3]==='copy') copier(txt,mid); else sauver('liste-dulac.csv',txt,mid); return; }
+  if(id==='ns_save'){ saveSide(); return; }
+  if(id==='go_liste'){ tab='epicerie'; render(); window.scrollTo(0,0); return; }
+  if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg'); return; }
+  if(id==='bk_file'){ sauver('menu-dulac-sauvegarde.json', JSON.stringify(S), '#bk_msg'); return; }
+  if(id==='bk_imp'){ arm(t,'Confirmer : remplacer mes données', () => {
+      try{ const o = JSON.parse($('#bk_txt').value); if(!o || typeof o!=='object' || !o.menu || !o.stock) throw 0; S = mergeState(o); save(); render(); }
+      catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette sauvegarde n'est pas valide."; t.dataset.armed='0'; t.textContent='Restaurer cette sauvegarde'; } }); return; }
+  if(id==='aadd'){
+    const name = $('#an').value.trim(), q = parseFloat($('#aq').value), u = $('#au').value;
+    if(!name || !(q>0)) return;
+    const k = keyOf(name,u); const o = S.stock[k];
+    const cat = $('#acat').value; if(o){ o.q += q; if(cat) o.cat = cat; } else S.stock[k] = {name, u, q, rayon:$('#ar').value, cat};
+    save(); render(); const am = $('#amsg'); if(am) am.textContent = name+' ajouté. La prochaine planification en tient compte.'; return;
+  }
+  if(!a) return;
+  const i = +t.dataset.i;
+  if(a==='swap'){ const keep = S.menu.items.filter((_,j) => j!==i); S.menu.items = fill(S.p.n, keep); save(); render(); }
+  else if(a==='gorec'){ e.preventDefault(); tab='recettes'; openRec.add('__new'); render(); window.scrollTo(0,0); }
+  else if(a==='lock'){ S.menu.items[i].lock = !S.menu.items[i].lock; save(); render(); }
+  else if(a==='setv'){
+    const it = S.menu.items[i], r = byName(it.r), nv = +t.dataset.v, old = it.ovr||{}, ov = variantSides(r,nv), used = usedSides(S.menu.items.filter((_,j) => j!==i));
+    it.v = nv;
+    ['f','v'].forEach(sl => { const key = sl==='f'?'sf':'sv'; if(sl in ov) it[key] = ov[sl]; else if(old[sl]) it[key] = chooseSide(r,sl,used); });
+    it.ovr = {f:'f' in ov, v:'v' in ov}; save(); render(); }
+  else if(a==='reroll'){ const it = S.menu.items[i], r = byName(it.r), used = usedSides(S.menu.items.filter((_,j) => j!==i)); const ov = variantSides(r,it.v);
+    it.sf = 'f' in ov ? ov.f : chooseSide(r,'f',used); used.add(it.sf); it.sv = 'v' in ov ? ov.v : chooseSide(r,'v',used); save(); render(); }
+  else if(a==='exing'){ e.preventDefault(); const it = S.menu.items[i]; it.ex = it.ex||[]; const k = t.dataset.k; const p = it.ex.indexOf(k); if(p>=0) it.ex.splice(p,1); else it.ex.push(k); save(); render(); }
+  else if(a==='rshare'){ partager(texteRecette(S.menu.items[i], i), '#rmsg_'+i); }
+  else if(a==='rshare2'){ const r = byName(t.dataset.r); const fx = x => x==='auto' ? '' : (x||''); partager(texteRecette({r:r.n, v:0, sf:fx(r.sf), sv:fx(r.sv)}, 0), '#rm2_'+t.dataset.x); }
+  else if(a==='eat'){ const k = t.dataset.k; if(S.menu.useup[k]) delete S.menu.useup[k]; else S.menu.useup[k] = true; save(); render(); }
+  else if(a==='addrec'){ const r = byName(t.dataset.r); if(r){ S.menu.items.push(mkItem(r, usedSides(S.menu.items), pickVar(r))); save(); render(); } }
+  else if(a==='keepside'){ const o = S.stock[t.dataset.k]; if(o && !(S.sidesx||[]).some(s => norm(s.n)===norm(o.name))){ (S.sidesx = S.sidesx||[]).push({id:'x'+Date.now().toString(36), n:o.name, sl:o.cat, ty:['all'], i:[[Math.max(1,o.q), o.u, o.name, o.rayon||'épicerie']]}); save(); render(); const am = $('#amsg'); if(am) am.textContent = o.name+' est maintenant un accompagnement permanent (voir Recettes).'; } }
+  else if(a==='fav'){ if(S.fav[t.dataset.r]) delete S.fav[t.dataset.r]; else S.fav[t.dataset.r] = true; openRec.add(t.dataset.r); save(); render(); }
+  else if(a==='sdel'){ e.preventDefault(); S.sidesx.splice(+t.dataset.i,1); save(); render(); }
+  else if(a==='vadd'){ addVariante(t); }
+  else if(a==='vdel'){ e.preventDefault(); S.varx[t.dataset.r].splice(+t.dataset.i,1); save(); render(); }
+  else if(a==='rdel'){ arm(t,'Confirmer', () => { S.custom = S.custom.filter(r => r.n!==t.dataset.r); delete S.varx[t.dataset.r]; openRec.delete(t.dataset.r); save(); render(); }); }
+  else if(a==='rm'){ S.menu.items.splice(i,1); save(); render(); }
+  else if(a==='spdel'){ e.preventDefault(); S.spec.splice(i,1); save(); render(); }
+  else if(a==='manque'){ const k = t.dataset.k; if(S.menu.extra[k]) delete S.menu.extra[k]; else S.menu.extra[k] = true; save(); render(); }
+  else if(a==='stq'){ /* géré au change */ }
+  else if(a==='stp' || a==='stm'){ const o = S.stock[t.dataset.k]; if(!o) return; o.q += (a==='stp'?1:-1)*stepOf(o.u); if(o.q<=0) delete S.stock[t.dataset.k]; save(); render(); }
+  else if(a==='ladd'){ S[t.dataset.l].push({name:'', q:1, u:'un', r:'épicerie'}); save(); renderReglages(); }
+  else if(a==='ldel'){ S[t.dataset.l].splice(i,1); save(); renderReglages(); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if(t.dataset.a==='chk'){
+    if(t.checked) S.menu.chk[t.dataset.k]=true; else delete S.menu.chk[t.dataset.k];
+    const it = t.closest('.item'); if(it) it.classList.toggle('done', t.checked);
+    const rows = buyList().rows, done = rows.filter(r => S.menu.chk[r.k]).length;
+    const pt = $('#pg-t'), pb = $('#pg-b'); if(pt) pt.textContent = `${done} / ${rows.length} dans le panier`; if(pb) pb.style.width = (rows.length?done/rows.length*100:0)+'%';
+    const bg = $('#bgl'); const n = rows.length-done; bg.hidden = !n; bg.textContent = n;
+    save(); return;
+  }
+  if(t.dataset.a==='sidesel'){ const it = S.menu.items[+t.dataset.i]; it[t.dataset.s==='f'?'sf':'sv'] = t.value; it.ovr = Object.assign({}, it.ovr, {[t.dataset.s]:false}); save(); render(); return; }
+  if(t.dataset.a==='stcat'){ const o = S.stock[t.dataset.k]; if(o){ o.cat = t.value; save(); render(); } return; }
+  if(t.dataset.a==='tmsel'){ S.tmx[t.dataset.r] = +t.value; openRec.add(t.dataset.r); save(); render(); return; }
+  if(t.dataset.a==='sideq'){ S.menu.items[+t.dataset.i][t.dataset.s==='f'?'fm':'vm'] = parseFloat(t.value); save(); render(); return; }
+  if(t.dataset.a==='portions'){ S.menu.items[+t.dataset.i].pt = +t.value; save(); render(); return; }
+  if(t.dataset.a==='stq'){ const o = S.stock[t.dataset.k]; const v = parseFloat(String(t.value).replace(',','.')); if(o){ if(v>0) o.q = v; else delete S.stock[t.dataset.k]; save(); render(); } return; }
+  if(t.dataset.l){ const row = S[t.dataset.l][+t.dataset.i]; if(!row) return; const f = t.dataset.f; row[f] = f==='q' ? (parseFloat(t.value)||0) : t.value; save(); return; }
+  if(t.id==='d_plan'){ S.dates.plan = t.value; save(); return; }
+  if(t.id==='d_shop'){ S.dates.shop = t.value; save(); render(); return; }
+  if(t.id==='cp_in'){ S.cp = t.value.trim(); save(); return; }
+  if(t.id==='relay_in'){ S.relay = t.value.trim(); save(); return; }
+  if(t.id==='p_n'){ S.p.n = +t.value; save(); }
+  else if(t.id==='p_cool'){ S.p.cool = +t.value; save(); }
+  else if(t.id==='p_var'){ S.p.varMode = t.value; save(); }
+  else if(t.id==='p_sou'){ S.p.souper = +t.value; save(); render(); }
+  else if(t.id==='p_res'){ S.p.restes = +t.value; save(); render(); }
+  else if(t.id==='p_tm'){ S.p.maxTm = +t.value; save(); }
+  else if(t.id==='p_lg'){ S.p.nLong = +t.value; save(); }
+  else if(t.id==='p_j'){ S.p.jours = +t.value; save(); }
+  else if(t.id==='maison'){ S.maison = t.value; save(); }
+});
+document.addEventListener('toggle', e => { const d = e.target; if(d.dataset && d.dataset.rec){ if(d.open) openRec.add(d.dataset.rec); else openRec.delete(d.dataset.rec); } }, true);
+document.addEventListener('input', e => { if(e.target.id==='rfilt'){ rfiltre = e.target.value; const pos = e.target.selectionStart; renderRecettes(); const f = $('#rfilt'); f.focus(); f.setSelectionRange(pos,pos); return; } });
+document.addEventListener('input', e => { if(e.target.id==='filt'){ filtre = e.target.value; const pos = e.target.selectionStart; renderMaison(); const f = $('#filt'); f.focus(); f.setSelectionRange(pos,pos); } });
+
+
+/* ---------- aide ---------- */
+function renderAide(){
+  const D = (t, body, open) => `<details class="card help" ${open?'open':''}><summary>${t}</summary>${body}</details>`;
+  $('#tab-aide').innerHTML = `<button class="btn" id="help_back">← Retour au menu</button>
+  <div class="card"><b>À quoi sert cette application</b><p>Elle planifie les soupers de la semaine, tient compte des spéciaux des circulaires, produit <b>une seule liste d'épicerie complète</b> (soupers, déjeuners, lunchs, collations, boissons) et se souvient de ce qu'il reste à la maison, pour ne pas racheter ce que vous avez déjà.</p></div>`
+  + D("1. Ouvrir l'application sur l'iPhone (avec Koder)", `<p>L'application est un seul fichier, <b>menu-dulac.html</b>, qui reste sur le téléphone. Elle n'a pas besoin d'internet (sauf pour chercher les spéciaux). Sur iPhone, Fichiers et Safari ne savent pas la faire fonctionner : il faut une application gratuite qui fait tourner les pages web, <b>Koder</b>.</p>
+    <ol><li>Installe <b>Koder</b> depuis l'App Store (gratuit).</li>
+    <li>Enregistre le fichier <b>menu-dulac.html</b> reçu dans Fichiers.</li>
+    <li>Dans Fichiers, touche-le longuement, puis <b>Partager</b> (ou « Copier vers »), puis choisis <b>Koder</b>.</li>
+    <li>Ouvre Koder, touche le fichier, puis le bouton <b>Aperçu</b> (Preview). L'application s'affiche.</li>
+    <li>Les fois suivantes : Koder, le fichier, <b>Aperçu</b>. Ouvre-la <b>toujours de cette façon</b>.</li></ol>
+    <div class="warn"><b>Fais ce test d'abord :</b> dans l'onglet Maison, ajoute un article, ferme complètement Koder, rouvre le fichier avec Aperçu et vérifie que l'article est toujours là. Les données sont liées à cette façon d'ouvrir le fichier : si tu le déplaces, le renommes ou l'ouvres autrement, tu repars à zéro. Copie la sauvegarde (Réglages) de temps en temps.</div>
+    <div class="tip">Chaque personne a son propre fichier et ses propres données. <b>Les téléphones ne se synchronisent pas</b> (voir la section 7).</div>`, true)
+  + D('2. Première utilisation : préparer les réglages', `<ol>
+    <li>Ouvre <b>Réglages</b>. Dans « Menu », choisis le nombre de soupers par semaine, combien de semaines avant de répéter un plat, et le nombre de jours de collations.</li>
+    <li>Dans <b>Mes collations, par jour</b>, mets ce que quelqu'un mange chaque jour (sac de noix, fromages, yogourts, brownie). La quantité est multipliée par le nombre de jours.</li>
+    <li>Dans <b>Déjeuners, lunchs, collations et boissons</b>, vérifie la liste de ce que la famille achète chaque semaine (lait, œufs, céréales, jus, croustilles…). Modifie les quantités, retire ce dont vous n'avez pas besoin, ajoute des lignes et choisis leur rayon. Les quantités de départ sont des estimations pour 4 personnes.</li>
+    <li>Dans <b>Toujours à la maison</b>, garde les articles que vous avez toujours (sel, poivre, huile, ketchup…). Ils n'iront pas dans la liste : ils seront seulement rappelés dans « Vérifier avant de partir ».</li></ol>`)
+  + D("3. L'inventaire : ce qu'il y a à la maison", `<p>L'onglet <b>Maison</b> est la mémoire de l'application. Tout ce qui s'y trouve est <b>déduit de la liste d'épicerie</b> et <b>favorise les plats qui l'utilisent</b> quand le menu est créé.</p>
+    <ul><li><b>Ajouter un article :</b> en bas de Maison, tape le nom (des suggestions apparaissent), la quantité, l'unité et le rayon. Choisis aussi une <b>catégorie</b> : « Féculent » ou « Légume ou salade » en fait un accompagnement possible (un sac de rouleaux de printemps sera jumelé à un plat, et « Garder comme accompagnement » le conserve pour les semaines suivantes). Exemple : tu achètes 300 g de fromage cheddar pour un lunch → tu l'ajoutes. Au prochain menu, les plats avec du cheddar sont avantagés, et le cheddar est déduit de la liste.</li>
+    <li><b>Changer une quantité :</b> tape le nombre exact dans la case, ou utilise − et +. À 0, l'article disparaît.</li>
+    <li><b>« À utiliser cette semaine » (onglet Menu) :</b> liste ce qui est en stock mais que le menu n'utilise pas. « Je le mange » le compte comme collation ou lunch (il est retiré à la fin de la semaine); les boutons « + plat » ajoutent une recette qui l'utilise.</li>
+    <li>Les noms n'ont pas besoin d'être identiques : « Fromage cheddar » en stock couvre « cheddar râpé » dans une recette (même unité).</li></ul>`)
+  + D('4. Faire le menu de la semaine', `<ol>
+    <li>Dans <b>Réglages</b>, vérifie les <b>portions au souper</b> (par défaut 5, avec deux ados) et les <b>portions de restes</b> pour le dîner du lendemain (2); tout est calculé avec ces chiffres. Choisis aussi 6 ou 7 soupers par semaine, le <b>temps maximum en semaine</b> (35 min par défaut) et le nombre de soupers <b>plus longs</b> permis (1 par défaut, pour un congé ou la fin de semaine) : tous les autres soupers sont des recettes rapides. Ensuite, dans l'onglet <b>Menu</b>, règle les deux dates : <b>Je planifie le</b> (le jour où tu fais le plan) et <b>J'achète le</b> (le jour de l'épicerie). Si tu planifies le mardi et fais l'épicerie le jeudi, mets la date du jeudi : les spéciaux retenus seront ceux du jeudi.</li>
+    <li>Touche <b>Chercher les spéciaux</b>. L'application lit les circulaires Maxi, IGA, Walmart et Inter-Marché. Elle garde seulement les articles liés à vos recettes et à vos essentiels. Si les circulaires du jeudi ne sont pas encore sorties, elle te le dit : relance plus tard, ou utilise les circulaires actuelles.</li>
+    <li>Touche <b>Créer le menu</b>. Elle choisit les soupers en favorisant les plats dont les ingrédients sont en spécial ou déjà à la maison, sans répéter les plats récents. Elle limite aussi les pâtes à 2 repas et la même viande à 2 repas.</li>
+    <li>Ajuste chaque plat : <b>Garder</b> le verrouille, <b>Autre plat</b> le remplace, <b>Retirer</b> l'enlève. Sous le nom, choisis le <b>féculent</b> et le <b>légume / salade</b> (l'application en propose de différents d'une semaine à l'autre; <b>Autres accompagnements</b> en tire d'autres) et leur <b>quantité</b> : si personne ne mange le légume, mets « Aucun » ou « Moins » et monte le féculent à « Plus ». Le menu « Portions de ce repas » règle la quantité totale. Les pastilles (Normale, Épicée, Nashville…) changent la <b>version</b> du plat : la liste d'épicerie suit. Dans « Recette et ingrédients », « retirer » enlève un ingrédient précis de la liste. « Recette et ingrédients » montre les quantités et la préparation.</li>
+    <li>Pour ajouter un plat de la banque, utilise « Ajouter un plat ». <b>Refaire le menu</b> remplace tout sauf les plats « Gardé ».</li></ol>
+    <div class="tip">Les recettes d'origine sont écrites pour 6 portions; l'application les ajuste au nombre de portions choisi (souper + restes du lendemain midi). Les œufs, pains et autres unités sont arrondis vers le haut.</div>`)
+  + D('5. Faire l\'épicerie une seule fois', `<ol>
+    <li>Ouvre l'onglet <b>Épicerie</b>. La liste est classée par rayon. Chaque ligne montre la quantité à acheter et, s'il y a lieu, le spécial (magasin et prix) et combien tu as déjà.</li>
+    <li>Regarde la section <b>Vérifier avant de partir</b> : ce sont les articles « toujours à la maison ». Si l'un manque, touche <b>Il manque</b> pour le mettre dans la liste.</li>
+    <li>Coche chaque article en le mettant dans le panier. Le compteur de l'onglet baisse.</li>
+    <li>De retour à la maison, touche <b>Épicerie terminée</b>. Les articles cochés entrent dans la Maison. Le menu est alors verrouillé.</li></ol>
+    <div class="tip">Les prix des spéciaux sont ceux de la circulaire, sans l'unité (par livre, par kg, par paquet). Vérifie le format en magasin.</div>`)
+  + D('6. Terminer la semaine : la mémoire des restes', `<p>Quand la semaine est finie, va dans <b>Menu</b> et touche <b>Terminer la semaine</b> (deux touches pour confirmer). L'application :</p>
+    <ul><li>retire de la Maison ce qui a été utilisé cette semaine;</li><li>garde les restes;</li><li>range les plats dans l'<b>historique</b> pour ne pas les refaire trop vite, et fait alterner les versions d'un plat à chaque retour.</li></ul>
+    <p><b>Exemple :</b> tu achètes 12 œufs et il t'en faut 8. Il en reste 4. La semaine suivante, si le menu en demande 4, il n'y a aucun œuf sur la liste. S'il en faut 6, elle te fait racheter une douzaine.</p>
+    <p>Les articles vendus en emballage (œufs, beurre, bacon, lait, pâtes…) sont arrondis à la taille d'un emballage courant. Si la réalité ne correspond pas (tu as mangé moins que prévu), corrige la quantité dans <b>Maison</b>.</p>`)
+  + D('7. Envoyer une copie à ta conjointe', `<div class="warn"><b>Rien n'est partagé automatiquement.</b> Chaque téléphone garde ses propres données.</div>
+    <p>Dans Menu ou Épicerie, la carte <b>Copier pour envoyer</b> propose trois textes :</p>
+    <ul><li><b>Liste d'épicerie seulement</b>, classée par rayon;</li><li><b>Menu de la semaine</b> : les plats, versions et accompagnements;</li><li><b>Menu détaillé</b> : chaque recette avec ingrédients et préparation.</li></ul>
+    <p>Touche <b>Copier</b>, puis colle le texte dans un message ou dans Notes. Si la copie est bloquée, le texte s'affiche : touche-le longuement pour le sélectionner. Chaque repas (Menu) et chaque recette (Recettes) a aussi son bouton <b>Copier</b>.</p>`)
+  + D('8. Ajouter des recettes et des variantes', `<ul><li>Ouvre l'onglet <b>Recettes</b> puis « Nouvelle recette » (aussi accessible par le lien dans « Ajouter un plat » du Menu).</li>
+    <li>Écris le nom, coche « Les garçons aiment ce plat » au besoin, choisis le <b>type de plat</b> et les accompagnements par défaut (ou « Auto » pour qu'ils varient), et les <b>ingrédients pour 6 portions, un par ligne</b>, par exemple :<br><i>900 g poitrines de poulet<br>500 ml crème 35%<br>2 oignons<br>0,3 kg riz</i><br>Écris la quantité, l'unité (g, kg, ml, L, ou rien pour des unités), puis le nom. Le rayon est deviné; ajoute « | viandes » à la fin d'une ligne pour le choisir.</li>
+    <li>Les « mots de la circulaire » servent à trouver les spéciaux (ex. : poulet, crème). S'ils sont vides, l'application les déduit des viandes.</li>
+    <li><b>Variante :</b> ouvre une recette dans la liste, puis « Ajouter une variante ». Donne un nom (Épicée, Nashville…) et, au besoin, les changements d'ingrédients : une ligne <i>+ 250 ml babeurre</i> pour ajouter, <i>- sauce BBQ</i> pour retirer, <i>- 250 ml crème</i> pour en réduire la quantité.</li>
+    <li><b>Accompagnement :</b> « Nouvel accompagnement » en haut de Recettes (nom, féculent ou légume, ingrédients).</li>
+    <li><b>Temps et favoris :</b> chaque recette a un temps total modifiable (la durée influence le menu) et un bouton « Ajouter aux favoris » : les favoris reviennent plus souvent.</li>
+    <li>Une recette que tu as créée peut être supprimée. Les recettes d'origine, non.</li></ul>`)
+  + D('9. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Vérifie que le téléphone est en ligne et que le <b>code postal</b> est le bon (Menu → « Si la recherche ne fonctionne pas »).</li>
+    <li>Certains navigateurs bloquent la requête vers Flipp. Dans ce cas, ouvre <a href="https://flipp.com/fr-ca" target="_blank" rel="noopener">Flipp</a>, copie le texte de la circulaire, colle-le dans la zone prévue, choisis le magasin et touche <b>Ajouter ces spéciaux</b>. Seules les lignes liées à tes recettes sont gardées.</li>
+    <li>Sans spéciaux, tout fonctionne : le menu est simplement choisi sans tenir compte des rabais.</li></ul>`)
+  + D('10. Sauvegarder et ne rien perdre', `<ul><li>Les données sont enregistrées dans le navigateur de ce téléphone, à chaque action.</li>
+    <li>Elles peuvent disparaître si tu effaces les données de Safari, si tu désinstalles l'icône, ou si Safari les nettoie après environ 7 jours sans utilisation (c'est moins probable avec l'icône de l'écran d'accueil).</li>
+    <li><b>Habitude conseillée :</b> une fois par mois, dans Réglages, touche « Copier la sauvegarde » et colle-la dans un message à toi-même ou dans Notes.</li></ul>`)
+  + D('11. Questions fréquentes', `<p><b>Le menu ne change pas quand je touche « Refaire le menu ».</b> Les plats « Gardé » restent. Retire le verrouillage si tu veux les remplacer. Une fois l'épicerie terminée, le menu est verrouillé jusqu'à « Terminer la semaine ».</p>
+    <p><b>Un article de la liste existe en double.</b> Si deux recettes nomment un même article différemment (par exemple « boeuf haché » et « boeuf haché ou poulet haché »), il apparaît deux fois. Additionne-les en magasin.</p>
+    <p><b>La liste est trop longue ou trop courte.</b> Les quantités sont des estimations. Corrige les essentiels dans Réglages et le stock dans Maison.</p>
+    <p><b>Je veux tout recommencer.</b> Réglages → « Tout remettre à zéro » (efface menu, stock et historique, pas les recettes que tu as ajoutées).</p>`);
+}
+
+
+/* ---------- démarrage ---------- */
+(function init(){
+  try{ if('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){}
+  loadLocal();
+  if(!S.auto && BUNDLED) S.auto = {items:(BUNDLED.items||[]).map(i => Object.assign({}, i, {vt:BUNDLED.valide||''})), maj:BUNDLED.maj||'', src:'Flipp (copie intégrée)'};
+  render();
+  setSync('Enregistré sur cet appareil');
+  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+})();
+</script>
+</body></html>
