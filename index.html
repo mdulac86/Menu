@@ -377,7 +377,7 @@ const ESS_START = () => ([
     {name:'Eau pétillante (caisse)', q:1, u:'un', r:'épicerie', c:'Boissons'}
 ]);
 const DEFAULT = () => ({
-  v:3, maj:0, help:false, cp:'', relay:'', dates:{plan:'', shop:''}, auto:null,
+  v:3, appv:'', lastExport:'', maj:0, help:false, cp:'', relay:'', dates:{plan:'', shop:''}, auto:null,
   stock:{}, hist:[], custom:[], varx:{},
   menu:{date:'', items:[], chk:{}, extra:{}, achete:false, snap:null, useup:{}},
   spec:[],
@@ -389,13 +389,35 @@ const DEFAULT = () => ({
 let S = DEFAULT();
 
 function mergeState(o){ const d = DEFAULT(); const m = Object.assign(d, o); if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(d.p, o.p||{}); m.menu.useup = m.menu.useup||{}; m.menu.ent = m.menu.ent||[]; m.menu.sou = m.menu.sou||[]; m.menu.des = m.menu.des||[]; if(!m.dates) m.dates = {plan:'', shop:''}; m.storesx = m.storesx||[]; m.stores = (m.stores||[]).filter(s => !['Loblaws','Food Basics','No Frills'].includes(s)); m.stores.forEach(s => { if(!STORES.includes(s) && !m.storesx.includes(s)) m.storesx.push(s); }); return m; }
+/* ---------- protection des données ----------
+   Les données vivent sur le téléphone, sous la clé KEY. Une mise à jour de l'application ne remplace que le code.
+   1. Si les données ne peuvent pas être lues, elles sont mises de côté (RESCUE) avant tout enregistrement.
+   2. Une copie est gardée avant chaque nouvelle version et une fois par jour (COPIES, 5 au maximum).
+   3. Une copie peut être enregistrée dans Fichiers et restaurée. */
+const APPV = '2026-10-11b', KEY = 'menu_epicerie_v1', COPIES = 'menu_epicerie_copies', RESCUE = 'menu_epicerie_secours';
+let loadFailed = false, rescued = false;
+function readCopies(){ try{ return JSON.parse(localStorage.getItem(COPIES) || '[]'); }catch(e){ return []; } }
+function snapshot(label, raw){
+  const L = readCopies(); L.unshift({d: new Date().toISOString(), label, data: raw});
+  for(let n = Math.min(L.length, 5); n >= 1; n--){ try{ localStorage.setItem(COPIES, JSON.stringify(L.slice(0, n))); return true; }catch(e){} }
+  return false;
+}
 function loadLocal(){
-  try{ const j = localStorage.getItem('menu_epicerie_v1'); if(j) S = mergeState(JSON.parse(j)); }catch(e){}
+  let j = null;
+  try{ j = localStorage.getItem(KEY); }catch(e){}
+  if(j){
+    try{ S = mergeState(JSON.parse(j)); }
+    catch(e){ loadFailed = true; try{ localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
+    if(!loadFailed && S.appv !== APPV){ snapshot('Avant la mise à jour', j); S.appv = APPV; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+    if(loadFailed) S.flash = "Tes données n'ont pas pu être lues par cette version. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
+  } else S.appv = APPV;
   const st = {}; Object.values(S.stock||{}).forEach(o => { const [q,u] = normQU(o.name,o.q,o.u); const k = keyOf(o.name,u); if(st[k]) st[k].q += q; else st[k] = Object.assign({}, o, {q,u}); }); S.stock = st;
 }
 function save(){
   _AR = _ND = _BL = _CAT = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); S.maj = Date.now();
-  try{ localStorage.setItem('menu_epicerie_v1', JSON.stringify(S)); setSync('Enregistré sur cet appareil'); }
+  if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Réglages)"); return; }
+  try{ const raw = JSON.stringify(S); localStorage.setItem(KEY, raw); setSync('Enregistré sur cet appareil');
+    const L = readCopies(); if(!L.length || L[0].d.slice(0,10) !== isoToday()) snapshot('Copie du jour', raw); }
   catch(e){ setSync("Enregistrement impossible : mode privé ou stockage plein"); }
 }
 function setSync(t){ const e = $('#sync'); if(e) e.textContent = t; }
@@ -1707,6 +1729,8 @@ function renderMenu(){
   if(!S.setup) h += renderSetup();
   else if(!S.help) h += `<div class="card call"><h3>Première fois ?</h3><p class="small">L'aide explique comment installer l'application sur l'iPhone, préparer la première semaine et copier la liste.</p><div class="acts"><button class="btn s p" id="help_open">Lire l'aide</button><button class="btn s" id="help_hide">Plus tard</button></div></div>`;
   h += `<p class="note" id="flash" ${S.flash ? '' : 'hidden'}>${esc(S.flash||'')}</p>`; S.flash = '';
+  { const n = Object.keys(S.stock||{}).length + (S.custom||[]).length*3 + Object.keys(S.prices||{}).length, old = !S.lastExport || addDays(S.lastExport, 30) < isoToday();
+    if(S.setup && n >= 10 && old && !(S.bkSnooze && S.bkSnooze > isoToday())) h += `<div class="card"><h3>Protège tes données</h3><p class="small">${S.lastExport ? 'Ta dernière copie dans Fichiers date de plus d\'un mois.' : 'Ton garde-manger et tes recettes ne sont gardés que sur ce téléphone.'} Une copie dans Fichiers les protège si l'icône est supprimée ou si tu changes de téléphone.</p><div class="acts"><button class="btn s p" data-a="bk_go">Faire une copie</button><button class="btn s" data-a="bk_later">Plus tard</button></div></div>`; }
   h += renderToday();
   h += renderWeek();
   if(!m.date){
@@ -2177,6 +2201,38 @@ function histHtml(){
   return (avg ? `<p class="small">Moyenne payée : <b>${money(avg)}</b> sur ${paid.length} semaine${paid.length>1?'s':''}${S.p.budget ? `, pour un budget de ${money(S.p.budget)}` : ''}.</p>` : '')
     + S.hist.slice().reverse().slice(0,12).map(w => `<p class="small"><b>${esc(w.date)}</b>${w.paid ? ` (${money(w.paid)})` : ''} : ${histItems(w).map(x => esc(x.r)).join(', ')}</p>`).join('');
 }
+function backupCard(){
+  const L = readCopies(), fmt = d => { try{ return new Date(d).toLocaleString('fr-CA', {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}); }catch(e){ return d; } };
+  let res = ''; try{ res = localStorage.getItem(RESCUE) || ''; }catch(e){}
+  const n = Object.keys(S.stock||{}).length, nr = (S.custom||[]).length, np = Object.keys(S.prices||{}).length;
+  return `<div class="card" id="sauvegarde"><h3>Sauvegarde de mes données</h3>
+    <p class="small">Tes données restent sur ce téléphone : ${n} article${n>1?'s':''} à la maison, ${nr} recette${nr>1?'s':''} à toi, ${np} prix noté${np>1?'s':''}, tes réglages et ton historique. Une mise à jour de l'application ne remplace que le code : tes données ne sont pas touchées.</p>
+    ${res ? `<p class="note">Des données n'ont pas pu être lues et ont été mises de côté sans rien effacer. <button class="btn s" id="bk_rescue" data-armed="0">Essayer de les restaurer</button></p>` : ''}
+    <p class="small"><b>Copies automatiques sur ce téléphone</b> : avant chaque mise à jour et une fois par jour, les 5 plus récentes. Elles protègent contre une erreur, mais pas si l'icône de l'application est supprimée.</p>
+    ${L.length ? `<div class="list">${L.map((c,j) => `<div class="item"><span class="t"><b>${esc(c.label)}</b><small>${esc(fmt(c.d))}</small></span><button class="btn s" data-a="bk_restore" data-j="${j}" data-armed="0">Restaurer</button></div>`).join('')}</div>` : '<p class="small">Aucune copie pour l’instant.</p>'}
+    <p class="small"><b>Copie dans Fichiers</b> : la seule qui survit si l'icône est supprimée ou si tu changes de téléphone. Fais-en une après avoir rempli ton garde-manger, puis une fois par mois. ${S.lastExport ? `Dernière copie : ${esc(fmtDate(S.lastExport))}.` : 'Aucune copie dans Fichiers pour l’instant.'}</p>
+    <div class="acts"><button class="btn s p" id="bk_file">Enregistrer une copie dans Fichiers</button><button class="btn s" id="bk_copy">Copier en texte</button></div>
+    <label class="f">Restaurer une copie : choisis le fichier, ou colle le texte<input type="file" id="bk_pick" accept=".json,application/json,text/plain"></label>
+    <textarea id="bk_txt" placeholder="Ou colle ici une copie en texte" aria-label="Sauvegarde"></textarea>
+    <button class="btn s d" id="bk_imp" data-armed="0">Restaurer cette copie</button><div class="small" id="bk_msg"></div></div>`;
+}
+async function exportFile(){
+  const prev = S.lastExport; S.lastExport = isoToday();
+  const txt = JSON.stringify(S), name = `menu-semaine-sauvegarde-${isoToday()}.json`, msg = $('#bk_msg');
+  const done = () => { S.lastExport = isoToday(); save(); renderReglages(); const m = $('#bk_msg'); if(m) m.textContent = 'Copie créée. Choisis « Enregistrer dans Fichiers » pour la garder.'; };
+  try{
+    const f = new File([txt], name, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title:'Sauvegarde Menu de la semaine'}); done(); return; }
+  }catch(e){ if(e && e.name==='AbortError'){ S.lastExport = prev; return; } }
+  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'application/json'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); done(); }
+  catch(e){ copier(txt, '#bk_msg'); }
+}
+function restoreFrom(raw, label){
+  const o = JSON.parse(raw); if(!o || typeof o!=='object' || !o.menu || !o.stock) throw new Error('invalide');
+  snapshot('Avant la restauration', JSON.stringify(S));
+  S = mergeState(o); S.appv = APPV; loadFailed = false; save(); render();
+  S.flash = label; const m = $('#bk_msg'); if(m) m.textContent = label;
+}
 function renderReglages(){
   const p = S.p;
   let h = `<div class="card"><h3>Apparence</h3><div class="seg" role="group" aria-label="Apparence">${[['auto','Automatique'],['light','Claire'],['dark','Sombre']].map(([v,n]) => `<button class="${(p.theme||'auto')===v?'on':''}" data-a="theme" data-v="${v}">${n}</button>`).join('')}</div><p class="small">Automatique suit le téléphone : la carte crème le jour, l'ardoise le soir.</p></div>
@@ -2208,10 +2264,7 @@ function renderReglages(){
     <div class="card"><h3>Toujours à la maison</h3><p class="small">Séparés par des virgules. Ils ne vont pas dans la liste : ils s'affichent dans « Vérifier avant de partir ».</p><textarea id="maison">${esc(S.maison)}</textarea></div>
     <div class="card"><h3>Historique</h3>${histHtml()}
     ${S.hist.length?'<button class="btn s d" id="hclr" data-armed="0">Effacer l\'historique</button>':''}</div>
-    <div class="card"><h3>Sauvegarde de cet appareil</h3><p class="small">Copie les données de CE téléphone (recettes ajoutées, variantes, stock, historique) dans un message à toi-même, pour les restaurer si le navigateur les efface. Ce n'est pas un partage : chaque téléphone garde ses propres données.</p>
-      <div class="acts"><button class="btn s p" id="bk_copy">Copier la sauvegarde</button></div>
-      <textarea id="bk_txt" placeholder="Colle ici une sauvegarde" aria-label="Sauvegarde"></textarea>
-      <button class="btn s d" id="bk_imp" data-armed="0">Restaurer cette sauvegarde</button><div class="small" id="bk_msg"></div></div>
+    ${backupCard()}
     <div class="card"><h3>Tout remettre à zéro</h3><p class="small">Efface le menu, le stock et l'historique.</p><button class="btn s d" id="reset" data-armed="0">Réinitialiser</button></div>`;
   $('#tab-reglages').innerHTML = h;
 }
@@ -2288,7 +2341,7 @@ document.addEventListener('click', e => {
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
   if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
-  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { S = DEFAULT(); save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { snapshot('Avant la remise à zéro', JSON.stringify(S)); S = DEFAULT(); S.appv = APPV; save(); render(); }); return; }
   if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
   if(id==='help_hide'){ S.help=true; save(); render(); return; }
   if(id==='help_back'){ tab='menu'; render(); window.scrollTo(0,0); return; }
@@ -2314,10 +2367,12 @@ document.addEventListener('click', e => {
     const box = document.querySelector('details[data-rec="__new"]'); if(box) box.scrollIntoView({block:'start'});
     drafts.new.note = `Recette lue : ${w.rows.length} ingrédient${w.rows.length>1?'s':''}${w.portions && w.k==='souper' ? `, ajustés de ${w.portions} à 6 portions` : ''}${w.unsure.length ? `. Quantité à vérifier : ${w.unsure.join(', ')}` : ''}. Vérifie les noms, les quantités, le genre et le temps, puis touche « Enregistrer la recette » en bas.`; render(); const box2 = document.querySelector('details[data-rec="__new"]'); if(box2) box2.scrollIntoView({block:'start'}); return; }
   if(id==='go_liste'){ tab='epicerie'; render(); window.scrollTo(0,0); return; }
-  if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg'); return; }
+  if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg'); S.lastExport = isoToday(); save(); return; }
+  if(id==='bk_file'){ exportFile(); return; }
   if(id==='bk_imp'){ arm(t,'Confirmer : remplacer mes données', () => {
-      try{ const o = JSON.parse($('#bk_txt').value); if(!o || typeof o!=='object' || !o.menu || !o.stock) throw 0; S = mergeState(o); save(); render(); }
-      catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette sauvegarde n'est pas valide."; t.dataset.armed='0'; t.textContent='Restaurer cette sauvegarde'; } }); return; }
+      try{ restoreFrom($('#bk_txt').value, 'Copie restaurée. Tes données d\'avant sont gardées dans les copies automatiques.'); }
+      catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette copie n'est pas valide."; t.dataset.armed='0'; t.textContent='Restaurer cette copie'; } }); return; }
+  if(id==='bk_rescue'){ arm(t,'Confirmer : restaurer', () => { try{ restoreFrom(localStorage.getItem(RESCUE), 'Données restaurées.'); localStorage.removeItem(RESCUE); }catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Ces données n'ont pas pu être lues. Elles restent gardées."; } }); return; }
   if(id==='aadd'){
     const name = plain($('#an').value), am0 = $('#amsg'); let q = parseFloat(String($('#aq').value).replace(',','.')), u = $('#au').value;
     if(!name){ if(am0) am0.textContent = 'Choisis ou tape un aliment.'; return; }
@@ -2369,6 +2424,9 @@ document.addEventListener('click', e => {
   if(a==='occ_menu'){ occToMenu(); save(); render(); window.scrollTo(0,0); return; }
   if(a==='sdis'){ S.sdis = S.sdis||{}; if(S.sdis[t.dataset.id]) delete S.sdis[t.dataset.id]; else S.sdis[t.dataset.id] = true; openRec.add('side|'+t.dataset.id); save(); render(); return; }
   if(a==='sdel2'){ S.sidesx = (S.sidesx||[]).filter(x => x.id!==t.dataset.id); save(); render(); return; }
+  if(a==='bk_restore'){ const c = readCopies()[+t.dataset.j]; if(c) arm(t, 'Confirmer', () => { try{ restoreFrom(c.data, `Copie du ${new Date(c.d).toLocaleDateString('fr-CA', {day:'numeric', month:'long'})} restaurée.`); }catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette copie n'a pas pu être lue."; } }); return; }
+  if(a==='bk_go'){ tab = 'reglages'; render(); const c = document.getElementById('sauvegarde'); if(c) c.scrollIntoView({block:'start'}); return; }
+  if(a==='bk_later'){ S.bkSnooze = addDays(isoToday(), 14); save(); render(); return; }
   if(a==='theme'){ S.p.theme = t.dataset.v; save(); render(); return; }
   if(a==='stx_rm'){ e.preventDefault(); const s = t.dataset.s; S.storesx = (S.storesx||[]).filter(x => x!==s); S.stores = S.stores.filter(x => x!==s); save(); render(); return; }
   if(a==='aubadd'){ const s = allSpecAll().find(x => x.t===t.dataset.t); if(s){ S.menu.sn = S.menu.sn||[]; S.menu.sn.push({t:s.t, p:s.p, s:s.s, name:s.t, q:1, u:'un', r:guessRayon(s.t), src:'Réserves (aubaine)'}); save(); render(); } return; }
@@ -2421,6 +2479,7 @@ document.addEventListener('change', e => {
   if(t.dataset.ps){ S.p[t.dataset.ps] = t.value; save(); render(); return; }
   if(t.dataset.pb){ S.p[t.dataset.pb] = t.checked; save(); render(); return; }
   if(t.dataset.off!==undefined){ const d = +t.dataset.off, o = new Set(S.p.off||[0,6]); if(t.checked) o.add(d); else o.delete(d); S.p.off = [...o]; save(); return; }
+  if(t.id==='bk_pick' && t.files && t.files[0]){ const fr = new FileReader(); fr.onload = () => { const ta = $('#bk_txt'); if(ta) ta.value = String(fr.result||''); const m = $('#bk_msg'); if(m) m.textContent = 'Fichier lu. Touche « Restaurer cette copie » pour confirmer.'; }; fr.readAsText(t.files[0]); return; }
   if(t.dataset.a==='pr_in'){ const v = parseFloat(String(t.value).replace(',','.').replace(/[^0-9.]/g,'')), r = buyList().rows.find(x => x.k===t.dataset.k);
     if(r && v > 0){ S.prices = S.prices||{}; S.prices[r.k] = {pu: v/r.buy, d: isoToday(), s: storeOf(r), sp: !!dealFor(r.name)}; }
     prEdit = ''; save(); render(); return; }
@@ -2554,7 +2613,10 @@ function renderAide(){
   + D('13. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Vérifie tes épiceries et ton code postal dans Réglages.</li>
     <li>Si le navigateur bloque la requête, copie le texte d'une circulaire (<a href="https://flipp.com/fr-ca" target="_blank" rel="noopener">Flipp</a>) et colle-le dans « Si la recherche ne fonctionne pas ».</li>
     <li>Sans spéciaux, tout fonctionne : le menu est simplement choisi sans les rabais.</li></ul>`)
-  + D('14. Sauvegarder', `<p>Les données sont enregistrées sur ce téléphone à chaque action. Elles peuvent disparaître si tu effaces les données de Safari ou supprimes l'icône. Une fois par mois, dans Réglages, touche <b>Copier la sauvegarde</b> et colle-la dans Notes.</p>`)
+  + D('14. Sauvegarder', `<ul><li>Les données sont enregistrées sur ce téléphone à chaque action. <b>Une mise à jour de l'application ne les touche pas</b> : elle remplace seulement le code, et chaque nouvelle version lit les données de l'ancienne.</li>
+    <li>Par sécurité, l'application garde une <b>copie automatique</b> avant chaque mise à jour et une fois par jour (les 5 dernières, dans Réglages → Sauvegarde). Si une version n'arrive pas à lire tes données, elle les met de côté au lieu de les effacer.</li>
+    <li>Ce qui peut effacer les données : supprimer l'icône de l'écran d'accueil, effacer les données des sites dans les réglages de l'iPhone, ou ouvrir l'application à une autre adresse. Garde la même adresse et ne supprime pas l'icône.</li>
+    <li>Pour être protégé même dans ces cas : Réglages → <b>Enregistrer une copie dans Fichiers</b>, puis « Enregistrer dans Fichiers ». Fais-le après avoir rempli ton garde-manger, puis une fois par mois. Pour revenir en arrière : « Restaurer une copie » et choisis le fichier.</li></ul>`)
   + D('15. Questions fréquentes', `<p><b>Le menu ne change pas quand je le refais.</b> Les plats « Gardé » restent; une fois l'épicerie terminée, le menu est verrouillé jusqu'à « Terminer la semaine ».</p>
     <p><b>Un article est en double.</b> Deux recettes le nomment différemment; additionne-les en magasin.</p>
     <p><b>Les quantités ne conviennent pas.</b> Ajuste les portions (Réglages ou repas par repas), les quantités d'accompagnements, ou modifie la recette. Les quantités des recettes sont des estimations : corrige celles qui ne conviennent pas à ta famille.</p>
