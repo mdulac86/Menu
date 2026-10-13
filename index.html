@@ -415,7 +415,7 @@ function mergeState(o){ const d = DEFAULT(); const m = Object.assign(d, o); if((
    1. Si les données ne peuvent pas être lues, elles sont mises de côté (RESCUE) avant tout enregistrement.
    2. Une copie est gardée avant chaque nouvelle version et une fois par jour (COPIES, 5 au maximum).
    3. Une copie peut être enregistrée dans Fichiers et restaurée. */
-const APPV = '2026-10-13a', KEY = 'menu_epicerie_v1', COPIES = 'menu_epicerie_copies', RESCUE = 'menu_epicerie_secours';
+const APPV = '2026-10-13b', KEY = 'menu_epicerie_v1', COPIES = 'menu_epicerie_copies', RESCUE = 'menu_epicerie_secours';
 let loadFailed = false, rescued = false;
 function readCopies(){ try{ return JSON.parse(localStorage.getItem(COPIES) || '[]'); }catch(e){ return []; } }
 function snapshot(label, raw){
@@ -2922,6 +2922,8 @@ function ajouterSpeciaux(){
 
 document.addEventListener('click', e => {
   const t = e.target.closest('[id],[data-a]'); if(!t) return;
+  /* un menu déroulant ou un champ texte se gère à « change » : redessiner au toucher fermerait le menu sur iPhone */
+  if(t.tagName==='SELECT' || t.tagName==='OPTION' || t.tagName==='TEXTAREA' || (t.tagName==='INPUT' && !/^(checkbox|radio|button|submit)$/.test(t.type))) return;
   const a = t.dataset.a, id = t.id;
   if(id==='setup_done'){ S.setup = true; const c = $('#su_ess'); if(c && c.checked && !S.ess.length) S.ess = ESS_START(); save(); render(); window.scrollTo(0,0); return; }
   if(id==='ess_preset'){ S.ess = ESS_START(); save(); render(); return; }
