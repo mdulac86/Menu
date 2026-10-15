@@ -220,9 +220,9 @@ async function chercherSpeciaux(ignorerDate){
   const say = t => { const st = $('#sp_status'); if(st) st.textContent = t; };
   if(spBusy) return;
   const cp = (S.cp||'').replace(/\s/g,'').toUpperCase();
-  if(!S.stores.length){ say('Choisis d\'abord tes épiceries dans Réglages.'); return; }
-  if(!cp){ say('Entre d\'abord ton code postal dans Réglages.'); return; }
-  if(!cpOk(cp)){ say('Code postal invalide dans Réglages (exemple : G6V 6Z3).'); return; }
+  if(!S.stores.length){ say('Choisis d\'abord tes épiceries dans Profil.'); return; }
+  if(!cp){ say('Entre d\'abord ton code postal dans Profil.'); return; }
+  if(!cpOk(cp)){ say('Code postal invalide dans Profil (exemple : G6V 6Z3).'); return; }
   spBusy = true; { const b = $('#sp_go'); if(b) b.disabled = true; }
   const shop = shopISO();
   try{

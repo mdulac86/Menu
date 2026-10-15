@@ -86,6 +86,15 @@ const serveur = require('./serveur');
     S.pmaj = {d: addDays(isoToday(), -40), snooze: addDays(isoToday(), 3)}; if(prixRappel()) out.push('rappel malgré « dans une semaine »');
     S.pmaj = {d: isoToday()}; if(prixRappel()) out.push('rappel juste après la mise à jour');
     S.bx = {}; S.pmaj = {};
+    /* 2.0 : profil, horaire, préparation */
+    S.profil = {membres:[{a:'adulte',ap:'normal',l:true},{a:'adulte',ap:'normal',l:true},{a:'enfant',age:14,ap:'grand',l:true},{a:'enfant',age:12,ap:'grand',l:true}], jours:{plan:4,cmd:5,ram:6,cuis:0}};
+    appliquerProfil(); if(S.p.souper !== 5 || S.p.restes !== 5) out.push(`portions du profil ${S.p.souper}/${S.p.restes}`);
+    if(nextDow('2026-10-15', 6) !== '2026-10-17' || nextDow('2026-10-17', 6) !== '2026-10-17' || startFrom('2026-10-17') !== '2026-10-18') out.push('jours de ramassage / cuisine');
+    S.dates.shop = ''; S.menu = DEFAULT().menu; genMenu();
+    if(new Date(S.menu.start+'T12:00:00').getDay() !== 0) out.push('le menu ne commence pas le dimanche : ' + S.menu.start);
+    if(weekDates()[0] !== S.menu.start) out.push('semaine du menu');
+    try{ prepTasks(); whyOf(mlist('items')[0]); const A = altsFor(mlist('items')[0], 'items'); if(A.length > 3) out.push('plus de 3 choix'); }catch(e){ out.push('préparation / choix : ' + e.message); }
+    S.hist = [{paid:110, est:100},{paid:120, est:100},{paid:105, est:100}]; if(Math.abs(calF() - 1.1) > .001) out.push('calibrage ' + calF()); S.hist = [];
     return out;
   }, CASES);
   await b.close(); if(srv) srv.close();

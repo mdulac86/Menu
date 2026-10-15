@@ -2,7 +2,7 @@
    Usage : node tests/scenario.js [dossier-captures]   (sert le projet sous /Menu/test/ pour tester le canal de test) */
 const { chromium } = (() => { try{ return require('playwright-core'); }catch(e){ return require('/opt/node-tools/node_modules/playwright-core'); } })();
 const http = require('http'), fs = require('fs'), path = require('path');
-const ROOT = path.join(__dirname, '..'), OUT = process.argv[2] || '';
+const ROOT = process.env.RACINE || path.join(__dirname, '..'), OUT = process.argv[2] || '';
 const corpus = JSON.parse(fs.readFileSync(__dirname + '/donnees/circulaires-2026-10-15.json', 'utf8'));
 const TYPES = {'.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.webmanifest':'application/manifest+json'};
 const srv = http.createServer((q, r) => { let p = decodeURIComponent(q.url.split('?')[0]).replace(/^\/Menu\/(test\/)?/, '/'); if(p.endsWith('/')) p += 'index.html';

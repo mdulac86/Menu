@@ -114,7 +114,7 @@ function loadLocal(){
     try{ S = mergeState(JSON.parse(j)); }
     catch(e){ loadFailed = true; try{ if(!localStorage.getItem(RESCUE)) localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
     if(!loadFailed && S.appv !== APPV){ snapshot('Avant la mise à jour', j); S.appv = APPV; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
-    if(loadFailed) S.flash = "Tes données n'ont pas pu être lues par cette version. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
+    if(loadFailed) S.flash = "Tes données n'ont pas pu être lues par cette version. Elles sont gardées de côté, rien n'est effacé : Profil → Sauvegarde → « Essayer de les restaurer ».";
   } else S.appv = APPV;
 }
 /* nombre saisi : « 1 200 », « 150 $ », « 2,5 » ; jamais négatif ni NaN */
@@ -122,7 +122,7 @@ const numIn = v => Math.max(0, parseFloat(String(v ?? '').replace(/[\s\u00a0$]/g
 function resetCaches(){ _DO = new WeakMap(); _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); }
 function save(){
   resetCaches(); S.maj = Date.now(); S.bkDirty = true;
-  if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Réglages)"); return; }
+  if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Profil)"); return; }
   const raw = JSON.stringify(S);
   const put = () => { localStorage.setItem(KEY, raw); setSync('Enregistré sur cet appareil'); };
   try{ put(); }

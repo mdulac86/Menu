@@ -1,0 +1,16 @@
+# Vérification automatique : à chaque envoi sur GitHub, les tests roulent dans un vrai navigateur.
+# Si un test échoue, GitHub envoie un courriel au propriétaire du dépôt.
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-save playwright-core@1.48.2 playwright@1.48.2 && npx playwright install --with-deps chromium
+      - run: node tests/unit.js
+      - run: node tests/scenario.js
+      - run: node tests/horsligne.js
+      - run: node tests/smoke.js 300 1

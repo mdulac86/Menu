@@ -80,7 +80,7 @@ function assignDej(force){
   todo.filter(x => isSimple(R(x))).forEach(x => { const d = tk(false); if(d) x.d = d; });
 }
 /* ---------- dîners : les restes du souper de la veille d'abord ----------
-   Chaque souper est cuisiné pour le souper + les restes (Réglages). Le midi suivant, on mange ces restes.
+   Chaque souper est cuisiné pour le souper + les restes (Profil). Le midi suivant, on mange ces restes.
    Les jours de dîner sans restes reçoivent une recette de la banque des soupers (pas déjà au menu). */
 const dinDays = () => { const ds = weekDates(), n = Math.min(7, S.p.nDin||0), no = S.menu.dinNo||{}; return ds.filter(d => !isOff(d)).concat(ds.filter(isOff)).slice(0, n).filter(d => !no[d]).sort(); };
 function restesAvail(d){
@@ -161,7 +161,7 @@ function linkFollow(it){
 }
 /* ---------- plats préparés, notes, prix ---------- */
 const ppOk = r => !r.pp || S.p.pp==='all' || (S.p.pp==='spec' && dealsOf(r).length>0);
-/* déjeuners et desserts simples : seulement si permis dans Réglages */
+/* déjeuners et desserts simples : seulement si permis dans Profil */
 const isSimple = r => !!(r && (r.sp || (kindOf(r)==='dessert' && r.pp)));
 const simpleOk = r => !isSimple(r) || kindOf(r)!=='dessert' || !!S.p.desSimple;
 const softBad = r => { const rt = S.rate[r.n]; return !!rt && rt.down>=2 && rt.down>rt.up; };

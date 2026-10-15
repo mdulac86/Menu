@@ -14,7 +14,7 @@ GROUPS.profil.filter(v => v!=='aide').forEach(v => RENDER[v] = () => renderRegla
 function subNav(g){ const L = GROUPS[g]; if(L.length < 2) return '';
   return `<div class="seg subnav" role="tablist" aria-label="Sous-menus">${L.map(v => `<button role="tab" class="${v===tab?'on':''}" data-a="view" data-v="${v}" aria-selected="${v===tab}">${esc(VLBL[v])}</button>`).join('')}</div>`; }
 function renderPrixTab(){ $('#tab-prix').innerHTML = `<div class="card"><input type="text" id="ar_q" value="${esc(artF.q)}" placeholder="Chercher un article" aria-label="Chercher un article" autocomplete="off"></div>` + prixView(); }
-/* Apparence : claire par défaut, sombre ou comme le téléphone au choix (Réglages). */
+/* Apparence : claire par défaut, sombre ou comme le téléphone au choix (Profil). */
 function applyTheme(){
   const t = (S.p && S.p.theme) || 'auto', root = document.documentElement;
   if(t==='auto') delete root.dataset.theme; else root.dataset.theme = t;
@@ -118,7 +118,7 @@ document.addEventListener('click', e => {
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
   if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
-  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Réglages)."); return; } S = DEFAULT(); S.appv = APPV; loadFailed = false; rescued = false; save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Profil)."); return; } S = DEFAULT(); S.appv = APPV; loadFailed = false; rescued = false; save(); render(); }); return; }
   if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
   if(id==='help_hide'){ S.help=true; save(); render(); return; }
   if(id==='help_back'){ tab='semaine'; render(); window.scrollTo(0,0); return; }
@@ -415,16 +415,21 @@ function renderAide(){
     <li>Ouvre toujours l'application par <b>son icône</b>.</li></ol>
     <div class="warn"><b>Installe avant d'entrer quoi que ce soit.</b> Safari et l'icône de l'écran d'accueil ne partagent pas leurs données.</div>
     <div class="tip">Chaque personne installe l'application sur son téléphone. Les données ne sont pas partagées entre téléphones (voir la section 11).</div>`, true)
-  + D('2. Première configuration', `<p>Au premier lancement, la carte <b>Bienvenue</b> du Menu te demande :</p>
-    <ul><li><b>Ton code postal</b> : il sert à trouver les circulaires de ta région.</li>
-    <li><b>Tes épiceries</b> : seules leurs circulaires sont lues pour les spéciaux. Elles sont classées par genre (supermarchés, escompte, grandes surfaces comme Walmart et Costco, santé et vrac, pharmacies). Le bouton <b>Trouver les épiceries de mon code postal</b> montre celles qui ont une circulaire près de chez toi, y compris les marchés de ta région. Une épicerie manque ? Écris son nom sous « Une épicerie manque ? ».</li>
-    <li><b>Combien de soupers, d'entrées et de desserts</b> par semaine.</li>
-    <li><b>Les portions</b> : au souper, et en restes pour le dîner du lendemain. Chaque souper est calculé pour la somme des deux.</li>
-    <li>Si tu veux, une <b>liste de départ</b> pour les déjeuners, lunchs, collations et boissons. Sinon, l'application reste vide et tu ajoutes tes articles dans Réglages.</li></ul>
-    <p>Tout se change ensuite dans <b>Réglages</b>.</p>`)
+  + D('2. Première configuration', `<p>Au premier lancement, un assistant en 5 étapes décrit ta famille :</p>
+    <ul><li><b>La famille</b> : adultes et enfants (avec leur âge), l'appétit de chacun et qui apporte un lunch. Les portions et les restes pour les lunchs en découlent.</li>
+    <li><b>L'horaire</b> : le jour où tu planifies, où tu commandes, où tu ramasses l'épicerie et où vous commencez à cuisiner.</li>
+    <li><b>Les épiceries</b> : ton code postal, celles où tu vas et ta principale. La liste se fait à la principale; l'application t'avertit quand une autre est nettement plus avantageuse.</li>
+    <li><b>Les repas</b> à planifier et, si tu veux, une liste de départ pour les déjeuners, lunchs, collations et boissons.</li>
+    <li><b>Le budget</b> de la semaine.</li></ul>
+    <p>Tout se change ensuite dans l'onglet <b>Profil</b>. Le profil peut être enregistré dans Fichiers (Profil → Sauvegarde) pour le réinstaller ou le donner à un proche.</p>`)
+  + D('Ta semaine en 4 étapes', `<ol><li><b>Planifier</b> (mercredi soir ou jeudi) : dans Ma semaine, touche <b>Préparer ma semaine</b>. L'application lit les circulaires pour la date du ramassage, fait un menu varié du dimanche au samedi qui en profite, respecte le budget et prépare la liste.</li>
+    <li><b>Commander</b> : Épicerie → <b>Commande en ligne</b>. Chaque article a un lien vers le site de l'épicerie et le format à commander. Ouvre-le, ajoute au panier, reviens et coche.</li>
+    <li><b>Ramasser</b> : touche « Épicerie terminée », puis inscris le total de la facture. Après quelques semaines, l'estimation du coût se corrige d'elle-même.</li>
+    <li><b>Cuisiner</b> : la carte <b>Préparation</b> regroupe ce qui se fait d'avance (hacher, cuire le riz, mariner, congeler). Chaque soir, la carte <b>Aujourd'hui</b> montre le repas et le bouton Cuisiner.</li></ol>
+    <div class="tip">Les poissons et la viande hachée sont placés en début de semaine, les plats du congélateur et du garde-manger à la fin.</div>`)
   + D('3. Faire le menu de la semaine', `<ol>
     <li>Règle les dates : <b>Je planifie le</b> et <b>J'achète le</b>. Les spéciaux retenus sont ceux valides le jour de l'épicerie.</li>
-    <li>Tu ne vas qu'à une de tes épiceries cette semaine, ou tu commandes en ligne ? Sur la carte de la semaine, choisis <b>Cette semaine, je fais l'épicerie : Seulement chez Maxi</b> (par exemple). Le menu suit les spéciaux de Maxi, et la liste, les prix, « Moins cher ailleurs » et les aubaines ne parlent que de Maxi. Une petite note dit seulement combien tu sauverais ailleurs, sans rien changer. « Dans quelques-unes… » permet d'en cocher plusieurs. La liste complète de tes épiceries se change dans Réglages.</li>
+    <li>Tu ne vas qu'à une de tes épiceries cette semaine, ou tu commandes en ligne ? Sur la carte de la semaine, choisis <b>Cette semaine, je fais l'épicerie : Seulement chez Maxi</b> (par exemple). Le menu suit les spéciaux de Maxi, et la liste, les prix, « Moins cher ailleurs » et les aubaines ne parlent que de Maxi. Une petite note dit seulement combien tu sauverais ailleurs, sans rien changer. « Dans quelques-unes… » permet d'en cocher plusieurs. La liste complète de tes épiceries se change dans Profil.</li>
     <li>Une envie précise ? <b>Ajouter un plat de mon choix</b> (Menu) : cherche un plat, une version ou un ingrédient (burger Nashville, saumon, potage), puis choisis le jour. Le plat reste au menu quand tu le refais. Tu peux le faire avant de créer le menu : l'application complète le reste. Dans Recettes, le bouton <b>Ajouter au menu de la semaine</b> fait la même chose.</li>
     <li><b>Reporter un souper</b> : resto ou changement de plan ? Ouvre le plat, touche <b>Reporter</b> : « À demain » fait glisser les soupers suivants d'un jour jusqu'au prochain soir libre; « À la semaine prochaine » le met de côté, il sera déjà au menu de la semaine suivante et ses ingrédients restent dans Maison. La carte Aujourd'hui a aussi « On mange au resto : reporter à demain ».</li>
     <li><b>Portions</b> : ouvre un plat et choisis le nombre de portions (2 pour un souper à deux, 12 quand on reçoit). La liste d'épicerie s'ajuste.</li>
@@ -436,31 +441,31 @@ function renderAide(){
     <li><b>Garder</b> verrouille un plat, <b>Autre plat</b> le remplace. Le bouton <b>Plus</b> contient <b>Copier la recette</b>, <b>Je n'aime pas</b> (le plat est mis de côté pour de bon et remplacé) et <b>Retirer du menu</b>. Dans « Recette et ingrédients », « retirer » enlève un ingrédient de la liste.</li>
     <li>Les étiquettes jaunes montrent les spéciaux trouvés dans tes circulaires : produit, prix et magasin.</li>
     <li>Chaque souper a un <b>jour</b> (en haut de sa carte). Touche-le pour déplacer le plat; l'autre plat prévu ce jour-là prend sa place.</li></ol>`)
-  + D("4. Les jours de la semaine et la carte Aujourd'hui", `<ul><li>Dans Réglages, coche tes <b>jours de congé</b>. Les soupers plus longs y sont placés; les jours de travail reçoivent les plats rapides (<b>Temps max. en semaine</b>, 35 min par défaut).</li>
+  + D("4. Les jours de la semaine et la carte Aujourd'hui", `<ul><li>Dans Profil, coche tes <b>jours de congé</b>. Les soupers plus longs y sont placés; les jours de travail reçoivent les plats rapides (<b>Temps max. en semaine</b>, 35 min par défaut).</li>
     <li>Les plats « à la mijoteuse » se préparent le matin en 15 minutes : ils vont bien un jour de travail.</li>
     <li>La carte <b>Aujourd'hui</b>, en haut du Menu, montre le déjeuner, le dîner et le souper du jour, celui de demain, avec les rappels : sortir la viande du congélateur la veille, partir la mijoteuse le matin, garder des restes.</li>
     <li><b>Cuisiner</b> ouvre la recette en grand : ingrédients pour tes portions (avec la sauce et les accompagnements) et étapes à cocher. L'écran reste allumé. Sur chaque plat du menu, <b>Recette</b> ouvre la même vue pour y jeter un coup d'œil pendant la planification.</li></ul>`)
-  + D('5. Déjeuners, dîners et restes', `<ul><li><b>Déjeuners</b> : ils ont leur section dans Recettes (crêpes, galettes de sarrasin, pain doré, déjeuner de cabane, gruau de nuit…). Les plus longs vont aux jours de congé. Les céréales, rôties et cafés de tous les jours restent dans la liste « Déjeuners, lunchs » de Réglages.</li>
-    <li><b>Dîners</b> : chaque souper est cuisiné avec des portions de plus (Réglages, « Portions de restes »). Le midi suivant, le dîner, ce sont ces restes : rien à acheter. Les jours sans restes, l'application choisit une recette de la banque des soupers, différente de celles de la semaine, pour les portions d'un dîner.</li>
+  + D('5. Déjeuners, dîners et restes', `<ul><li><b>Déjeuners</b> : ils ont leur section dans Recettes (crêpes, galettes de sarrasin, pain doré, déjeuner de cabane, gruau de nuit…). Les plus longs vont aux jours de congé. Les céréales, rôties et cafés de tous les jours restent dans la liste « Déjeuners, lunchs » de Profil.</li>
+    <li><b>Dîners</b> : chaque souper est cuisiné avec des portions de plus (Profil, « Portions de restes »). Le midi suivant, le dîner, ce sont ces restes : rien à acheter. Les jours sans restes, l'application choisit une recette de la banque des soupers, différente de celles de la semaine, pour les portions d'un dîner.</li>
     <li>Sur un jour de restes, <b>Préparer un dîner à la place</b> ajoute une recette. Sur un dîner cuisiné, <b>Manger plutôt les restes de…</b> fait l'inverse, et <b>Pas de dîner ce jour-là</b> (sous Plus) le retire.</li>
     <li><b>Ajouter un plat de mon choix</b> : pour une recette de souper, choisis <b>Au souper</b> ou <b>Au dîner</b>, puis le jour.</li>
     <li>La carte <b>Aujourd'hui</b> rappelle de garder les restes du souper pour le dîner du lendemain.</li><li>Quand une grosse pièce est au menu (épaule de jambon, poulet entier, rôti de porc…), un deuxième plat qui utilise ses restes est ajouté plus tard dans la semaine : sandwichs au jambon haché, croque-monsieur, pâtes au jambon, pâté au poulet…</li>
     <li>La carte de la grosse pièce indique <b>Restes prévus pour</b> : la quantité achetée est augmentée en conséquence. Celle du deuxième plat indique <b>Avec les restes de</b> : cet ingrédient n'est pas racheté.</li>
-    <li>Le deuxième plat est toujours placé après le premier. Pour ne plus jumeler les plats, décoche l'option dans Réglages, carte « Organisation de la semaine ».</li></ul>`)
+    <li>Le deuxième plat est toujours placé après le premier. Pour ne plus jumeler les plats, décoche l'option dans Profil, carte « Organisation de la semaine ».</li></ul>`)
   + D('6. Plats préparés, collations, entrées et desserts', `<ul><li>Les <b>entrées</b> et les <b>desserts</b> choisis en haut du Menu ont leur section sous les soupers, et leurs ingrédients sont dans la liste d'épicerie.</li>
-    <li>La carte <b>Collations en spécial</b> (Menu) propose des fruits, yogourts, fromages, craquelins, barres et autres collations annoncés dans tes circulaires. « Ajouter » en met un paquet dans la liste pour cette semaine seulement. Pour ne plus la voir : Réglages, carte « Mes collations ».</li>
+    <li>La carte <b>Collations en spécial</b> (Menu) propose des fruits, yogourts, fromages, craquelins, barres et autres collations annoncés dans tes circulaires. « Ajouter » en met un paquet dans la liste pour cette semaine seulement. Pour ne plus la voir : Profil, carte « Mes collations ».</li>
     <li>Les <b>plats préparés</b> (pizza, lasagne ou pâté surgelés, poulet rôti ou sushis du comptoir…) portent l'étiquette <b>Prêt à servir</b>, et <b>En spécial</b> quand une de tes circulaires les annonce.</li>
-    <li>Dans Réglages, choisis : les mettre au menu quand ils sont en spécial (1 par semaine au plus), seulement les suggérer (carte « Plats préparés en spécial » du Menu), les traiter comme les autres plats, ou jamais.</li></ul>`)
+    <li>Dans Profil, choisis : les mettre au menu quand ils sont en spécial (1 par semaine au plus), seulement les suggérer (carte « Plats préparés en spécial » du Menu), les traiter comme les autres plats, ou jamais.</li></ul>`)
   + D('7. Après le repas : on a aimé ou pas', `<p>Le jour même ou après, touche <b>On a aimé</b> ou <b>Pas aimé</b> sur la carte du souper. Un plat aimé revient plus souvent; un plat peu aimé revient moins souvent, et après deux « Pas aimé » il n'est plus proposé automatiquement (tu peux toujours l'ajouter toi-même). Pour l'écarter pour de bon, utilise <b>Je n'aime pas</b>.</p>`)
   + D("8. L'inventaire : ce qu'il y a à la maison", `<ul><li>L'onglet <b>Maison</b> garde ce que tu as. Tout ce qui s'y trouve est déduit de la liste et favorise les plats qui l'utilisent.</li>
     <li><b>Ajouter un article</b> : tape quelques lettres (« fromage », « poulet ») et touche l'aliment proposé. L'unité, le rayon et la catégorie se remplissent tout seuls; il reste à vérifier la quantité. Tu peux aussi <b>choisir par rayon</b>.</li>
     <li>Un aliment que l'application ne connaît pas est accepté : vérifie alors son rayon et sa catégorie. « Féculent » ou « Légume ou salade » en fait un accompagnement possible (un sac de rouleaux de printemps, par exemple).</li>
     <li>Une quantité très petite en grammes (3 g, par exemple) demande une confirmation : c'était peut-être 3 kg ou 3 paquets.</li>
     <li>Tape une quantité exacte ou utilise − et +. À 0, l'article disparaît. « À utiliser cette semaine » (Menu) propose d'utiliser ce qui dort à la maison.</li></ul>`)
-  + D("9. Faire l'épicerie une seule fois", `<ol><li>L'onglet <b>Épicerie</b> classe tout <b>par rayon</b> ou <b>par magasin</b>. Par magasin, chaque article va à l'épicerie où il est le moins cher en spécial; le reste va à ton épicerie principale (Réglages).</li>
+  + D("9. Faire l'épicerie une seule fois", `<ol><li>L'onglet <b>Épicerie</b> classe tout <b>par rayon</b> ou <b>par magasin</b>. Par magasin, chaque article va à l'épicerie où il est le moins cher en spécial; le reste va à ton épicerie principale (Profil).</li>
     <li><b>Mode magasin</b> : gros texte, écran qui reste allumé quand le téléphone le permet, et les articles cochés descendent dans « Dans le panier ». Touche <b>Quitter</b> pour revenir.</li>
     <li>« Vérifier avant de partir » rappelle les articles toujours à la maison : touche <b>Il manque</b> au besoin.</li>
-    <li>Avec un <b>budget</b> (Réglages), l'onglet montre ton budget et le coût estimé des articles en spécial. Au retour, inscris le <b>total payé</b> à la caisse : la moyenne payée s'affiche dans Réglages, carte Historique.</li>
+    <li>Avec un <b>budget</b> (Profil), l'onglet montre ton budget et le coût estimé des articles en spécial. Au retour, inscris le <b>total payé</b> à la caisse : la moyenne payée s'affiche dans Profil, carte Historique.</li>
     <li><b>Prix et budget</b> : chaque article montre un prix. « ≈ » veut dire un prix habituel estimé (moyennes du Québec de Statistique Canada quand elles existent). Un spécial donne le prix de la circulaire; quand la circulaire indique le rabais en %, l'application en déduit le prix régulier. Touche un prix pour noter ce que tu as payé : l'application le retient pour les semaines suivantes. Le total estimé se compare à ton budget.</li>
     <li><b>Moins cher ailleurs</b> : l'application lit les circulaires de toutes tes épiceries, même celles décochées pour la semaine. Si un article est nettement moins cher ailleurs, c'est écrit sous l'article, et une carte résume l'économie possible par épicerie.</li>
     <li><b>Vraies aubaines</b> : un rabais d'au moins 35 % sur un produit qui se garde (viande et poisson à congeler, surgelés, garde-manger, beurre, fromage) apparaît dans « Vraies aubaines : fais des réserves », avec un conseil de conservation et « En ajouter ».</li>
@@ -473,29 +478,36 @@ function renderAide(){
   + D('12. La banque de recettes', `<ul><li>L'onglet <b>Recettes</b> regroupe les plats par <b>protéine</b>, par <b>style</b> ou par <b>genre</b> (soupers, entrées, desserts). Les filtres combinent recherche, genre, protéine, style, « 30 min ou moins » et favoris.</li>
     <li><b>Je n'aime pas</b> met une recette de côté : elle n'est plus jamais proposée. Coche « Mis de côté » pour les revoir et <b>Remettre dans la banque</b>.</li>
     <li><b>Accompagnements</b> : chaque souper montre son féculent et son légume. « Varié » laisse l'application choisir chaque semaine parmi ceux qui vont avec le plat; choisis-en un pour l'avoir à tout coup, ou « Aucun ». La section <b>Accompagnements</b> (en bas de l'onglet, ou Genre : Accompagnements) montre tous les féculents et légumes avec leurs ingrédients; « Ne plus le proposer » le retire des choix automatiques.</li>
-    <li><b>Soupes et potages</b> : un genre à part, pour les lunchs ou en entrée. Choisis combien en faire par semaine sur la carte de la semaine ou dans Réglages.</li>
+    <li><b>Soupes et potages</b> : un genre à part, pour les lunchs ou en entrée. Choisis combien en faire par semaine sur la carte de la semaine ou dans Profil.</li>
     <li><b>Sauces</b> : des compléments, pas des repas. Ouvre un souper du menu et choisis une « Sauce en complément » (sauce au poivre avec un steak, par exemple), ou touche <b>Ajouter à un plat du menu</b> dans la recette de la sauce. Ses ingrédients vont dans la liste d'épicerie.</li>
     <li><b>Nouvelle recette</b>, <b>Modifier la recette</b> et les versions utilisent le même formulaire guidé : pour chaque ingrédient, tape quelques lettres, touche l'aliment proposé, puis indique la quantité et l'unité dans les menus. Le rayon se remplit tout seul; pour un aliment nouveau, l'application demande dans quel rayon il se trouve.</li>
     <li><b>Ajouter une version</b> ou <b>Modifier cette version</b> : coche les ingrédients à retirer, ajoute ceux qui changent, choisis l'accompagnement et écris la préparation propre à cette version. « Retirer cette version » la cache, « Rétablir les variantes d'origine » annule tes changements.</li>
     <li>Ce que tu tapes dans un formulaire reste là même si tu changes d'onglet. Un message sous le formulaire indique ce qui manque (un nom, une quantité…).</li>
     <li>Les soupers sont écrits pour 6 portions et ajustés à tes portions; les entrées et desserts donnent environ 6 à 8 portions.</li></ul>`)
-  + D('13. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Vérifie tes épiceries et ton code postal dans Réglages.</li>
+  + D('13. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Vérifie tes épiceries et ton code postal dans Profil.</li>
     <li>Si le navigateur bloque la requête, copie le texte d'une circulaire (<a href="https://flipp.com/fr-ca" target="_blank" rel="noopener">Flipp</a>) et colle-le dans « Si la recherche ne fonctionne pas ».</li>
     <li>Sans spéciaux, tout fonctionne : le menu est simplement choisi sans les rabais.</li></ul>`)
   + D('14. Sauvegarder', `<ul><li>Les données sont enregistrées sur ce téléphone à chaque action. <b>Une mise à jour de l'application ne les touche pas</b> : elle remplace seulement le code, et chaque nouvelle version lit les données de l'ancienne.</li>
-    <li>Par sécurité, l'application garde une <b>copie automatique</b> avant chaque mise à jour et une fois par jour (les 5 dernières, dans Réglages → Sauvegarde). Si une version n'arrive pas à lire tes données, elle les met de côté au lieu de les effacer.</li>
+    <li>Par sécurité, l'application garde une <b>copie automatique</b> avant chaque mise à jour et une fois par jour (les 5 dernières, dans Profil → Sauvegarde). Si une version n'arrive pas à lire tes données, elle les met de côté au lieu de les effacer.</li>
     <li>Ce qui peut effacer les données : supprimer l'icône de l'écran d'accueil, effacer les données des sites dans les réglages de l'iPhone, ou ouvrir l'application à une autre adresse. Garde la même adresse et ne supprime pas l'icône.</li>
-    <li>Pour être protégé même dans ces cas : Réglages → <b>Enregistrer une copie dans Fichiers</b>, puis « Enregistrer dans Fichiers ». Fais-le après avoir rempli ton garde-manger, puis une fois par mois. Pour revenir en arrière : « Restaurer une copie » et choisis le fichier.</li></ul>`)
+    <li>Pour être protégé même dans ces cas : Profil → <b>Enregistrer une copie dans Fichiers</b>, puis « Enregistrer dans Fichiers ». Fais-le après avoir rempli ton garde-manger, puis une fois par mois. Pour revenir en arrière : « Restaurer une copie » et choisis le fichier.</li></ul>`)
   + D("15. Articles : corriger un spécial, convertir une mesure", `<ul><li>L'onglet <b>Articles</b> montre le spécial associé à chaque article de ta liste (« Ma liste »), de tous les articles connus (« Tous ») ou de ceux que tu as modifiés.</li>
     <li>Un spécial n'est pas le bon ? Touche « Pas le bon ? » sous l'étiquette jaune dans la liste, ou ouvre l'article. Choisis un autre spécial, « Aucun spécial cette semaine », ou cherche le bon dans les circulaires : « Cette semaine » l'associe jusqu'à la fin de la semaine, « Toujours » retient ce produit pour les prochaines semaines.</li>
     <li>Tu peux aussi changer les <b>mots recherchés</b> (une virgule sépare deux façons de le nommer), ajouter des <b>mots à exclure</b> (pané, assaisonné…), choisir le <b>rayon</b>, le <b>format du paquet</b> et le <b>prix habituel</b>.</li>
     <li>À chaque recherche des spéciaux, le prix trouvé est noté. Quand un article n'est pas en spécial, la liste dit à quel prix il l'est souvent.</li>
     <li>Le <b>convertisseur</b> passe des g aux lb, des ml aux tasses et cuillères (avec la densité de la farine, du sucre, du beurre…), et des prix à la livre aux prix au kilo.</li></ul>`)
+  + D("Partager l'application", `<p>Pour l'installer sur un autre téléphone, ouvre ce lien dans Safari ou montre ce code à scanner avec l'appareil photo :</p>
+    <p><a href="https://mdulac86.github.io/Menu/">mdulac86.github.io/Menu</a></p><p><img src="qr-menu.png" width="160" height="160" alt="Code QR vers l'application"></p>
+    <p class="small">Chaque personne a ses propres données : rien n'est partagé entre les téléphones.</p>`)
+  + D('Vie privée', `<ul><li>Tes données (famille, menus, liste, prix) restent <b>sur ton téléphone</b>. Aucun compte, aucune collecte.</li>
+    <li>La seule information envoyée est ton <b>code postal</b>, à Flipp, pour trouver les circulaires de ta région.</li>
+    <li>Les liens vers les sites des épiceries ouvrent leur page de recherche dans Safari.</li></ul>`)
+  + (self.APP_CONTACT ? D('Signaler un problème ou une idée', `<p><a class="btn s p" href="mailto:${esc(self.APP_CONTACT)}?subject=${encodeURIComponent('Menu de la semaine ' + APPV)}&body=${encodeURIComponent('Appareil : ' + navigator.userAgent + '\n\n')}">Écrire un courriel</a></p><p class="small">La version de l'application et le modèle du téléphone sont ajoutés; aucune de tes données.</p>`) : '')
   + D('16. Questions fréquentes', `<p><b>Le menu ne change pas quand je le refais.</b> Les plats « Gardé » restent; une fois l'épicerie terminée, le menu est verrouillé jusqu'à « Terminer la semaine ».</p>
     <p><b>Un article est en double.</b> Deux recettes le nomment différemment; additionne-les en magasin.</p>
-    <p><b>Les quantités ne conviennent pas.</b> Ajuste les portions (Réglages ou repas par repas), les quantités d'accompagnements, ou modifie la recette. Les quantités des recettes sont des estimations : corrige celles qui ne conviennent pas à ta famille.</p>
+    <p><b>Les quantités ne conviennent pas.</b> Ajuste les portions (Profil ou repas par repas), les quantités d'accompagnements, ou modifie la recette. Les quantités des recettes sont des estimations : corrige celles qui ne conviennent pas à ta famille.</p>
     <p><b>Un spécial ne correspond pas à l'article</b> (ex. des oeufs Kinder pour des oeufs). Onglet Articles → l'article → « Pas ce produit » : il ne sera plus jamais associé. Les friandises, plats préparés et produits « à la » ou « aux » (nouilles aux oeufs, poulet au beurre) sont déjà écartés automatiquement.</p>
-    <p><b>Tout recommencer.</b> Réglages → « Tout remettre à zéro ».</p>`);
+    <p><b>Tout recommencer.</b> Profil → « Tout remettre à zéro ».</p>`);
 }
 
 
@@ -524,7 +536,7 @@ const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeo
     /* données qui empêchent l'affichage : on les met de côté et on n'enregistre plus rien par-dessus */
     try{ const j = localStorage.getItem(KEY); if(j && !localStorage.getItem(RESCUE)) localStorage.setItem(RESCUE, j); }catch(_){}
     loadFailed = true; rescued = false; S = DEFAULT(); S.appv = APPV;
-    S.flash = "Tes données ont causé une erreur d'affichage. Elles sont gardées telles quelles, rien n'est effacé ni remplacé : Réglages → Sauvegarde → « Essayer de les restaurer », ou « Tout remettre à zéro » pour repartir.";
+    S.flash = "Tes données ont causé une erreur d'affichage. Elles sont gardées telles quelles, rien n'est effacé ni remplacé : Profil → Sauvegarde → « Essayer de les restaurer », ou « Tout remettre à zéro » pour repartir.";
     try{ render(); }catch(_){}
   }
   setSync(loadFailed ? 'Mode secours : tes données sont gardées de côté' : 'Enregistré sur cet appareil');

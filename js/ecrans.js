@@ -83,7 +83,7 @@ function countSelects(dis){
 function renderSetup(){
   const p = S.p;
   return `<div class="card call"><h3>Bienvenue ! On prépare ton application</h3>
-    <p class="small">Elle démarre vide. Choisis tes épiceries, ton code postal et ce que tu veux planifier chaque semaine. Tout se change plus tard dans Réglages.</p>
+    <p class="small">Elle démarre vide. Choisis tes épiceries, ton code postal et ce que tu veux planifier chaque semaine. Tout se change plus tard dans Profil.</p>
     <label class="f">Code postal<input type="text" data-cp="1" value="${esc(S.cp)}" autocapitalize="characters" placeholder="A1A 1A1"></label>
     <p class="small"><b>Mes épiceries</b>, pour chercher les spéciaux. Coche celles où tu vas, ou touche le bouton pour voir celles qui ont une circulaire près de chez toi.</p>
     ${storePicker()}
@@ -106,7 +106,7 @@ function renderWeek(){
   const go = goStores();
   const status = S.stores.length && !go.length ? 'Coche au moins une épicerie pour voir ses spéciaux.'
     : S.auto ? `${items.length} spécia${items.length>1?'ux':'l'} valide${items.length>1?'s':''} ce jour-là, dans ${esc(go.join(', ') || S.auto.src || 'les circulaires')}.`
-    : S.stores.length ? 'Les spéciaux de tes épiceries ne sont pas encore cherchés.' : 'Choisis tes épiceries dans Réglages pour chercher les spéciaux.';
+    : S.stores.length ? 'Les spéciaux de tes épiceries ne sont pas encore cherchés.' : 'Choisis tes épiceries dans Profil pour chercher les spéciaux.';
   return `<div class="card week">
     <h2>Épicerie du ${esc(fmtDate(shop))}</h2>
     <div class="grid4c">${countSelects('')}</div>
@@ -717,7 +717,7 @@ function recEditor(r){
     <label class="f">Préparation<select ${F(key,'tp')}>${optMin(TP_L, d.tp||d.tm)}</select></label></div>
     <div class="grid2"><label class="f">Temps total<select ${F(key,'tm')}>${optMin(TM_L, d.tm)}</select></label>
     <label class="check"><input type="checkbox" ${F(key,'mj')} ${d.mj?'checked':''}> Peut cuire à la mijoteuse pendant la journée</label></div>
-    <label class="check"><input type="checkbox" ${F(key,'sp')} ${d.sp?'checked':''}> Déjeuner de semaine (jours de travail) ou dessert simple (pas proposé, sauf si permis dans Réglages)</label>
+    <label class="check"><input type="checkbox" ${F(key,'sp')} ${d.sp?'checked':''}> Déjeuner de semaine (jours de travail) ou dessert simple (pas proposé, sauf si permis dans Profil)</label>
     <div class="grid2"><label class="f">Féculent par défaut<select ${F(key,'sf')}>${sideOpts('f', d.sf, true)}</select></label><label class="f">Légume par défaut<select ${F(key,'sv')}>${sideOpts('v', d.sv, true)}</select></label></div>
     <p class="small"><b>Ingrédients</b>${kindOf(r)==='souper' ? ' pour 6 portions' : ''}. Tape quelques lettres et choisis l'aliment proposé.</p>
     ${ingBuilder(key, d.rows)}
