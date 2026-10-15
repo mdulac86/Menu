@@ -27,7 +27,7 @@ self.addEventListener('fetch', e => {
       clearTimeout(t);
       const hit = await caches.match(req, {ignoreSearch: true});
       if(hit) return hit;
-      if(req.mode === 'navigate'){ const home = await caches.match('index.html') || await caches.match('./'); if(home) return home; }
+      if(req.mode === 'navigate'){ const home = await caches.match(self.APP_TEST ? 'test.html' : 'index.html') || await caches.match('./'); if(home) return home; }
       return new Response('Hors ligne', {status: 503, headers: {'Content-Type': 'text/plain; charset=utf-8'}});
     }
   })());

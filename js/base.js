@@ -98,6 +98,7 @@ function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); con
    2. Une copie est gardée avant chaque nouvelle version et une fois par jour (COPIES, 5 au maximum).
    3. Une copie peut être enregistrée dans Fichiers et restaurée. */
 const APPV = self.APP_VERSION || 'dev', TEST = !!self.APP_TEST, PFX = TEST ? 'menu_test_' : 'menu_epicerie_';
+const TEST_PAGE = TEST && /test\.html$/.test(location.pathname);   /* version de test publiée comme fichiers « test… » à la racine */
 const KEY = PFX + 'v1', COPIES = PFX + 'copies', RESCUE = PFX + 'secours', REAL_KEY = 'menu_epicerie_v1';
 let loadFailed = false, rescued = false, bkBar = true;   /* bkBar : bandeau de sauvegarde, une fois par ouverture */
 function readCopies(){ try{ return JSON.parse(localStorage.getItem(COPIES) || '[]'); }catch(e){ return []; } }

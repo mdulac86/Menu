@@ -10,7 +10,7 @@ const http = require('http');
   await page.goto('http://localhost:8765/index.html');
   const avant = await page.evaluate(() => { S.setup = true; S.stores = ['IGA']; S.cp = 'G6V6Z3'; S.p.budget = 180; genMenu(); S.stock['riz|g'] = {name:'Riz', u:'g', q:900, rayon:'épicerie'}; S.fav['Pâté chinois'] = true; save(); return {menu: S.menu.items.map(x => x.r), souper: S.p.souper, budget: S.p.budget}; });
   srv.close(); await new Promise(r => setTimeout(r, 300));
-  process.env.RACINE = ''; delete require.cache[require.resolve('./serveur')]; srv = await require('./serveur')();
+  process.env.RACINE = process.env.RACINE_NOUVEAU || ''; delete require.cache[require.resolve('./serveur')]; srv = await require('./serveur')();
   await page.goto('http://localhost:8765/index.html'); await page.waitForTimeout(400);
   const apres = await page.evaluate(() => ({menu: S.menu.items.map(x => x.r), souper: S.p.souper, etape: etape(), budget: S.p.budget, riz: !!Object.values(S.stock).find(o => o.name==='Riz'), fav: !!S.fav['Pâté chinois'], copie: readCopies().some(c => c.label==='Avant la mise à jour'), secours: loadFailed}));
   const ok = JSON.stringify(avant.menu) === JSON.stringify(apres.menu) && apres.souper === avant.souper && apres.etape !== 'preparer' && apres.budget === 180 && apres.riz && apres.fav && apres.copie && !apres.secours && !errs.length;

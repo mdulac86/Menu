@@ -521,7 +521,7 @@ const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeo
 (function init(){
   try{ if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
     const had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => { document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible') reg.update().catch(()=>{}); }); }).catch(()=>{});
+    navigator.serviceWorker.register(TEST_PAGE ? 'sw-test.js' : 'sw.js', TEST_PAGE ? {updateViaCache: 'none', scope: './test'} : {updateViaCache: 'none'}).then(reg => { document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible') reg.update().catch(()=>{}); }); }).catch(()=>{});
     navigator.serviceWorker.addEventListener('controllerchange', () => { if(draftsDirty()){ setSync('Nouvelle version prête : elle s\'appliquera à la prochaine ouverture.'); return; } if(had && !sessionStorage.getItem(PFX+'maj')){ try{ sessionStorage.setItem(PFX+'maj', '1'); }catch(e){} location.reload(); } });
   } }catch(e){}
   loadLocal();
