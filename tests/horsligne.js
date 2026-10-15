@@ -1,5 +1,5 @@
 /* Vérifie que l'application s'installe (service worker) et s'ouvre sans connexion. */
-const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
+const { chromium } = (() => { try{ return require('playwright-core'); }catch(e){ return require('/opt/node-tools/node_modules/playwright-core'); } })();
 const serveur = require('./serveur');
 (async () => {
   const srv = await serveur();

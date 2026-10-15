@@ -110,14 +110,14 @@ function loadLocal(){
   try{ j = localStorage.getItem(KEY); }catch(e){}
   if(j){
     try{ S = mergeState(JSON.parse(j)); }
-    catch(e){ loadFailed = true; try{ const old = localStorage.getItem(RESCUE); if(old && old !== j) localStorage.setItem(RESCUE+'_2', old); localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
+    catch(e){ loadFailed = true; try{ if(!localStorage.getItem(RESCUE)) localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
     if(!loadFailed && S.appv !== APPV){ snapshot('Avant la mise à jour', j); S.appv = APPV; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
     if(loadFailed) S.flash = "Tes données n'ont pas pu être lues par cette version. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
   } else S.appv = APPV;
 }
 /* nombre saisi : « 1 200 », « 150 $ », « 2,5 » ; jamais négatif ni NaN */
 const numIn = v => Math.max(0, parseFloat(String(v ?? '').replace(/[\s\u00a0$]/g,'').replace(',','.')) || 0);
-function resetCaches(){ _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); }
+function resetCaches(){ _DO = new WeakMap(); _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); }
 function save(){
   resetCaches(); S.maj = Date.now(); S.bkDirty = true;
   if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Réglages)"); return; }
@@ -606,7 +606,7 @@ function parseIngLine(line){
       const par = s.match(/^\(([^)]*)\)/);                          /* « 1 (796 ml) boîte » ou « 2 (env. 400 g) poitrines » */
       const pm = s.match(PIECES);
       if(pm){ piece = pm[0]; s = s.slice(pm[0].length).trim(); }
-      const pMetric = (() => { const p2 = s.match(/^(?:de\s+)?\(([^)]*)\)/); const mm = p2 && p2[1].match(/(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg)\b/i); if(mm){ s = s.slice(p2[0].length).trim(); return mm; } return null; })();
+      const pMetric = pm && /bo[iî]te|conserve|paquet|sac|sachet|pot|bouteille|contenant|barquette|casseau|enveloppe/i.test(pm[0]) ? (() => { const p2 = s.match(/^(?:de\s+)?\(([^)]*)\)/); const mm = p2 && p2[1].match(/(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg)\b/i); if(mm){ s = s.slice(p2[0].length).trim(); return mm; } return null; })() : null;
       const sz = pMetric || s.match(/^(?:de\s+)?\(?\s*(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg|oz|lb)\b\.?\s*\)?/i)
              || (par ? par[1].match(/(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg|lb)\b/i) : null);
       if(sz && piece && /bo[iî]te|conserve|paquet|sac|sachet|pot|bouteille|contenant|barquette|casseau|enveloppe/i.test(piece)){
@@ -800,7 +800,7 @@ function spreadDays(){
 
 /* ---------- jours de la semaine ---------- */
 const addDays = (iso, n) => { const d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-const weekDates = () => Array.from({length:7}, (_,k) => addDays(shopISO(), k));
+const weekDates = () => Array.from({length:7}, (_,k) => addDays(weekStart(), k));
 const isOff = iso => (S.p.off||[0,6]).includes(new Date(iso+'T12:00:00').getDay());
 const dayLbl = iso => { try{ return cap(new Date(iso+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'long', day:'numeric'})); }catch(e){ return iso; } };
 const JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
@@ -968,7 +968,8 @@ function buyList(){
 }
 const isoToday = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 /* début de la semaine du menu : la date d'épicerie choisie, sinon le jour où le menu a été créé (les jours ne glissent plus chaque jour) */
-const shopISO = () => S.dates.shop || (S.menu && S.menu.date && S.menu.start) || isoToday();
+const shopISO = () => S.dates.shop || isoToday();
+const weekStart = () => S.dates.shop || (S.menu && S.menu.date && S.menu.start) || isoToday();
 const fmtDate = iso => { try{ return new Date(iso+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'}); }catch(e){ return iso; } };
 const nice = t => { t = String(t).trim(); return t.charAt(0).toUpperCase()+t.slice(1).toLowerCase(); };
 const cap = t => { t = String(t); return t.charAt(0).toUpperCase()+t.slice(1); };
@@ -1127,9 +1128,9 @@ const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d
    (pané, haché, sauce, soupe, jus, chips…) est écarté si l'article ne la nomme pas, sauf dans « X ou Y ».
    L'onglet Articles permet de choisir le bon spécial, d'en retenir un produit, de changer les mots ou d'en exclure. */
 const STOPW = new Set(['de','du','des','la','le','les','a','au','aux','et','en','d','l','pour','avec','sur','un','une','x','g','kg','ml','lb','oz','ou','par','sans','dans','ch','chacun','prix','special']);
-const OPTW = new Set(['frais','fraiche','gros','grosse','moyen','moyenne','petit','petite','nature','regulier','reguliere','classique','original','originale','extra','desosse','peau','maigre','mi','surgele','rape','tranche','bio','biologique','familial','format','choix','filet','mur','mure','blanc','blanche','jaune','rouge','vert','verte','emince','coupe','piece','tout','usage','lave','bebe','mini','jumbo','paquet','boite','sac','emballage','regime','caisse','pot','bouteille','contenant','barquette','unite','portion','individuel','individuelle','lunch','lunchs','dejeuner','dejeuners','collation','famille','roties','rotie','cuit','cuite','congele']);
+const OPTW = new Set(['endes','cru','crue','decortique','decortiquee','deveine','deveinee','frais','fraiche','gros','grosse','moyen','moyenne','petit','petite','nature','regulier','reguliere','classique','original','originale','extra','desosse','peau','maigre','mi','surgele','rape','tranche','bio','biologique','familial','format','choix','filet','mur','mure','blanc','blanche','jaune','rouge','vert','verte','emince','coupe','piece','tout','usage','lave','bebe','mini','jumbo','paquet','boite','sac','emballage','regime','caisse','pot','bouteille','contenant','barquette','unite','portion','individuel','individuelle','lunch','lunchs','dejeuner','dejeuners','collation','famille','roties','rotie','cuit','cuite','congele']);
 const FORMW = new Set(['hache','roti','steak','cotelette','cote','poitrine','cuisse','haut','pilon','aile','epaule','longe','saucisse','bacon','cube','laniere','pane','croquette','burger','boulette','bouillon','soupe','sauce','assaisonnement','marinade','marine','chip','croustille','biscuit','barre','jus','boisson','yogourt','creme','glace','gateau','muffin','tarte','pizza','lasagne','repas','sandwich','vinaigrette','trempette','tartinade','poudre','sirop','nourriture','chien','chat','compote','puree','broye','pain','hamburger','dog','baguette','bagel','croissant','tortilla','pita','naan','brioche','salade','chocolat','the','cafe','cereale','granola','nouille','sec','seche','bbq','kit','melange','gelee','confiture','dinde','latte','cappuccino','frappuccino','capsule','tartiner','teriyaki','aigre','carbonara','frit','frite','tao','shawarma','plat','simili','stroganov','mein','pastrami','garni','farci','fume','endes','conserve','collation','fouette','vegetale','vegetal','patissiere','evapore','concentre','condense','aromatise','sucre','croquant','enrobe','glacage','fondant','friandise','bonbon','gomme','jujube','guimauve','surprise','kinder']);
-const sing = w => w.length > 3 && /[sx]$/.test(w) && !/(ss|is|us|ais|ois|oix|as)$/.test(w) && !/^(gros|dos|repos|frais|sans|sous)$/.test(w) ? w.slice(0,-1) : w;
+const sing = w => w.length > 3 && /[sx]$/.test(w) && !/(ss|is|us|ais|ois|oix|as)$/.test(w) && !/^(gros|dos|repos|frais|sans|sous|endes)$/.test(w) ? w.slice(0,-1) : w;
 /* corrections avant la normalisation (les accents distinguent pâté et pâtes) */
 const rawFix = s => String(s||'').toLowerCase().replace(/(?<![a-zà-ÿ])p[âa]t[ée]s?(?![a-zà-ÿ])/g, m => /é/.test(m) ? 'terrine' : m).replace(/\ben d[ée]s\b/g, 'endes').replace(/\bpommes? terre\b/g, 'pomme de terre');
 const toks = (s, keepParen) => { let t = norm(rawFix(s)); if(!keepParen) t = t.replace(/\([^)]*\)/g,' ');
@@ -1144,9 +1145,15 @@ const _PREP = new WeakMap();
    « Oeufs blancs » oui, mais pas « Nouilles aux oeufs », « Casserole d'oeufs » ni « Oeufs Kinder Surprise ». */
 const CONNW = new Set(['de','d','du','des','a','au','aux','avec','en','sur','pour','et','farci','farcie','farcis','barde','bardee','bardes','enrobe','enrobee','fourre','fourree','saveur','style','facon','sauce']);
 const ARTW = new Set(['la','le','les','l','un','une']);
+/* mots de catégorie qui peuvent précéder le produit : « Fromage feta », « Riz basmati », « Huile d'olive » */
+const CLASSW = new Set(['fromage','viande','poisson','legume','fruit','pate','nouille','riz','farine','huile','vinaigre','sucre','the','epice','fine','herbe','sauce','lait','creme','bouillon']);
+/* compléments normaux après le produit : l'animal (« Saucisses de porc »), le liquide (« Thon à l'huile ») */
+const POSTOK = new Set(['poulet','boeuf','porc','dinde','veau','agneau','canard','poisson','saumon','thon','morue','crevette','huile','eau','saumure','dos','surlonge','longe','epaule','cuisse','poitrine','lait','grain']);
+/* produits souvent aromatisés : « Yogourt aux fraises », « Ketchup aux tomates » restent ces produits */
+const FREEPOST = new Set(['yogourt','yogurt','ketchup','jus','the','cafe','tisane','compote','confiture','gruau','cereale','craquelin','biscuit','muffin','barre','vinaigrette','moutarde','soupe','bouillon','saucisse','pain','bagel','fromage','pouding','gelee','sirop','tartinade','trempette','salsa','mayonnaise']);
 /* coupes et formats : « Poitrines de poulet », « Sac de carottes » restent du poulet et des carottes */
 const CUTW = new Set(['poitrine','cuisse','haut','pilon','aile','filet','cube','laniere','epaule','longe','cotelette','cote','steak','roti','bavette','surlonge','tranche','morceau','jarret','contre','intérieur','interieur','exterieur','ronde','croupe','palette','flanc','cuisseau','gigot','carre','demi','quartier','tournedo','medaillon','escalope','brochette',
-  'sac','paquet','boite','caisse','emballage','barquette','format','tube','pot','bouteille','contenant','plateau','bloc','rouleau','douzaine','botte','regime','couronne','tete','pied','coeur','bouquet','grappe','casseau','livre','lb','kg','g','ml','l','economique','familial','gros','grosse','petit','petite']);
+  'sac','paquet','paq','emb','bifteck','produit','preparation','entier','entiere','duo','assortiment','canette','minicanette','boite','caisse','emballage','barquette','format','tube','pot','bouteille','contenant','plateau','bloc','rouleau','douzaine','botte','regime','couronne','tete','pied','coeur','bouquet','grappe','casseau','livre','lb','kg','g','ml','l','economique','familial','gros','grosse','petit','petite']);
 /* friandises et produits non alimentaires qui partagent des mots avec les aliments */
 const CANDY_RE = /\b(kinder|surprise|friandises?|bonbons?|cadbury|lindt|ferrero|hershey|reese|smarties|m ?& ?m|mars|twix|kit ?kat|aero|caramilk|coffee crisp|toblerone|guimauves?|reglisses?|halloween|paques|jujubes?|gommes?)\b/;
 const SMOKED = new Set(['bacon','jambon','saucisse','saucisson','kielbasa']);
@@ -1156,13 +1163,22 @@ const VARIETY = {
   riz: {all:new Set(['lait','croustillant','souffle','galette','cereale']), def:new Set()}
 };
 /* conserves : un article en boîte prend un spécial en boîte, pas le saumon frais */
-const CANNED_RE = /\bboites?\b|conserve|\bcans?\b|canned|endes|\bpelee|\bpolpa\b|mutti|unico|aylmer|rio mare|clover|gold seal|\b(1[0-9]{2}|[2-9][0-9]{2}) ?ml\b/;
-const CANNABLE = new Set(['tomate','saumon','thon','mais','pois','haricot','ananas','peche','poire','champignon','pomme']);
+const CANNED_RE = /\bboites?\b|conserve|\bcans?\b|canned|endes|\bpelee|\bpolpa\b|mutti|unico|aylmer|rio ?mare|clover|gold seal|cedar|fillo|clark|primo|del monte|green giant|pastene|\b(1[0-9]{2}|[2-9][0-9]{2}) ?ml\b|\b(8[5-9]|9[0-9]|1[0-9]{2}|2[01][0-9]) ?g\b/;
+const CANNABLE = new Set(['tomate','saumon','thon','mais','pois','haricot','ananas','peche','poire','champignon','pomme','lentille','feve']);
 const NAMEFIX = [[/\bou\s*\/\s*or\b/g, ' ou '], [/\b(\d+)\s*%/g, '$1pc']];
 function nameSegs(t){
   let n = norm(rawFix(t)).split('|')[0]; NAMEFIX.forEach(([re, r]) => n = n.replace(re, r));
   n = n.replace(/\([^)]*\)/g, ' ').replace(/\b\d+(?:[.,]\d+)?\s*(?:x|×)\s*\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|lb|oz)\b/g, ' ').replace(/\b\d+(?:[.,]\d+)?(?:\s*[-à\/]\s*\d+(?:[.,]\d+)?)?\s*(?:g|kg|ml|l|lb|oz|un|unites?)\b\.?/g, ' ');
-  return n.split(/\bou\b|\bor\b|;|\s-\s|,(?!\d)/).map(seg => seg.replace(/['’]/g, ' ').split(/[^a-z0-9]+/).filter(Boolean).map(w => { if(/^\d+pc$/.test(w)) return w; w = sing(w); return w.length > 4 && w.endsWith('ee') ? w.slice(0,-1) : w; }).filter(w => w==='et' || !/^\d/.test(w) || /pc$/.test(w))).filter(W => W.length);
+  const tok = seg => seg.replace(/['’]/g, ' ').split(/[^a-z0-9]+/).filter(Boolean).map(w => { if(/^\d+pc$/.test(w)) return w; w = sing(w); return w.length > 4 && w.endsWith('ee') ? w.slice(0,-1) : w; }).filter(w => w==='et' || !/^\d/.test(w) || /pc$/.test(w));
+  const out = [];
+  /* les « ou » partagent souvent un mot : « Poitrines ou cuisses de poulet », « Lait 1 % ou 2 % », « Huile de canola ou végétale » */
+  n.split(/;|\s-\s|,(?!\d)/).forEach(part => {
+    const S = part.split(/\bou\b|\bor\b/).map(tok).filter(W => W.length); if(!S.length) return;
+    const first = S[0][0], last = S[S.length-1], tail = last.slice(1);
+    S.forEach((W, i) => { out.push(W);
+      if(S.length > 1){ if(i > 0 && !W.includes(first)) out.push([first].concat(W)); if(i < S.length-1 && tail.length) out.push(W.concat(tail)); } });
+  });
+  return out;
 }
 let _PN = null;
 /* noms de produits connus : un tel mot devant l'article (« Poulet au beurre » pour Beurre) change le produit */
@@ -1177,15 +1193,15 @@ function segFits(R, mine, W){
   const PN = prodNouns(), head = R[0];
   if(!R.every(w => W.includes(w))) return false;
   const i = W.indexOf(head), pre = W.slice(0, i).filter(w => !ARTW.has(w));
-  let j = -1; pre.forEach((w, k) => { if(CONNW.has(w)) j = k; });
+  const j = pre.length && CONNW.has(pre[pre.length-1]) ? pre.length-1 : -1;   /* connecteur juste avant le produit */
   if(j >= 0){ const bef = pre.slice(0, j); if(!bef.length || !bef.every(w => CUTW.has(w) || CONNW.has(w))) return false; }
-  else if(pre.some(w => PN.has(w) && !mine.has(w) && !CUTW.has(w) && !OPTW.has(w))) return false;
+  else if(pre.some(w => PN.has(w) && !CONNW.has(w) && !mine.has(w) && !CUTW.has(w) && !OPTW.has(w) && !CLASSW.has(w))) return false;
   /* après le mot principal : « Beurre aux pois chiches », « Riz au lait » sont d'autres produits */
-  const post = W.slice(i + 1);
+  const post = FREEPOST.has(head) ? [] : W.slice(i + 1);
   for(let k = 0; k < post.length; k++){
     if(!CONNW.has(post[k])) continue;
     let w = post[k+1]; let m = k+1; while(w && ARTW.has(w)){ m++; w = post[m]; }
-    if(w && PN.has(w) && !mine.has(w) && !OPTW.has(w) && !CUTW.has(w)) return false;
+    if(w && PN.has(w) && !mine.has(w) && !OPTW.has(w) && !CUTW.has(w) && !POSTOK.has(w)) return false;
   }
   /* forme ou préparation qui n'est pas dans le nom de l'article (pané, haché, en sauce…) */
   if(W.some(w => FORMW.has(w) && !mine.has(w) && !(w==='fume' && SMOKED.has(head)))) return false;
@@ -1200,7 +1216,10 @@ function segFits(R, mine, W){
 }
 function prep(list){
   let P = _PREP.get(list);
-  if(!P){ P = list.map(s => { const tk = toks(s.t, true), sg = nameSegs(s.t); return {s, tk:new Set(tk.concat(sg.flat())), segs:sg, f:tk.filter(w => FORMW.has(w)), b:baseOf(rawFix(s.t)), candy:CANDY_RE.test(norm(s.t)), alt:/ ou /.test(norm(s.t))}; }); _PREP.set(list, P); }
+  if(!P){ P = list.map(s => { const tk = toks(s.t, true), sg = nameSegs(s.t), nt = norm(rawFix(s.t)); return {s, nt, tk:new Set(tk.concat(sg.flat())), segs:sg, f:tk.filter(w => FORMW.has(w)), b:baseOf(rawFix(s.t)), candy:CANDY_RE.test(nt), can:CANNED_RE.test(nt), canMark:/endes|\bpelee|\bpolpa\b|conserve|\bboites?\b/.test(nt), alt:/ ou /.test(nt)}; }); P.memo = new Map();
+    /* index mot → spéciaux : on n'examine que les spéciaux qui contiennent le premier mot cherché */
+    P.idx = new Map(); P.forEach(x => x.tk.forEach(w => { let a = P.idx.get(w); if(!a) P.idx.set(w, a = []); a.push(x); }));
+    _PREP.set(list, P); }
   return P;
 }
 /* réglages d'un article (onglet Articles) */
@@ -1208,20 +1227,27 @@ const artB = name => baseOf(plain(name));
 const art = name => (S.art||{})[artB(name)] || {};
 const pcToks = name => (norm(name).match(/\b\d+\s*%/g) || []).map(x => x.replace(/\s*%/, 'pc'));
 function dealCands(name, P){
+  if(P.memo && P.memo.has(name)) return P.memo.get(name);
+  const res = dealCands0(name, P); if(P.memo) P.memo.set(name, res); return res;
+}
+function dealCands0(name, P){
   const A = art(name), nb = baseOf(name), alts = [];
   if(A.kw) A.kw.split(',').forEach(x => { const t = toks(x); if(t.length) alts.push({t, free:false, kw:true}); });
-  else { const r = reqToks(name); if(r.length) alts.push({t:r, free:false}); }
+  else { const parts = / ou /.test(norm(name)) ? plain(name).split(/\s+ou\s+/i) : [name]; parts.forEach(p => { const r = reqToks(p); if(r.length) alts.push({t:r, free:false}); }); }
   (A.learn||[]).forEach(t => { if(t.length) alts.push({t, free:true}); });
   if(!alts.length) return [];
   const no = A.no ? A.no.split(',').flatMap(x => toks(x)) : [];
   const mine = new Set(toks(name).concat(alts.flatMap(a => a.t), pcToks(name)));
+  if(/\bboites?\b|conserve|en d[ée]s/i.test(name)) ['conserve','endes','boite'].forEach(w => mine.add(w));
   const candyOk = CANDY_RE.test(norm(name)) || /chocolat|bonbon|friandise/.test(norm(name));
-  const canned = /\bboites?\b|conserve/.test(norm(name)) && !/\bboites? (de|d)( |')?(oeufs?|cereales?|biscuits?|craquelins?|the|cafe|mouchoirs?|chocolats?)/.test(norm(name)), ex = new Set(A.ex || []);
-  return P.filter(x => {
+  let pool = P;
+  if(P.idx){ const set = new Set(); alts.forEach(a => (P.idx.get(a.t[0]) || []).forEach(x => set.add(x))); pool = P.filter(x => set.has(x)); }
+  const head = reqToks(name)[0], canned = CANNABLE.has(head) && (/\bboites?\b|conserve/.test(norm(name)) || /endes/.test(norm(rawFix(name)))) && !/\bboites? (de|d)( |')?(oeufs?|cereales?|biscuits?|craquelins?|the|cafe|mouchoirs?|chocolats?)/.test(norm(name)), ex = new Set(A.ex || []);
+  return pool.filter(x => {
     if(no.some(w => x.tk.has(w)) || ex.has(norm(x.s.t))) return false;
     if(alts.some(a => a.free && a.t.every(w => x.tk.has(w)))) return true;
     if(x.candy && !candyOk) return false;
-    if(canned ? !CANNED_RE.test(norm(rawFix(x.s.t))) : (CANNABLE.has(reqToks(name)[0]) && /endes|\bpelee|\bpolpa\b|conserve|\bboites?\b/.test(norm(rawFix(x.s.t))))) return false;
+    if(canned ? !x.can : (CANNABLE.has(head) && x.canMark)) return false;
     if(COMPOUNDS.some(c => x.b.includes(c) && !nb.includes(c) && nb.split(' ').includes(c.split(' ')[0]))) return false;
     /* mots choisis à la main (Articles) : tous présents dans un même segment, sans autre contrôle de forme */
     return alts.some(a => !a.free && x.segs.some(W => a.kw ? a.t.every(w => W.includes(w)) : segFits(a.t, mine, W)));
@@ -1327,7 +1353,11 @@ const itemDeals = (it, r) => { const ds = dealsOf(r); return r.ur && primOf(it) 
 /* Coupe ou forme précise dans un spécial : elle doit aussi se trouver dans la recette (pas de boeuf haché pour un rôti). */
 const SHAPES = ['hache','roti','steak','cotelette','cote','poitrine','cuisse','pilon','aile','epaule','longe','filet','saucisse','bacon','tranche','cube','laniere','surlonge','bavette','palette','croquette','pane','pizza','lasagne','tourtiere','pogo','burrito','soupe','sauce','croustille','biscuit','yogourt','glacee','gateau','muffin','barre','jus','boisson','vinaigrette','trempette','repas','salade','sandwich','fromage a la creme','poulet','boeuf','porc','dinde','jambon','saumon','crevette','veau','agneau','tilapia','morue','aiglefin','thon','poisson'];
 const SHAPE_RE = SHAPES.map(w => [w, new RegExp('\\b'+w)]);
+let _DO = new WeakMap();
 function dealsOf(r){
+  if(_DO.has(r)) return _DO.get(r); const res = dealsOf0(r); _DO.set(r, res); return res;
+}
+function dealsOf0(r){
   const out = [], ing = norm(r.n+' '+r.i.map(g => g[2]).join(' '));
   const fits = s => { const t = norm(s.t); return SHAPE_RE.every(([w,re]) => !re.test(t) || ing.includes(w)); };
   const P = prep(allSpec());
@@ -1417,6 +1447,9 @@ function dishCost(it){
 function budgetFit(){
   const b = +S.p.budget || 0; if(!b || !S.menu.date || S.menu.achete) return 0;
   let changed = 0; const recent = recentSet(), tried = new Set();
+  /* candidats évalués une seule fois (note et coût), pas à chaque tour */
+  const pool = allRecipes().filter(r => kindOf(r)==='souper' && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !recent.has(r.n))
+    .map(r => { const it = mkItem(r, new Set(), pickVar(r)); return {r, s: score(r), c: dishCost(it)}; });
   for(let k = 0; k < 6; k++){
     resetCaches();
     if(listTotals(buyList().rows).cost <= b) break;
@@ -1427,14 +1460,11 @@ function budgetFit(){
     const longOk = isLong(byName(cand.it.r));
     const others = L.filter((_, j) => j !== cand.i);
     let best = null;
-    allRecipes().forEach(r => {
-      if(kindOf(r)!=='souper' || used.has(r.n) || S.dis[r.n] || softBad(r) || !ppOk(r) || !simpleOk(r) || recent.has(r.n) || (isLong(r) && !longOk)) return;
-      const it = mkItem(r, usedSides(others), pickVar(r)); const c = dishCost(it);
-      if(c < cand.c * 0.8){ const s = score(r) - 2 * c / Math.max(1, cand.c); if(!best || s > best.s) best = {it, s}; }
-    });
+    pool.forEach(o => { if(used.has(o.r.n) || (isLong(o.r) && !longOk) || !(o.c < cand.c * 0.8)) return;
+      const s = o.s - 2 * o.c / Math.max(1, cand.c); if(!best || s > best.s) best = {r:o.r, s}; });
     if(!best) continue;
-    if(cand.it.d) best.it.d = cand.it.d;
-    L[cand.i] = best.it; changed++;
+    const it = mkItem(best.r, usedSides(others), pickVar(best.r)); if(cand.it.d) it.d = cand.it.d;
+    L[cand.i] = it; changed++;
   }
   resetCaches(); return changed;
 }
@@ -1578,7 +1608,7 @@ async function chercherSpeciaux(ignorerDate){
     if(!ok || !list.length){ say((S.auto && S.auto.items.length ? 'Aucun spécial lisible cette fois-ci : les spéciaux trouvés avant sont gardés. ' : 'Les circulaires ont été trouvées, mais leur contenu est illisible. ') + 'Réessaie plus tard ou utilise le collage manuel ci-dessous.'); return; }
     S.auto = {items:list, maj:isoToday(), shop, anyDate, src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
     try{ noterPrix(); }catch(e){}
-    save(); render();
+    spBusy = false; save(); render();
     say(`${list.length} spéciaux retenus dans ${ok} circulaire${ok>1?'s':''} (${S.auto.src}) pour le ${fmtDate(shop)}${note}.` + (fail ? ` ${fail} circulaire${fail>1?'s':''} illisible${fail>1?'s':''} : relance plus tard pour les avoir.` : '') + ((S.skip||[]).some(s => S.stores.includes(s)) ? ` Cette semaine : ${autoItems().length} chez ${goStores().join(', ') || 'aucune épicerie'}.` : ''));
   }catch(e){
     say(e.net
@@ -2785,7 +2815,7 @@ document.addEventListener('click', e => {
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
   if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
-  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Réglages)."); return; } S = DEFAULT(); S.appv = APPV; save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Réglages)."); return; } S = DEFAULT(); S.appv = APPV; loadFailed = false; rescued = false; save(); render(); }); return; }
   if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
   if(id==='help_hide'){ S.help=true; save(); render(); return; }
   if(id==='help_back'){ tab='menu'; render(); window.scrollTo(0,0); return; }
@@ -3128,21 +3158,27 @@ function renderAide(){
 
 
 /* ---------- démarrage ---------- */
+/* un brouillon de recette réellement commencé (pas seulement un formulaire vide ouvert) */
+const draftsDirty = () => { try{ return Object.values(drafts).some(d => d && ((typeof d.n==='string' && d.n.trim()) || (typeof d.s==='string' && d.s.trim()) || (Array.isArray(d.rows) && d.rows.some(r => r && typeof r.n==='string' && r.n.trim())))); }catch(e){ return false; } };
+const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeof BAREME==='undefined' && 'prix-maxi.js'].filter(Boolean);
 (function init(){
   try{ if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
     const had = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => { document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible') reg.update().catch(()=>{}); }); }).catch(()=>{});
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if(typeof drafts !== 'undefined' && Object.keys(drafts).length){ setSync('Nouvelle version prête : elle s\'appliquera à la prochaine ouverture.'); return; } if(had && !sessionStorage.getItem('maj_rechargee')){ try{ sessionStorage.setItem('maj_rechargee', '1'); }catch(e){} location.reload(); } });
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if(draftsDirty()){ setSync('Nouvelle version prête : elle s\'appliquera à la prochaine ouverture.'); return; } if(had && !sessionStorage.getItem('maj_rechargee')){ try{ sessionStorage.setItem('maj_rechargee', '1'); }catch(e){} location.reload(); } });
   } }catch(e){}
   loadLocal();
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(e){}
   try{ render(); }
-  catch(err){   /* données qui empêchent l'affichage : on les met de côté (rien n'est effacé) et on repart d'un état propre */
-    try{ const j = localStorage.getItem(KEY); if(j){ const old = localStorage.getItem(RESCUE); if(old && old !== j) localStorage.setItem(RESCUE+'_2', old); localStorage.setItem(RESCUE, j); } rescued = true; }catch(_){}
-    loadFailed = true; S = DEFAULT(); S.appv = APPV;
-    S.flash = "Tes données ont causé une erreur d'affichage. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
-    render();
+  catch(err){
+    /* un fichier de l'application n'a pas été chargé (connexion) : ce ne sont pas les données, on ne touche à rien */
+    if(missingFiles().length){ setSync("Un fichier de l'application n'a pas pu être chargé (" + missingFiles().join(', ') + "). Vérifie la connexion et recharge la page. Tes données sont intactes."); return; }
+    /* données qui empêchent l'affichage : on les met de côté et on n'enregistre plus rien par-dessus */
+    try{ const j = localStorage.getItem(KEY); if(j && !localStorage.getItem(RESCUE)) localStorage.setItem(RESCUE, j); }catch(_){}
+    loadFailed = true; rescued = false; S = DEFAULT(); S.appv = APPV;
+    S.flash = "Tes données ont causé une erreur d'affichage. Elles sont gardées telles quelles, rien n'est effacé ni remplacé : Réglages → Sauvegarde → « Essayer de les restaurer », ou « Tout remettre à zéro » pour repartir.";
+    try{ render(); }catch(_){}
   }
   setSync(loadFailed ? 'Mode secours : tes données sont gardées de côté' : 'Enregistré sur cet appareil');
   /* dernière protection : une erreur imprévue s'affiche au lieu de bloquer l'application en silence */

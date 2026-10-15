@@ -1,6 +1,6 @@
 /* Test de fumée : parcourt l'app dans Chromium, clique partout au hasard et signale toute erreur JS.
    Usage : node tests/smoke.js [iterations] [seed]   (serveur http sur le dossier du projet, port 8765) */
-const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
+const { chromium } = (() => { try{ return require('playwright-core'); }catch(e){ return require('/opt/node-tools/node_modules/playwright-core'); } })();
 const N = +process.argv[2] || 400; let seed = +process.argv[3] || 1;
 const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 const BASE = process.env.BASE || 'http://localhost:8765/';

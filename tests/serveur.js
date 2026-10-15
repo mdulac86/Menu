@@ -1,6 +1,6 @@
 /* Petit serveur de fichiers pour les tests (port 8765), démarré par chaque test. */
 const http = require('http'), fs = require('fs'), path = require('path');
-const ROOT = path.join(__dirname, '..');
+const ROOT = process.env.RACINE || path.join(__dirname, '..');
 const TYPES = {'.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css', '.json':'application/json', '.png':'image/png', '.webmanifest':'application/manifest+json'};
 module.exports = () => new Promise(res => {
   const srv = http.createServer((req, rep) => {

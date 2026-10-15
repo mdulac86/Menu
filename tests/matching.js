@@ -1,6 +1,6 @@
 /* Évalue l'association spéciaux ↔ articles sur de vraies circulaires (tests/donnees/*.json).
    Usage : node tests/matching.js [sortie.txt]   — écrit, pour chaque article du catalogue et chaque mot-clé de recette, les spéciaux associés. */
-const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
+const { chromium } = (() => { try{ return require('playwright-core'); }catch(e){ return require('/opt/node-tools/node_modules/playwright-core'); } })();
 const fs = require('fs');
 const corpus = JSON.parse(fs.readFileSync(__dirname + '/donnees/circulaires-2026-10-15.json', 'utf8'));
 const serveur = require('./serveur');

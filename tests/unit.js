@@ -1,6 +1,6 @@
 /* Tests unitaires exécutés dans la vraie page (Chromium) : association spéciaux ↔ articles, prix, analyse de texte.
    Usage : node tests/unit.js   (serveur http sur le dossier du projet, port 8765) */
-const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
+const { chromium } = (() => { try{ return require('playwright-core'); }catch(e){ return require('/opt/node-tools/node_modules/playwright-core'); } })();
 const CASES = {
   /* [article, nom de circulaire, doit correspondre ?] */
   match: [
@@ -24,6 +24,11 @@ const CASES = {
     ['Fromage râpé', 'Fromage de chèvre Compliments', false], ['Fromage râpé', 'Fromage mozzarella râpé P\'tit Québec, 907 g', true], ['Fromage cheddar', 'Fromage gouda ou suisse Monsieur Gustav', false],
     ['Poulets entiers', 'Poulet teriyaki', false], ['Poulets entiers', 'Poulet entier frais', true], ['Bacon', 'Bacon fumé Maple Leaf 375 g', true], ['Bacon', 'Poulet bardé de bacon', false],
     ['Pain tranché', 'Plateau de sandwichs moelleux, de pains farcis ou de mini-croissants', false],
+    ['Feta', 'Fromage feta Tre Stelle', true], ['Fromage cheddar', 'Fromage cheddar fort Black Diamond', true], ['Saucisses', 'Saucisses de porc douces', true],
+    ['Yogourt', 'Yogourt aux fraises Liberté', true], ['Thon', "Thon à l'huile Clover Leaf", true], ['Ketchup', 'Ketchup aux tomates Heinz', true],
+    ['Poitrines de poulet', 'Poitrines ou cuisses de poulet', true], ['Lait 2%', 'Lait 1 % ou 2 % Natrel', true], ['Crème 35%', 'Crème 15 % ou 35 %', true],
+    ['Dinde hachée', 'Dinde ou poulet haché', true], ['Huile végétale', 'Huile de canola ou végétale', true], ['Pains à hot-dog', 'Pains à hamburger ou à hot-dog', true],
+    ['Jambon en dés', 'Jambon fumé Selection', true], ['Tomates en dés', 'Tomates en dés Aylmer 796 ml', true], ['Crème 35%', 'Crème à la pistache fior fiore à tartiner', false],
     ['Chocolat mi-sucré', 'Chocolat Kinder Bueno', false], ['Chocolat mi-sucré', 'Chocolat à cuisson Baker\'s mi-sucré', true]
   ]
 };
