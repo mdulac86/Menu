@@ -335,3 +335,23 @@ button.chip.on{background:var(--accent);color:var(--accent-ink)}
 .vbox,.rbox{display:flex;flex-direction:column;gap:12px}
 .note[hidden]{display:none}
 @media (max-width:380px){.grid4{grid-template-columns:1.6fr 1fr 1fr auto}.tabs button{font-size:.62rem}.dbody{padding-left:0}}
+
+/* ---------- 2.0 : version de test, sous-menus, semaine, commande ---------- */
+.testbar{background:var(--warn-soft);color:var(--ink);border:1px dashed var(--warn);border-radius:12px;padding:8px 12px;font-size:.82rem;font-weight:600;margin:-6px 0 14px;text-align:center}
+.subnav{margin:0 0 14px;position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 0 6px}
+.subnav button{min-height:40px}
+.cal{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}
+.calday{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--soft)}
+.calday.today{outline:2px solid var(--accent)}
+.calday .cd{font-size:.8rem;font-weight:700;color:var(--mute)}
+.calday .cm{display:flex;flex-direction:column;min-width:0}
+.calday .cm b{font-size:.92rem;line-height:1.25}
+.calday .cm small{color:var(--mute);font-size:.76rem}
+.why{font-size:.82rem;color:var(--mute);margin:6px 0}
+.why b{color:var(--ink);font-weight:600}
+.shopl{display:inline-block;margin:4px 0 2px;font-size:.84rem;font-weight:600;color:var(--accent);min-height:32px;line-height:32px}
+.ibw.doute{background:var(--warn-soft);border-radius:10px;padding:6px}
+.ibw .dt{display:block;font-size:.76rem;font-weight:600;color:var(--ink);margin-bottom:4px}
+.alts{margin:8px 0}
+body.test header h1 em::after{content:" TEST";font-style:normal;font-size:.5em;color:var(--warn);vertical-align:super}
+@media (max-width:380px){.calday{grid-template-columns:78px 1fr auto}}

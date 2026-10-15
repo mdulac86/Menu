@@ -24,11 +24,15 @@ const serveur = require('./serveur');
     r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify(body)}); });
   if(process.env.STATE) await page.addInitScript(s => { if(!localStorage.getItem('menu_epicerie_v1')) localStorage.setItem('menu_epicerie_v1', s); }, require('fs').readFileSync(process.env.STATE, 'utf8'));
   await page.goto(BASE); await page.waitForTimeout(300);
-  /* configuration initiale */
-  const cp = page.locator('[data-cp]:visible'); if(await cp.count()){ await cp.first().fill('G1V 4M7'); await cp.first().dispatchEvent('change');
-    for(const s of ['IGA', 'Maxi']){ const c = page.locator(`[data-store="${s}"]`).first(); if(await c.count()) await c.check({force: true}); }
-    const ess = page.locator('#su_ess'); if(await ess.count()) await ess.check({force: true});
-    await page.click('#setup_done'); }
+  /* configuration initiale : l'assistant en 5 étapes */
+  for(let k = 0; k < 6; k++){
+    const cp = page.locator('[data-cp]:visible'); if(await cp.count()){ await cp.first().fill('G1V 4M7'); await cp.first().dispatchEvent('change');
+      for(const s of ['IGA', 'Maxi']){ const c = page.locator(`[data-store="${s}"]:visible`).first(); if(await c.count()) await c.check({force: true}); }
+      const pr = page.locator('[data-pf="princ"]:visible'); if(await pr.count()) await pr.selectOption('Maxi').catch(() => {}); }
+    const ess = page.locator('#su_ess:visible'); if(await ess.count() && await ess.isEnabled()) await ess.check({force: true});
+    const done = page.locator('#setup_done:visible'); if(await done.count()){ await done.click(); break; }
+    const nx = page.locator('[data-a="wiz"][data-v="1"]:visible'); if(await nx.count()) await nx.click(); else break;
+  }
   const log = [];
   for(let k = 0; k < N; k++){
     const cookOpen = await page.locator('#cook:not([hidden])').count();
@@ -38,7 +42,7 @@ const serveur = require('./serveur');
     const el = els[Math.floor(rnd() * els.length)];
     try{
       const desc = await el.evaluate(e => e.tagName + '#' + e.id + '[' + (e.dataset.a || '') + '] ' + (e.textContent || e.value || '').trim().slice(0, 40));
-      if(/exportFile|Exporter un fichier|Restaurer|file/i.test(desc)) continue;
+      if(/exportFile|Exporter un fichier|Restaurer|file|frigo|pf_export|Enregistrer/i.test(desc)) continue;
       log.push(desc);
       const tag = await el.evaluate(e => e.tagName + ':' + (e.type || ''));
       if(tag.startsWith('SELECT')){ const opts = await el.locator('option').all(); if(opts.length){ const v = await opts[Math.floor(rnd() * opts.length)].getAttribute('value') ?? await opts[0].textContent(); await el.selectOption(v === null ? {index: 0} : v, {timeout: 1500}); } }

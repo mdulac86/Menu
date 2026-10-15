@@ -12,7 +12,7 @@ const serveur = require('./serveur');
   const cached = await page.evaluate(async () => { const ks = await caches.keys(); const c = await caches.open(ks[0]); return {ks, n: (await c.keys()).length}; });
   await ctx.setOffline(true);
   await page.reload(); await page.waitForTimeout(500);
-  const ok = await page.evaluate(() => typeof RECIPES !== 'undefined' && typeof BAREME !== 'undefined' && !!document.querySelector('#tab-menu').innerHTML.length);
+  const ok = await page.evaluate(() => typeof RECIPES !== 'undefined' && typeof BAREME !== 'undefined' && !!document.querySelector('#tab-semaine').innerHTML.length);
   console.log(JSON.stringify(cached), ok && !errs.length ? 'OK : l\'application s\'ouvre hors ligne' : 'ÉCHEC hors ligne ' + errs.join(' | '));
   await b.close(); if(srv) srv.close(); process.exit(ok && !errs.length ? 0 : 1);
 })();
