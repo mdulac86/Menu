@@ -1,7 +1,7 @@
 /* Service worker : réseau d'abord (toujours la dernière version en ligne), cache en secours (hors ligne). */
 importScripts('version.js');
 const PRE = self.APP_TEST ? 'menu-test-' : 'menu-semaine-', C = PRE + self.APP_VERSION;
-const FILES = ['./', 'index.html', 'style.css', 'version.js', 'recettes.js', 'prix-maxi.js', 'js/base.js', 'js/plats.js', 'js/semaine.js', 'js/liste-prix.js', 'js/generation.js', 'js/ecrans.js', 'js/profil.js', 'js/app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'qr-menu.png'];
+const FILES = ['./', 'index.html', 'style.css', 'version.js', 'recettes.js', 'prix-maxi.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'qr-menu.png'];
 
 self.addEventListener('install', e => {
   /* cache:'reload' : on contourne le cache HTTP pour ne pas mélanger d'anciens fichiers avec les nouveaux */
@@ -27,7 +27,7 @@ self.addEventListener('fetch', e => {
       clearTimeout(t);
       const hit = await caches.match(req, {ignoreSearch: true});
       if(hit) return hit;
-      if(req.mode === 'navigate'){ const home = await caches.match('index.html') || await caches.match('./'); if(home) return home; }
+      if(req.mode === 'navigate'){ const home = await caches.match(self.APP_TEST ? 'test.html' : 'index.html') || await caches.match('./'); if(home) return home; }
       return new Response('Hors ligne', {status: 503, headers: {'Content-Type': 'text/plain; charset=utf-8'}});
     }
   })());
