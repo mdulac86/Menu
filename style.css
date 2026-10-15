@@ -216,7 +216,7 @@ details.dish[open] .dname{color:var(--accent)}
 .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}
 .btn{min-height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--chip);font-weight:600}
 .btn.p{background:var(--accent);color:var(--accent-ink)}
-.btn.s{min-height:38px;padding:0 13px;font-size:.88rem;border-radius:11px}
+.btn.s{min-height:40px;padding:0 13px;font-size:.88rem;border-radius:11px}
 .btn.d{color:var(--danger);background:var(--danger-soft)}
 .btn.wide{width:100%}
 .btn:disabled{opacity:.45}
@@ -335,3 +335,27 @@ button.chip.on{background:var(--accent);color:var(--accent-ink)}
 .vbox,.rbox{display:flex;flex-direction:column;gap:12px}
 .note[hidden]{display:none}
 @media (max-width:380px){.grid4{grid-template-columns:1.6fr 1fr 1fr auto}.tabs button{font-size:.62rem}.dbody{padding-left:0}}
+
+/* ---------- 2.0 : version de test, sous-menus, semaine, commande ---------- */
+.testbar{background:var(--warn-soft);color:var(--ink);border:1px dashed var(--warn);border-radius:12px;padding:8px 12px;font-size:.82rem;font-weight:600;margin:-6px 0 14px;text-align:center}
+.subnav{margin:0 -16px 14px;position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 16px 6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.subnav::-webkit-scrollbar{display:none}
+.subnav button{flex:none}
+.subnav button{min-height:40px}
+.cal{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}
+.calday{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--soft)}
+.calday.today{outline:2px solid var(--accent)}
+.calday .cd{font-size:.8rem;font-weight:700;color:var(--mute)}
+.calday .cm{display:flex;flex-direction:column;min-width:0}
+.calday .cm b{font-size:.92rem;line-height:1.25}
+.calday .cm small{color:var(--mute);font-size:.76rem}
+.why{font-size:.82rem;color:var(--mute);margin:6px 0}
+.why b{color:var(--ink);font-weight:600}
+.shopl{display:inline-flex;align-items:center;margin:2px 0;padding:0 10px 0 0;font-size:.86rem;font-weight:600;color:var(--accent);min-height:44px}
+.ibw.doute{background:var(--warn-soft);border-radius:10px;padding:6px}
+.ibw .dt{display:block;font-size:.76rem;font-weight:600;color:var(--ink);margin-bottom:4px}
+.alts{margin:8px 0}
+body.test header h1 em::after{content:" TEST";font-style:normal;font-size:.5em;color:var(--warn);vertical-align:super}
+@media (max-width:380px){.calday{grid-template-columns:78px 1fr auto}}
+
+.calday.prev{background:var(--chip);opacity:.85}
