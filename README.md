@@ -32,7 +32,16 @@ Les prix réguliers servent quand un article n'est pas en spécial. Ils sont dan
 - `BAREME` : `[expression, {u, f:[[format, prix], …], kg, gpu, e}]`. `u` est l'unité (`g`, `ml` ou `un`). `f` donne les formats vendus avec leur prix régulier. `kg` est le prix au kilo pour ce qui se vend au poids. `gpu` est le poids d'une unité. `e:1` marque un prix estimé.
 - `PRIX` : `[expression, {kg, L, un}]` pour les prix moyens au kilo, au litre ou à l'unité.
 
-Dans l'application, trois choses corrigent ces prix sans toucher au fichier :
+Dans l'application, l'onglet **Articles → Prix** permet de faire la mise à jour soi-même, une fois par mois :
+
+- la liste montre les 40 articles qui comptent le plus dans l'épicerie, chacun avec un lien vers maxi.ca et le prix régulier vu dans les circulaires ;
+- le prix inscrit pour un format remplace celui du fichier (`S.bx`) ;
+- un ajustement en % s'applique à tous les autres prix (`S.pmaj.pct`), par exemple pour suivre l'inflation ;
+- « J'ai terminé la mise à jour » note la date (`S.pmaj.d`). Un rappel apparaît dans l'onglet Menu 30 jours plus tard. Il peut être remis d'une semaine, ou désactivé dans Réglages.
+
+L'application ne peut pas lire maxi.ca elle-même : le site bloque les requêtes venant d'une autre page. C'est pourquoi le prix s'inscrit à la main.
+
+Trois autres choses corrigent aussi ces prix :
 
 - le prix payé, inscrit dans la liste d'épicerie ;
 - le prix habituel, inscrit dans l'onglet Articles ;

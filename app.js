@@ -80,7 +80,7 @@ function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); con
   /* chaque champ doit avoir le bon type, sinon on reprend la valeur par défaut (sauvegarde ancienne ou abîmée) */
   const D = DEFAULT(); Object.keys(D).forEach(k => { const v = D[k]; if(Array.isArray(v) && !Array.isArray(m[k])) m[k] = v; else if(isObj(v) && !isObj(m[k])) m[k] = v; });
   ['storesx','skip','report'].forEach(k => { if(m[k] != null && !Array.isArray(m[k])) delete m[k]; });
-  ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
+  ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx','bx','pmaj'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
   m.menu = Object.assign(DEFAULT().menu, isObj(o.menu) ? o.menu : {});
   ['items','dej','din','ent','sou','des','sn'].forEach(k => { if(m.menu[k] != null && !Array.isArray(m.menu[k])) m.menu[k] = []; if(Array.isArray(m.menu[k])) m.menu[k] = m.menu[k].filter(x => isObj(x) && typeof x.r==='string' || (k==='sn' && isObj(x))); });
   ['chk','extra','useup','dinCook','dinNo','dsel'].forEach(k => { if(!isObj(m.menu[k])) m.menu[k] = {}; });
@@ -986,13 +986,30 @@ const specTxt = s => s.t+(s.p ? ' à '+s.p : '')+' ('+s.s+')';
 const COMPOUNDS = ['pomme de terre','beurre d\'arachide','creme glacee','creme sure','lait de coco','noix de coco','fromage a la creme','pain de viande','sucre a glacer','pate a tarte'];
 
 /* Prix de référence : voir prix-maxi.js (PRIX, PRIX_DEF, BASE, BAREME, PRIX_MAJ). */
-const PRIX_MAJ_TXT = () => { try{ return 'relevé du ' + new Date(PRIX_MAJ+'T12:00:00').toLocaleDateString('fr-CA', {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return PRIX_MAJ; } };
-const prixVieux = () => { try{ return gapDays(PRIX_MAJ, isoToday()) > 120; }catch(e){ return false; } };
+const PRIX_MAJ_TXT = () => { try{ return 'mis à jour le ' + new Date(prixDate()+'T12:00:00').toLocaleDateString('fr-CA', {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return PRIX_MAJ; } };
+const prixVieux = () => { try{ return gapDays(prixDate(), isoToday()) > 120; }catch(e){ return false; } };
+/* rappel mensuel de mise à jour des prix (désactivable, « dans une semaine » possible) */
+const prixRappel = () => { try{ const p = pmaj(); return S.setup && p.rappel !== false && gapDays(prixDate(), isoToday()) >= 30 && !(p.snooze && p.snooze > isoToday()); }catch(e){ return false; } };
 const _BMC = new Map();
-function baremeOf(name){
+function baremeRaw(name){
   const n = norm(name); if(_BMC.has(n)) return _BMC.get(n);
   const b = BAREME.find(x => x[0].test(n)) || null; _BMC.set(n, b); return b;
 }
+/* Mise à jour des prix : un prix inscrit (S.bx, par entrée du barème) remplace celui du fichier;
+   les autres prix suivent l'ajustement global en % (S.pmaj.pct), pour suivre l'inflation. */
+const pmaj = () => (S.pmaj = isObj(S.pmaj) ? S.pmaj : {});
+const pctF = () => 1 + (Math.max(-50, Math.min(100, +pmaj().pct || 0)) / 100);
+const bxKey = b => b[0].source;
+function baremeOf(name){ const b = baremeRaw(name); return b ? mergeBx(b) : null; }
+function mergeBx(b){
+  const o = b[1], ov = (S.bx || {})[bxKey(b)] || {}, k = pctF();
+  const m = Object.assign({}, o);
+  if(o.f) m.f = o.f.map(([s, p], i) => [s, ov.f && ov.f[i] > 0 ? ov.f[i] : Math.round(p * k * 100) / 100]);
+  if(o.kg) m.kg = ov.kg > 0 ? ov.kg : Math.round(o.kg * k * 100) / 100;
+  return [b[0], m];
+}
+/* date de la dernière mise à jour des prix : celle du fichier ou celle faite dans l'application */
+const prixDate = () => { const d = pmaj().d || ''; return d > PRIX_MAJ ? d : PRIX_MAJ; };
 /* meilleure façon d'acheter q avec les formats F : un format, ou un gros format complété par un plus petit */
 function bestFormats(q, F){
   const tol = 0.03;
@@ -1026,9 +1043,9 @@ const baremeTxt = name => { const b = baremeOf(name); if(!b) return ''; const o 
 /* prix par unité de base (par g, par ml ou à l'unité) */
 function prixBase(name, u, ray){
   const n = norm(name), hit = PRIX.find(([re]) => re.test(n)), [b, f] = BASE[u] || ['un',1];
-  if(hit && hit[1][b] !== undefined) return hit[1][b]/f;
+  if(hit && hit[1][b] !== undefined) return hit[1][b]/f * pctF();
   const d = PRIX_DEF[ray] || PRIX_DEF['épicerie'];
-  return (d[b] !== undefined ? d[b] : (d.un || 4))/f;
+  return (d[b] !== undefined ? d[b] : (d.un || 4))/f * pctF();
 }
 let _ECO = new Map(), _ASA = null, _CMP = new Map(), prEdit = '';
 /* Articles comptés à l'unité mais vendus en paquet : le prix d'une circulaire est celui du paquet (douzaine d'oeufs, 8 pains…). */
@@ -1991,6 +2008,7 @@ function renderMenu(){
     h += `<div class="bkbar"><span><b>Sauvegarde</b> Des changements depuis ta dernière copie${S.lastExport ? ' ('+esc(dShort(S.lastExport))+')' : ''}.</span><button class="btn s p" id="bk_file">Sauvegarder</button><button class="ib_x" data-a="bk_hide" aria-label="Pas maintenant">×</button></div>`;
   { const n = Object.keys(S.stock||{}).length + (S.custom||[]).length*3 + Object.keys(S.prices||{}).length, old = !S.lastExport || addDays(S.lastExport, 30) < isoToday();
     if(S.p.bkOpen===false && S.setup && n >= 10 && old && !(S.bkSnooze && S.bkSnooze > isoToday())) h += `<div class="card"><h3>Protège tes données</h3><p class="small">${S.lastExport ? 'Ta dernière copie dans Fichiers date de plus d\'un mois.' : 'Ton garde-manger et tes recettes ne sont gardés que sur ce téléphone.'} Une copie dans Fichiers les protège si l'icône est supprimée ou si tu changes de téléphone.</p><div class="acts"><button class="btn s p" data-a="bk_go">Faire une copie</button><button class="btn s" data-a="bk_later">Plus tard</button></div></div>`; }
+  if(prixRappel()) h += `<div class="card"><h3>Mise à jour des prix</h3><p class="small">Les prix de référence ont été ${esc(PRIX_MAJ_TXT())}. Prends quelques minutes pour vérifier les principaux sur maxi.ca : le coût de l'épicerie et le budget seront plus justes.</p><div class="acts"><button class="btn s p" data-a="pm_go">Mettre à jour les prix</button><button class="btn s" data-a="pm_snooze">Dans une semaine</button></div></div>`;
   h += renderWeek();
   if(!m.date){
     h += renderPicker();
@@ -2062,7 +2080,7 @@ function budgetHtml(rows){
   const fit = b && rest < 0 && S.menu.date && !S.menu.achete ? `<div class="acts"><button class="btn s" id="bfit">Remplacer des soupers par des plats moins chers</button></div>` : '';
   return `<div class="budget"><p><span class="small">Total estimé</span> <b>≈ ${money(t.cost)}</b>${t.save >= 1 ? `<span class="small"> · ≈ ${money(t.save)} économisés en spéciaux</span>` : ''}</p>
     ${b ? `<div class="bar ${rest<0?'over':''}"><i style="width:${Math.min(100, t.cost/b*100)}%"></i></div><p class="small">Budget ${money(b)} : ${rest >= 0 ? `il reste ≈ <b>${money(rest)}</b>` : `<b class="over">dépasse de ≈ ${money(-rest)}</b>`}</p>` : ''}
-    ${fit}${prixVieux() ? `<p class="small over">Les prix de référence Maxi datent du ${esc(PRIX_MAJ_TXT().replace('relevé du ',''))} : le total est probablement sous-estimé.</p>` : ''}<p class="small">Prix réguliers du barème Maxi (${esc(PRIX_MAJ_TXT())}) pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
+    ${fit}${prixVieux() ? `<p class="small over">Les prix de référence datent de plus de 4 mois (${esc(PRIX_MAJ_TXT())}) : le total est probablement sous-estimé. <a href="#" data-a="pm_go">Les mettre à jour</a></p>` : ''}<p class="small">Prix réguliers du barème Maxi (${esc(PRIX_MAJ_TXT())}) pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
 }
 /* Épiceries laissées de côté cette semaine : combien on y sauverait (rien n'est changé dans la liste). */
 function ailleurs(rows){
@@ -2593,12 +2611,50 @@ function convCard(){
       <label class="f">Par<select id="cvp_u">${[['lb','livre (lb)'],['kg','kilo (kg)'],['100g','100 g']].map(([v,t]) => `<option value="${v}" ${cv.pu===v?'selected':''}>${t}</option>`).join('')}</select></label></div>
     <div class="cvo" id="cvp_out">${convPrix()}</div></details>`;
 }
+/* ---------- mise à jour des prix ----------
+   Le site de Maxi ne peut pas être lu par l'application (il le bloque). On liste donc les articles qui comptent,
+   avec un lien vers maxi.ca et le prix régulier vu dans les circulaires; on inscrit le prix du format, c'est tout. */
+function prixArts(){
+  const w = new Map(), add = (n, x) => { const b = baremeRaw(n); if(!b) return; const k = bxKey(b), o = w.get(k) || {b, n:plain(n), w:0}; o.w += x; w.set(k, o); };
+  if(S.menu.date){ try{ buyList().rows.forEach(r => add(r.name, 20)); }catch(e){} }
+  (S.ess||[]).concat(S.snacks||[]).forEach(o => add(o.name, 8));
+  allRecipes().forEach(r => r.i.forEach(g => add(g[2], 1)));
+  const q = norm(artF.q||'').trim();
+  let L = [...w.values()].sort((a, c) => c.w - a.w);
+  if(q) L = L.filter(o => norm(o.n).includes(q)); else L = L.slice(0, 40);
+  return L;
+}
+function prixRow(o){
+  const b = mergeBx(o.b), raw = o.b[1], ov = (S.bx||{})[bxKey(o.b)] || {}, k = esc(bxKey(o.b)), n = esc(o.n);
+  const unitTxt = s => raw.u==='un' ? (s===1 ? "l'unité" : 'paquet de '+s) : fq(s, raw.u);
+  const inp = (val, ph, extra) => `<input type="text" inputmode="decimal" class="num pm_in" data-k="${k}" ${extra} value="${val ? String(val).replace('.', ',') : ''}" placeholder="${String(ph).replace('.', ',')}" aria-label="Nouveau prix">`;
+  const fields = raw.kg ? `<label class="f">Prix au kilo ($/kg)${inp(ov.kg, b[1].kg, 'data-kg="1"')}</label>`
+    : raw.f.map(([s], i) => `<label class="f">${esc(cap(unitTxt(s)))} ($)${inp(ov.f && ov.f[i], b[1].f[i][1], `data-i="${i}"`)}</label>`).join('');
+  const H = ((S.ph||{})[artB(o.n)] || []).filter(e => e.r).slice(0, 2);
+  const vu = H.length ? `<small>Prix régulier vu dans les circulaires : ${H.map(e => `${esc(money(e.r))} chez ${esc(e.s)} (${esc(e.t)}, ${esc(dShort(e.d))})`).join(' · ')}</small>` : '';
+  const quand = ov.d ? `<small class="ok">Mis à jour le ${esc(dShort(ov.d))}</small>` : '';
+  return `<div class="item" style="display:block"><span class="t"><b>${esc(cap(o.n))}</b>${quand}${vu}</span>
+    <div class="grid2" style="margin-top:6px">${fields}</div>
+    <p class="small"><a href="https://www.maxi.ca/fr/search?search-bar=${encodeURIComponent(o.n)}" target="_blank" rel="noopener">Voir le prix sur maxi.ca ↗</a>${Object.keys(ov).some(x => x!=='d') ? ` · <a href="#" data-a="pm_reset" data-k="${k}">Revenir au prix du fichier</a>` : ''}</p></div>`;
+}
+function prixView(){
+  const L = prixArts(), p = pmaj();
+  return `<div class="card"><h3>Mise à jour des prix</h3>
+    <p class="small">Prix réguliers (pas les spéciaux) des articles qui comptent le plus dans ton épicerie, ${esc(PRIX_MAJ_TXT())}. Touche « Voir le prix sur maxi.ca », puis inscris le prix du même format. Un champ vide garde le prix actuel (en gris).</p>
+    <label class="f">Ajuster tous les autres prix de (%)<input type="text" inputmode="decimal" class="num" id="pm_pct" value="${p.pct ? String(p.pct).replace('.', ',') : ''}" placeholder="0 (ex. 3 pour +3 %)"></label>
+    <p class="small">Pratique pour suivre l'inflation sur tout ce que tu ne vérifies pas un par un.</p>
+    <div class="acts"><button class="btn s p" data-a="pm_done">J'ai terminé la mise à jour</button></div>
+    <p class="note" id="pm_msg" hidden></p></div>
+    ${L.length ? `<div class="card list">${L.map(prixRow).join('')}</div>` : `<div class="empty"><b>Aucun article</b><span>Rien ne correspond à cette recherche.</span></div>`}
+    ${!artF.q ? '<p class="small">Seuls les 40 articles les plus importants sont affichés : cherche un article plus haut pour en voir un autre.</p>' : ''}`;
+}
 function renderArticles(){
   const el = $('#tab-articles'), f = artF.f==='week' && !S.menu.date ? 'all' : artF.f;
   const L = artList(f), shown = L.slice(0, 150);
   let h = `<div class="card"><h2 style="font-size:1.25rem">Articles</h2><p class="small">Le spécial associé à chaque article. S'il n'est pas le bon, ouvre l'article : choisis le bon, exclus-le, ou change les mots, le rayon, le format ou le prix habituel. Ces réglages restent pour les prochaines semaines.</p>
     <input type="text" id="ar_q" value="${esc(artF.q)}" placeholder="Chercher un article" aria-label="Chercher un article" autocomplete="off">
-    <div class="seg" role="group" aria-label="Articles à afficher">${[['week','Ma liste'],['all','Tous'],['mod','Modifiés']].map(([v,t]) => `<button class="${f===v?'on':''}" data-a="ar_f" data-v="${v}" ${v==='week' && !S.menu.date ? 'disabled' : ''}>${t}</button>`).join('')}</div></div>`;
+    <div class="seg" role="group" aria-label="Articles à afficher">${[['week','Ma liste'],['all','Tous'],['mod','Modifiés'],['prix','Prix']].map(([v,t]) => `<button class="${f===v?'on':''}" data-a="ar_f" data-v="${v}" ${v==='week' && !S.menu.date ? 'disabled' : ''}>${t}</button>`).join('')}</div></div>`;
+  if(f==='prix'){ el.innerHTML = h + prixView(); return; }
   h += convCard();
   if(shown.length) h += `<div class="card list">${shown.map(artRow).join('')}</div>`;
   else h += `<div class="empty"><b>Aucun article</b><span>${f==='mod' ? "Aucun article modifié pour l'instant." : 'Rien ne correspond à cette recherche.'}</span></div>`;
@@ -2620,14 +2676,15 @@ function histHtml(){
 function prixCard(){
   const nPerso = Object.values(S.prices||{}).filter(x => x && !x.sp).length, nVus = Object.keys(S.ph||{}).length;
   return `<div class="card"><h3>Prix de référence</h3>
-    <p class="small">Les prix réguliers viennent de maxi.ca (${esc(PRIX_MAJ_TXT())}). Ils servent quand un article n'est pas en spécial.${prixVieux() ? ' <b class="over">Ce relevé date de plus de 4 mois : les prix ont probablement monté.</b>' : ''}</p>
+    <p class="small">Les prix réguliers viennent de maxi.ca (${esc(PRIX_MAJ_TXT())}${+pmaj().pct ? `, ajustés de ${esc(String(pmaj().pct).replace('.', ','))} %` : ''}). Ils servent quand un article n'est pas en spécial.${prixVieux() ? ' <b class="over">Ce relevé date de plus de 4 mois : les prix ont probablement monté.</b>' : ''}</p>
     <p class="small">Ils se corrigent tout seuls avec tes données :</p>
     <ul class="todo small">
       <li><b>Prix payé</b> : dans Épicerie, touche le prix d'un article pour inscrire ce que tu as payé. Ce prix remplace celui de Maxi pour cet article. ${nPerso ? `(${nPerso} prix à toi)` : ''}</li>
       <li><b>Prix habituel</b> : dans Articles, inscris le prix régulier d'un article.</li>
       <li><b>Circulaires</b> : à chaque recherche, les spéciaux vus sont notés avec le prix habituel quand la circulaire indique le rabais. ${nVus ? `(${nVus} articles suivis)` : ''}</li>
     </ul>
-    <p class="small">Pour refaire tout le relevé Maxi, demande à Claude de « mettre à jour les prix Maxi » : il relit maxi.ca et remplace le fichier prix-maxi.js du site.</p></div>`;
+    <div class="acts"><button class="btn s p" data-a="pm_go">Mettre à jour les prix</button></div>
+    <label class="check"><input type="checkbox" id="pm_rappel" ${pmaj().rappel !== false ? 'checked' : ''}> Me le rappeler chaque mois</label></div>`;
 }
 function backupCard(){
   const L = readCopies(), fmt = d => { try{ return new Date(d).toLocaleString('fr-CA', {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}); }catch(e){ return d; } };
@@ -2908,6 +2965,10 @@ document.addEventListener('click', e => {
   if(a==='stx_rm'){ e.preventDefault(); const s = t.dataset.s; S.storesx = (S.storesx||[]).filter(x => x!==s); S.stores = S.stores.filter(x => x!==s); save(); render(); return; }
   if(a==='ar_go'){ e.preventDefault(); const b = t.dataset.b; tab = 'articles'; artF = {q:'', f:'week'}; openPan.add('art|'+b); render(); const d = document.querySelector(`details.art[data-b="${CSS.escape(b)}"]`); if(d) d.scrollIntoView({block:'start'}); return; }
   if(a==='ar_f'){ artF.f = t.dataset.v; renderArticles(); return; }
+  if(a==='pm_go'){ e.preventDefault(); tab = 'articles'; artF = {q:'', f:'prix'}; render(); window.scrollTo(0,0); return; }
+  if(a==='pm_snooze'){ pmaj().snooze = addDays(isoToday(), 7); save(); render(); return; }
+  if(a==='pm_done'){ const p = pmaj(); p.d = isoToday(); delete p.snooze; save(); render(); const mm = $('#pm_msg'); if(mm){ mm.textContent = 'Prix à jour. Prochain rappel dans un mois.'; mm.hidden = false; } return; }
+  if(a==='pm_reset'){ e.preventDefault(); if(S.bx) delete S.bx[t.dataset.k]; save(); render(); return; }
   if(a==='ar_unex'){ const b = t.dataset.b, A = (S.art||{})[b]; if(A) delete A.ex; openPan.add('art|'+b); save(); render(); return; }
   if(a==='ar_ex'){ const b = t.dataset.b, s = allSpec().find(x => spId(x)===t.dataset.id); if(s){ const A = (S.art||{})[b] || {}; artSet(b, {n:t.dataset.n, ex:[...new Set((A.ex||[]).concat(norm(s.t)))].slice(-60)}); if(S.menu.dsel && S.menu.dsel[b]===t.dataset.id) delete S.menu.dsel[b]; } openPan.add('art|'+b); save(); render(); return; }
   if(a==='ar_pick' || a==='ar_none' || a==='ar_auto' || a==='ar_spick'){ const b = t.dataset.b; S.menu.dsel = S.menu.dsel || {};
@@ -3034,6 +3095,16 @@ document.addEventListener('change', e => {
   if(t.id==='d_shop'){ S.dates.shop = t.value; save(); render(); return; }
   if(t.id==='relay_in'){ S.relay = t.value.trim(); save(); return; }
   if(t.id==='p_cool'){ S.p.cool = +t.value; save(); }
+  if(t.classList && t.classList.contains('pm_in')){   /* prix inscrit dans « Mise à jour des prix » */
+    const k = t.dataset.k, raw = String(t.value).trim(), v = parseFloat(raw.replace(/[\s$]/g,'').replace(',','.'));
+    if(raw && !(v > 0 && v < 1000)){ t.value = ''; return; }
+    S.bx = isObj(S.bx) ? S.bx : {}; const o = S.bx[k] = Object.assign({}, S.bx[k]);
+    if(t.dataset.kg) { if(raw) o.kg = v; else delete o.kg; }
+    else { o.f = Array.isArray(o.f) ? o.f : []; o.f[+t.dataset.i] = raw ? v : null; if(!o.f.some(x => x > 0)) delete o.f; }
+    if(o.f || o.kg) o.d = isoToday(); else delete S.bx[k];
+    save(); return; }
+  if(t.id==='pm_pct'){ const v = parseFloat(String(t.value).replace(/[\s%]/g,'').replace(',','.')); pmaj().pct = isFinite(v) ? Math.max(-50, Math.min(100, v)) : 0; save(); render(); return; }
+  if(t.id==='pm_rappel'){ pmaj().rappel = t.checked; save(); return; }
   else if(t.id==='p_var'){ S.p.varMode = t.value; save(); }
   else if(t.id==='p_sou'){ S.p.souper = +t.value; save(); render(); }
   else if(t.id==='p_res'){ S.p.restes = +t.value; save(); render(); }

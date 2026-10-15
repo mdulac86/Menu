@@ -77,6 +77,15 @@ const serveur = require('./serveur');
     /* les jours du menu ne glissent pas d'un jour à l'autre */
     const days = mlist('items').map(x => x.d).join(); S.menu.start = S.menu.start || isoToday();
     if(weekDates()[0] !== (S.dates.shop || S.menu.start)) out.push('début de semaine');
+    /* mise à jour des prix : prix inscrit, ajustement global, rappel mensuel */
+    const b0 = baremeRaw('oeufs'); const k0 = bxKey(b0), p12 = b0[1].f[0][1];
+    S.bx = {[k0]: {f:[4.99], d: isoToday()}}; if(baremeOf('oeufs')[1].f[0][1] !== 4.99) out.push('prix inscrit ignoré');
+    S.pmaj = {pct: 10}; if(Math.abs(baremeOf('oeufs')[1].f[1][1] - Math.round(b0[1].f[1][1]*1.1*100)/100) > .001) out.push('ajustement % ignoré');
+    if(baremeOf('oeufs')[1].f[0][1] !== 4.99) out.push('ajustement % appliqué à un prix inscrit');
+    S.setup = true; S.pmaj = {d: addDays(isoToday(), -40)}; if(prixRappel() !== (gapDays(PRIX_MAJ, isoToday()) >= 30)) out.push('rappel mensuel incorrect');
+    S.pmaj = {d: addDays(isoToday(), -40), snooze: addDays(isoToday(), 3)}; if(prixRappel()) out.push('rappel malgré « dans une semaine »');
+    S.pmaj = {d: isoToday()}; if(prixRappel()) out.push('rappel juste après la mise à jour');
+    S.bx = {}; S.pmaj = {};
     return out;
   }, CASES);
   await b.close(); if(srv) srv.close();
