@@ -25,7 +25,7 @@ const serveur = require('./serveur');
   if(process.env.STATE) await page.addInitScript(s => { if(!localStorage.getItem('menu_epicerie_v1')) localStorage.setItem('menu_epicerie_v1', s); }, require('fs').readFileSync(process.env.STATE, 'utf8'));
   await page.goto(BASE); await page.waitForTimeout(300);
   /* configuration initiale */
-  const cp = page.locator('[data-cp]'); if(await cp.count()){ await cp.first().fill('G1V 4M7'); await cp.first().dispatchEvent('change');
+  const cp = page.locator('[data-cp]:visible'); if(await cp.count()){ await cp.first().fill('G1V 4M7'); await cp.first().dispatchEvent('change');
     for(const s of ['IGA', 'Maxi']){ const c = page.locator(`[data-store="${s}"]`).first(); if(await c.count()) await c.check({force: true}); }
     const ess = page.locator('#su_ess'); if(await ess.count()) await ess.check({force: true});
     await page.click('#setup_done'); }

@@ -78,7 +78,7 @@ let S = DEFAULT();
 const isObj = x => !!x && typeof x==='object' && !Array.isArray(x);
 function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); const d = DEFAULT(); const m = Object.assign(d, o);
   /* chaque champ doit avoir le bon type, sinon on reprend la valeur par défaut (sauvegarde ancienne ou abîmée) */
-  Object.keys(d).forEach(k => { const v = d[k]; if(Array.isArray(v) && !Array.isArray(m[k])) m[k] = v; else if(isObj(v) && !isObj(m[k])) m[k] = v; });
+  const D = DEFAULT(); Object.keys(D).forEach(k => { const v = D[k]; if(Array.isArray(v) && !Array.isArray(m[k])) m[k] = v; else if(isObj(v) && !isObj(m[k])) m[k] = v; });
   ['storesx','skip','report'].forEach(k => { if(m[k] != null && !Array.isArray(m[k])) delete m[k]; });
   ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
   m.menu = Object.assign(DEFAULT().menu, isObj(o.menu) ? o.menu : {});
@@ -86,7 +86,7 @@ function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); con
   ['chk','extra','useup','dinCook','dinNo','dsel'].forEach(k => { if(!isObj(m.menu[k])) m.menu[k] = {}; });
   m.custom = m.custom.filter(r => isObj(r) && typeof r.n==='string' && Array.isArray(r.i)).map(r => Object.assign(r, {m: Array.isArray(r.m) ? r.m.map(String) : [], i: r.i.filter(g => Array.isArray(g) && +g[0] >= 0 && typeof g[2]==='string'), e: typeof r.e==='string' ? r.e : '', s: typeof r.s==='string' ? r.s : ''}));
   m.hist = m.hist.filter(isObj).map(w => Object.assign(w, {items: Array.isArray(w.items) ? w.items : []}));
-  if(m.auto && !(isObj(m.auto) && Array.isArray(m.auto.items))) m.auto = null; if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(DEFAULT().p, o.p||{});   /* nouveaux réglages : valeurs par défaut */ m.menu.useup = m.menu.useup||{}; if(m.menu.date && !m.menu.dej && !m.menu.achete) m.menu.fillNew = true; m.menu.dej = m.menu.dej||[]; m.menu.din = m.menu.din||[]; m.menu.dinCook = m.menu.dinCook||{}; m.menu.dinNo = m.menu.dinNo||{}; m.menu.dsel = m.menu.dsel||{}; m.art = m.art||{}; m.ph = m.ph||{};
+  if(m.auto && !(isObj(m.auto) && Array.isArray(m.auto.items))) m.auto = null; if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(DEFAULT().p, isObj(o.p) ? o.p : {});   /* nouveaux réglages : valeurs par défaut */ m.menu.useup = m.menu.useup||{}; if(m.menu.date && !m.menu.dej && !m.menu.achete) m.menu.fillNew = true; m.menu.dej = m.menu.dej||[]; m.menu.din = m.menu.din||[]; m.menu.dinCook = m.menu.dinCook||{}; m.menu.dinNo = m.menu.dinNo||{}; m.menu.dsel = m.menu.dsel||{}; m.art = m.art||{}; m.ph = m.ph||{};
   try{ Object.keys(m.ph).forEach(k => { m.ph[k] = (m.ph[k]||[]).filter(e => isFood(e.t)); if(!m.ph[k].length) delete m.ph[k]; }); if(m.auto && m.auto.items) m.auto.items = m.auto.items.filter(i => isFood(i.t)); }catch(e){} m.menu.ent = m.menu.ent||[]; m.menu.sou = m.menu.sou||[]; m.menu.des = m.menu.des||[]; if(!m.dates) m.dates = {plan:'', shop:''}; m.storesx = m.storesx||[]; m.stores = (m.stores||[]).filter(s => !['Loblaws','Food Basics','No Frills'].includes(s)); m.stores.forEach(s => { if(!STORES.includes(s) && !m.storesx.includes(s)) m.storesx.push(s); });
   m.p.budget = Math.max(0, +m.p.budget || 0);
   const st = {}; Object.values(m.stock).forEach(x => { if(!isObj(x) || typeof x.name!=='string' || !(+x.q > 0)) return; const [q,u] = normQU(x.name,+x.q,x.u); const k = keyOf(x.name,u); if(st[k]) st[k].q += q; else st[k] = Object.assign({}, x, {q,u}); }); m.stock = st;
@@ -3122,7 +3122,7 @@ function renderAide(){
   + D('16. Questions fréquentes', `<p><b>Le menu ne change pas quand je le refais.</b> Les plats « Gardé » restent; une fois l'épicerie terminée, le menu est verrouillé jusqu'à « Terminer la semaine ».</p>
     <p><b>Un article est en double.</b> Deux recettes le nomment différemment; additionne-les en magasin.</p>
     <p><b>Les quantités ne conviennent pas.</b> Ajuste les portions (Réglages ou repas par repas), les quantités d'accompagnements, ou modifie la recette. Les quantités des recettes sont des estimations : corrige celles qui ne conviennent pas à ta famille.</p>
-    <p><b>Un spécial ne correspond pas au plat.</b> Les circulaires sont lues par mots-clés : vérifie l'étiquette jaune avant d'acheter.</p>
+    <p><b>Un spécial ne correspond pas à l'article</b> (ex. des oeufs Kinder pour des oeufs). Onglet Articles → l'article → « Pas ce produit » : il ne sera plus jamais associé. Les friandises, plats préparés et produits « à la » ou « aux » (nouilles aux oeufs, poulet au beurre) sont déjà écartés automatiquement.</p>
     <p><b>Tout recommencer.</b> Réglages → « Tout remettre à zéro ».</p>`);
 }
 

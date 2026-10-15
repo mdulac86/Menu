@@ -45,6 +45,33 @@ const serveur = require('./serveur');
     const chk = (l, q, u) => { const r = L(l); if(!r || r[1] !== u || Math.abs(r[0] - q) > q * .05 + 1) out.push(`ingrédient « ${l} » → ${JSON.stringify(r)} (attendu ${q} ${u})`); };
     chk('1 1/2 tasse de lait', 375, 'ml'); chk('500 g (1 lb) de boeuf haché', 500, 'g'); chk('2 c. à soupe d\'huile', 30, 'ml'); chk('1 boîte de 796 ml de tomates', 796, 'ml');
     chk('1/2 à 3/4 tasse de lait', 156, 'ml'); chk('1/4 de tasse de sucre', 63, 'ml'); chk('1 boîte (28 oz/796 ml) de tomates', 796, 'ml');
+    /* dates des circulaires en heure du Québec */
+    if(dayOf('2026-10-21T23:59:59-04:00') !== '2026-10-21') out.push('dayOf fin de circulaire');
+    if(!covers({valid_from:'2026-10-15T00:00:00-04:00', valid_to:'2026-10-21T23:59:59-04:00'}, '2026-10-21')) out.push('covers dernier jour');
+    /* nombres saisis */
+    [['1 200', 1200], ['150 $', 150], ['2,5', 2.5], ['-50', 0], ['abc', 0]].forEach(([v, e]) => { if(numIn(v) !== e) out.push(`numIn(${v}) = ${numIn(v)}`); });
+    /* sauvegardes abîmées : complétées sans planter */
+    try{ const m = mergeState({menu:{date:'x', items:'oops'}, stock:{a:{name:'Riz', q:'abc', u:'g'}}, hist:{}, custom:[{n:'X', i:[[1,'un','oeuf']], m:'pas un tableau'}], stores:'IGA', p:{budget:'-3'}});
+      if(!Array.isArray(m.menu.items) || !m.menu.chk || !Array.isArray(m.hist) || !Array.isArray(m.stores) || !Array.isArray(m.custom[0].m) || m.p.budget !== 0 || Object.keys(m.stock).length) out.push('mergeState ne répare pas tout'); }
+    catch(e){ out.push('mergeState plante : ' + e.message); }
+    try{ mergeState(null); out.push('mergeState(null) accepté'); }catch(e){}
+    /* restaurer une copie invalide ne change rien */
+    const before = JSON.stringify(S); try{ restoreFrom('{"pas":"bon"}', 'x'); out.push('copie invalide acceptée'); }catch(e){} if(JSON.stringify(S) !== before) out.push('copie invalide a modifié les données');
+    /* variante « -oeuf » ne retire pas le boeuf */
+    const eff = effective({n:'T', i:[[450,'g','boeuf haché','viandes'],[1,'un','oeuf','produits laitiers']], v:[['Sans oeuf','-oeuf']]}, 1).map(g => g.name);
+    if(!eff.includes('boeuf haché') || eff.includes('oeuf')) out.push('variante -oeuf : ' + eff.join(', '));
+    /* quantités : épices pas gonflées */
+    if(scaleQ(2, 'ml', 7/6) > 3) out.push('scaleQ épices ' + scaleQ(2,'ml',7/6));
+    /* prix à la livre */
+    const c = dealCost({p:'3,88 $', t:'Hauts de cuisse de poulet', per:'lb'}, {name:'hauts de cuisses de poulet', u:'g', buy:1000, rayon:'viandes'});
+    if(Math.abs(c - 8.55) > .05) out.push('coût au poids ' + c);
+    /* budget : la génération respecte une limite atteignable */
+    S.p.budget = 0; S.p.n = 5; genMenu(); const t0 = listTotals(buyList().rows).cost;
+    S.p.budget = Math.round(t0 * .85); const nb = budgetFit(); const t1 = listTotals(buyList().rows).cost;
+    if(!(t1 < t0)) out.push(`budgetFit n'a rien baissé (${t0.toFixed(2)} → ${t1.toFixed(2)}, ${nb} changements)`);
+    /* les jours du menu ne glissent pas d'un jour à l'autre */
+    const days = mlist('items').map(x => x.d).join(); S.menu.start = S.menu.start || isoToday();
+    if(weekDates()[0] !== (S.dates.shop || S.menu.start)) out.push('début de semaine');
     return out;
   }, CASES);
   await b.close(); if(srv) srv.close();
