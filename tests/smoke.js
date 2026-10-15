@@ -9,7 +9,9 @@ const from = iso(new Date(today - 3 * 864e5)), to = iso(new Date(+today + 6 * 86
 const FLYERS = [{id: 1, merchant: 'IGA', categories_csv: 'Épicerie', valid_from: from, valid_to: to}, {id: 2, merchant: 'Maxi', categories_csv: 'Groceries', valid_from: from, valid_to: to}, {id: 3, merchant: 'Pizza Pizza', categories_csv: 'Restaurants', valid_from: from, valid_to: to}];
 const ITEMS = {1: [['Poitrines de poulet désossées', 3.99, 40], ['Boeuf haché maigre', 4.44, 30], ['Pommes de terre sac 10 lb', 2.99, 50], ['Fromage cheddar 400 g', 4.99, 45], ['Lait 2% 4 L', 5.49, 10], ['Shampoing Pantene', 3.99, 50]],
   2: [['Porc haché', 2.99, 35], ['Saumon atlantique filets', 9.99, 20], ['Pâtes Catelli 900 g', 1.49, 50], ['Oignons jaunes sac 3 lb', 1.99, 30], ['Tomates en dés 796 ml', 0.99, 50]]};
+const serveur = require('./serveur');
 (async () => {
+  const srv = await serveur();
   const b = await chromium.launch({executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'}).catch(() => chromium.launch());
   const ctx = await b.newContext({viewport: {width: 390, height: 844}, serviceWorkers: 'block', permissions: ['clipboard-read', 'clipboard-write']});
   const page = await ctx.newPage(); const errs = [];
@@ -50,5 +52,5 @@ const ITEMS = {1: [['Poitrines de poulet désossées', 3.99, 40], ['Boeuf haché
   try{ JSON.parse(st); }catch(e){ errs.push('état illisible'); }
   console.log(errs.length ? errs.join('\n') : `OK : ${log.length} actions sans erreur (seed ${process.argv[3] || 1})`);
   if(process.env.DUMP) require('fs').writeFileSync(process.env.DUMP, st || '');
-  await b.close(); process.exit(errs.length ? 1 : 0);
+  await b.close(); if(srv) srv.close(); process.exit(errs.length ? 1 : 0);
 })();

@@ -3,7 +3,9 @@
 const { chromium } = require('/opt/node-tools/node_modules/playwright-core');
 const fs = require('fs');
 const corpus = JSON.parse(fs.readFileSync(__dirname + '/donnees/circulaires-2026-10-15.json', 'utf8'));
+const serveur = require('./serveur');
 (async () => {
+  const srv = await serveur();
   const b = await chromium.launch(); const page = await b.newPage();
   page.on('pageerror', e => console.error('pageerror', e.message));
   await page.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
@@ -26,5 +28,5 @@ const corpus = JSON.parse(fs.readFileSync(__dirname + '/donnees/circulaires-2026
   lines.push('', '#### AUBAINES', ...res.aub);
   fs.writeFileSync(process.argv[2] || '/dev/stdout', lines.join('\n') + '\n');
   console.error('articles associés :', Object.keys(res.art).length, '· recettes avec spécial :', Object.keys(res.rec).length);
-  await b.close();
+  await b.close(); if(srv) srv.close();
 })();

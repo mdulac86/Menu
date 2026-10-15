@@ -27,7 +27,9 @@ const CASES = {
     ['Chocolat mi-sucré', 'Chocolat Kinder Bueno', false], ['Chocolat mi-sucré', 'Chocolat à cuisson Baker\'s mi-sucré', true]
   ]
 };
+const serveur = require('./serveur');
 (async () => {
+  const srv = await serveur();
   const b = await chromium.launch(); const page = await b.newPage();
   const errs = []; page.on('pageerror', e => errs.push(e.message));
   await page.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
@@ -45,7 +47,7 @@ const CASES = {
     chk('1/2 à 3/4 tasse de lait', 156, 'ml'); chk('1/4 de tasse de sucre', 63, 'ml'); chk('1 boîte (28 oz/796 ml) de tomates', 796, 'ml');
     return out;
   }, CASES);
-  await b.close();
+  await b.close(); if(srv) srv.close();
   const all = errs.map(e => 'erreur JS : ' + e).concat(res);
   console.log(all.length ? all.join('\n') + `\n${all.length} échec(s)` : 'Tous les tests unitaires passent.');
   process.exit(all.length ? 1 : 0);

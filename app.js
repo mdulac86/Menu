@@ -75,8 +75,22 @@ const DEFAULT = () => ({
 });
 let S = DEFAULT();
 
-function mergeState(o){ const d = DEFAULT(); const m = Object.assign(d, o); if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(DEFAULT().p, o.p||{});   /* nouveaux réglages : valeurs par défaut */ m.menu.useup = m.menu.useup||{}; if(m.menu.date && !m.menu.dej && !m.menu.achete) m.menu.fillNew = true; m.menu.dej = m.menu.dej||[]; m.menu.din = m.menu.din||[]; m.menu.dinCook = m.menu.dinCook||{}; m.menu.dinNo = m.menu.dinNo||{}; m.menu.dsel = m.menu.dsel||{}; m.art = m.art||{}; m.ph = m.ph||{};
-  try{ Object.keys(m.ph).forEach(k => { m.ph[k] = (m.ph[k]||[]).filter(e => isFood(e.t)); if(!m.ph[k].length) delete m.ph[k]; }); if(m.auto && m.auto.items) m.auto.items = m.auto.items.filter(i => isFood(i.t)); }catch(e){} m.menu.ent = m.menu.ent||[]; m.menu.sou = m.menu.sou||[]; m.menu.des = m.menu.des||[]; if(!m.dates) m.dates = {plan:'', shop:''}; m.storesx = m.storesx||[]; m.stores = (m.stores||[]).filter(s => !['Loblaws','Food Basics','No Frills'].includes(s)); m.stores.forEach(s => { if(!STORES.includes(s) && !m.storesx.includes(s)) m.storesx.push(s); }); return m; }
+const isObj = x => !!x && typeof x==='object' && !Array.isArray(x);
+function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); const d = DEFAULT(); const m = Object.assign(d, o);
+  /* chaque champ doit avoir le bon type, sinon on reprend la valeur par défaut (sauvegarde ancienne ou abîmée) */
+  Object.keys(d).forEach(k => { const v = d[k]; if(Array.isArray(v) && !Array.isArray(m[k])) m[k] = v; else if(isObj(v) && !isObj(m[k])) m[k] = v; });
+  ['storesx','skip','report'].forEach(k => { if(m[k] != null && !Array.isArray(m[k])) delete m[k]; });
+  ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
+  m.menu = Object.assign(DEFAULT().menu, isObj(o.menu) ? o.menu : {});
+  ['items','dej','din','ent','sou','des','sn'].forEach(k => { if(m.menu[k] != null && !Array.isArray(m.menu[k])) m.menu[k] = []; if(Array.isArray(m.menu[k])) m.menu[k] = m.menu[k].filter(x => isObj(x) && typeof x.r==='string' || (k==='sn' && isObj(x))); });
+  ['chk','extra','useup','dinCook','dinNo','dsel'].forEach(k => { if(!isObj(m.menu[k])) m.menu[k] = {}; });
+  m.custom = m.custom.filter(r => isObj(r) && typeof r.n==='string' && Array.isArray(r.i)).map(r => Object.assign(r, {m: Array.isArray(r.m) ? r.m.map(String) : [], i: r.i.filter(g => Array.isArray(g) && +g[0] >= 0 && typeof g[2]==='string'), e: typeof r.e==='string' ? r.e : '', s: typeof r.s==='string' ? r.s : ''}));
+  m.hist = m.hist.filter(isObj).map(w => Object.assign(w, {items: Array.isArray(w.items) ? w.items : []}));
+  if(m.auto && !(isObj(m.auto) && Array.isArray(m.auto.items))) m.auto = null; if((o.v||1) < 2){ m.ess = d.ess; } m.v = 4; m.p = Object.assign(DEFAULT().p, o.p||{});   /* nouveaux réglages : valeurs par défaut */ m.menu.useup = m.menu.useup||{}; if(m.menu.date && !m.menu.dej && !m.menu.achete) m.menu.fillNew = true; m.menu.dej = m.menu.dej||[]; m.menu.din = m.menu.din||[]; m.menu.dinCook = m.menu.dinCook||{}; m.menu.dinNo = m.menu.dinNo||{}; m.menu.dsel = m.menu.dsel||{}; m.art = m.art||{}; m.ph = m.ph||{};
+  try{ Object.keys(m.ph).forEach(k => { m.ph[k] = (m.ph[k]||[]).filter(e => isFood(e.t)); if(!m.ph[k].length) delete m.ph[k]; }); if(m.auto && m.auto.items) m.auto.items = m.auto.items.filter(i => isFood(i.t)); }catch(e){} m.menu.ent = m.menu.ent||[]; m.menu.sou = m.menu.sou||[]; m.menu.des = m.menu.des||[]; if(!m.dates) m.dates = {plan:'', shop:''}; m.storesx = m.storesx||[]; m.stores = (m.stores||[]).filter(s => !['Loblaws','Food Basics','No Frills'].includes(s)); m.stores.forEach(s => { if(!STORES.includes(s) && !m.storesx.includes(s)) m.storesx.push(s); });
+  m.p.budget = Math.max(0, +m.p.budget || 0);
+  const st = {}; Object.values(m.stock).forEach(x => { if(!isObj(x) || typeof x.name!=='string' || !(+x.q > 0)) return; const [q,u] = normQU(x.name,+x.q,x.u); const k = keyOf(x.name,u); if(st[k]) st[k].q += q; else st[k] = Object.assign({}, x, {q,u}); }); m.stock = st;
+  return m; }
 /* ---------- protection des données ----------
    Les données vivent sur le téléphone, sous la clé KEY. Une mise à jour de l'application ne remplace que le code.
    1. Si les données ne peuvent pas être lues, elles sont mises de côté (RESCUE) avant tout enregistrement.
@@ -87,7 +101,7 @@ let loadFailed = false, rescued = false, bkBar = true;   /* bkBar : bandeau de s
 function readCopies(){ try{ return JSON.parse(localStorage.getItem(COPIES) || '[]'); }catch(e){ return []; } }
 function snapshot(label, raw){
   try{ const o = JSON.parse(raw); delete o.auto; raw = JSON.stringify(o); }catch(e){}
-  const L = readCopies(); L.unshift({d: new Date().toISOString(), label, data: raw});
+  const L = readCopies(); L.unshift({d: new Date().toISOString(), day: isoToday(), label, data: raw});
   for(let n = Math.min(L.length, 5); n >= 1; n--){ try{ localStorage.setItem(COPIES, JSON.stringify(L.slice(0, n))); return true; }catch(e){} }
   return false;
 }
@@ -96,14 +110,16 @@ function loadLocal(){
   try{ j = localStorage.getItem(KEY); }catch(e){}
   if(j){
     try{ S = mergeState(JSON.parse(j)); }
-    catch(e){ loadFailed = true; try{ localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
+    catch(e){ loadFailed = true; try{ const old = localStorage.getItem(RESCUE); if(old && old !== j) localStorage.setItem(RESCUE+'_2', old); localStorage.setItem(RESCUE, j); rescued = true; }catch(_){} }
     if(!loadFailed && S.appv !== APPV){ snapshot('Avant la mise à jour', j); S.appv = APPV; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
     if(loadFailed) S.flash = "Tes données n'ont pas pu être lues par cette version. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
   } else S.appv = APPV;
-  const st = {}; Object.values(S.stock||{}).forEach(o => { const [q,u] = normQU(o.name,o.q,o.u); const k = keyOf(o.name,u); if(st[k]) st[k].q += q; else st[k] = Object.assign({}, o, {q,u}); }); S.stock = st;
 }
+/* nombre saisi : « 1 200 », « 150 $ », « 2,5 » ; jamais négatif ni NaN */
+const numIn = v => Math.max(0, parseFloat(String(v ?? '').replace(/[\s\u00a0$]/g,'').replace(',','.')) || 0);
+function resetCaches(){ _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); }
 function save(){
-  _AR = _ND = _BL = _CAT = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); S.maj = Date.now(); S.bkDirty = true;
+  resetCaches(); S.maj = Date.now(); S.bkDirty = true;
   if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Réglages)"); return; }
   const raw = JSON.stringify(S);
   const put = () => { localStorage.setItem(KEY, raw); setSync('Enregistré sur cet appareil'); };
@@ -112,7 +128,7 @@ function save(){
     try{ localStorage.setItem(COPIES, JSON.stringify(readCopies().slice(0, 1))); put(); }
     catch(e2){ try{ localStorage.removeItem(COPIES); put(); }catch(e3){ setSync("Enregistrement impossible : mode privé ou stockage plein"); return; } }
   }
-  try{ const L = readCopies(); if(!L.length || L[0].d.slice(0,10) !== isoToday()) snapshot('Copie du jour', raw); }catch(e){}
+  try{ const L = readCopies(); if(!L.some(c => c.label==='Copie du jour' && c.day===isoToday())) snapshot('Copie du jour', raw); }catch(e){}
 }
 function setSync(t){ const e = $('#sync'); if(e) e.textContent = t; }
 
@@ -201,6 +217,12 @@ function varDetail(v){
   return `<div class="var">${desc?`<p style="margin:0">${esc(desc)}</p>`:''}${L.length?`<ul class="small" style="margin:4px 0 0;padding-left:18px">${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${v[2]?`<p class="small" style="margin:4px 0 0"><b>Préparation :</b> ${esc(v[2])}</p>`:''}${!desc && !L.length && !v[2] ? '<p class="small" style="margin:0">Aucun changement d\'ingrédient.</p>' : ''}</div>`;
 }
 function resetV(n){ allItems().forEach(x => { if(x.r===n){ x.v = 0; x.ovr = {}; } }); }
+/* après un changement de versions : chaque plat garde la même version (retrouvée par son contenu), sinon revient à la base */
+function remapV(n, before, a){
+  const r = byName(n), after = r ? varRows(r).map(x => x.v) : [];
+  allItems().concat((S.occ && S.occ.items) || []).forEach(x => { if(x.r!==n || !x.v) return; const old = before[x.v-1], j = after.indexOf(old);
+    if(j >= 0) x.v = j+1; else if(a==='vsave' && after[x.v-1]) {} else { x.v = 0; x.ovr = {}; } });
+}
 function addToMenu(r){ const l = LOFK[kindOf(r)]; const L = mlist(l); L.push(l==='items' ? mkItem(r, usedSides(L), pickVar(r)) : {r:r.n, v:pickVar(r)}); if(l==='items'){ linkFollow(L[L.length-1]); assignDays(false); } }
 const vname = t => { const i = t.indexOf(':'); const n = (i>0 ? t.slice(0,i) : t).trim(); return n.length>34 ? n.slice(0,32)+'…' : n; };
 const vdesc = t => { const i = t.indexOf(':'); return i>0 ? t.slice(i+1).trim() : ''; };
@@ -216,7 +238,9 @@ function effective(r, idx){
     } else if(tok[0]==='-'){
       const m = tok.match(/^-\s*([\d.,]+)\s+(g|ml|un)\s+(.*)$/);
       if(m){ const k = keyOf(m[3].trim(), m[2]); const o = map.get(k); if(o){ o.q -= parseFloat(m[1].replace(',','.')); if(o.q<=0) map.delete(k); } }
-      else { const w = norm(tok.slice(1).trim()); for(const [k,o] of [...map]) if(norm(o.name).includes(w)) map.delete(k); }
+      else { const nm = tok.slice(1).trim(), w = norm(nm), b = baseOf(nm), ex = [...map].filter(([k,o]) => baseOf(o.name)===b);
+        const re = new RegExp('(^|[^a-z])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '($|[^a-z])');
+        (ex.length ? ex : [...map].filter(([k,o]) => re.test(norm(o.name)))).forEach(([k]) => map.delete(k)); }
     }
   });
   return [...map.entries()].map(([k,o]) => ({k,...o}));
@@ -256,7 +280,7 @@ function stockKey(n){
   for(const [k,o] of Object.entries(S.stock)){ if(o.u===n.u && sameFood(sigWords(o.name), nw)) return k; }
   return null;
 }
-function stockSideBonus(s){ return s.i.some(([q,u,n]) => !isMaison(n) && stockKey({k:keyOf(n,u),name:n,u})) ? .5 : 0; }
+function stockSideBonus(s){ return s.i.some(([q,u,n]) => { if(isMaison(n)) return false; const u2 = normQU(n,q,u)[1]; return !!stockKey({k:keyOf(n,u2),name:n,u:u2}); }) ? .5 : 0; }
 /* Genre de féculent. Un plat qui contient déjà des pâtes, du riz ou des patates ne reçoit que du pain;
    un plat dans du pain (burger, tacos) peut avoir des frites ou du riz, mais pas un autre pain. */
 const STARCH = [['pates',/spaghetti|\bpates\b|macaroni|penne|fusilli|rotini|linguine|fettuccine|tortellini|ravioli|lasagne|gnocchi|nouilles|vermicelle|orzo|ramen|udon|coquilles/],
@@ -293,7 +317,7 @@ function scaleQ(q,u,f){
   if(Math.abs(f-1)<1e-9) return q;
   const x = q*f;
   if(u==='un') return x>=3 ? Math.ceil(x-1e-9) : Math.ceil(x*2-1e-9)/2;
-  return x>=100 ? Math.round(x/10)*10 : Math.round(x/5)*5 || 5;
+  return x>=100 ? Math.round(x/10)*10 : x>=20 ? Math.round(x/5)*5 : Math.max(.5, Math.round(x*2)/2);
 }
 function fullIngs(it, all){
   const r = byName(it.r); if(!r) return [];
@@ -309,7 +333,9 @@ function fullIngs(it, all){
     s.i.forEach(([q,u,n,ra]) => { const g = {k:keyOf(n,u),q,u,name:n,rayon:ra}; const out = ex.includes(g.k); if(out && !all) return; if(out){ map.set('x'+g.k,{...g,q:scaleQ(q,u,f),x:true}); return; } put(g, f*(it[mk]??1)); }); });
   return [...map.values()];
 }
-function stockOf(it){ const out = []; fullIngs(it).forEach(g => { if(isMaison(g.name)) return; const sk = stockKey(g); if(sk){ const nm = S.stock[sk].name; if(!out.includes(nm)) out.push(nm); } }); return out.slice(0,3); }
+/* clé de stock d'un ingrédient, avec la même conversion d'unités que la liste (4 pommes de terre ↔ 800 g) */
+const skOf = g => { const [q,u] = normQU(g.name, g.q, g.u); return stockKey({k:keyOf(g.name,u), name:g.name, u, q}); };
+function stockOf(it){ const out = []; fullIngs(it).forEach(g => { if(isMaison(g.name)) return; const sk = skOf(g); if(sk){ const nm = S.stock[sk].name; if(!out.includes(nm)) out.push(nm); } }); return out.slice(0,3); }
 function aUtiliser(){
   if(!Object.keys(S.stock).length) return [];
   const used = new Set(); needs().forEach(n => { if(n.src.includes('Restes à manger')) return; const sk = stockKey(n); if(sk) used.add(sk); });
@@ -347,7 +373,7 @@ async function wakeOn(){ try{ if(cook && !wl && navigator.wakeLock){ wl = await 
 function wakeOff(){ try{ if(wl) wl.release(); }catch(e){} wl = null; }
 /* une étape par phrase; « 400°F 40 min. » ou « 2,5 » ne coupent pas */
 function splitSteps(s){
-  const parts = String(s||'').replace(/\s+/g, ' ').trim().split(/([.!?])\s+/), out = []; let cur = '';
+  const parts = String(s||'').replace(/\s+/g, ' ').replace(/(^|[.!?]\s+)\d{1,2}[.)]\s+/g, '$1').trim().split(/([.!?])\s+/), out = []; let cur = '';
   for(let i = 0; i < parts.length; i += 2){ cur += parts[i] + (parts[i+1] || ''); const nx = parts[i+2];
     if(nx === undefined || /^[A-ZÀ-ÖØ-Þ0-9«(]/.test(nx)){ if(cur.trim()) out.push(cur.trim()); cur = ''; } else cur += ' '; }
   return out;
@@ -379,7 +405,7 @@ function cookHtml(){
   sides.filter(x => x.s.s).forEach(({s}) => splitSteps(s.s).forEach(t => steps.push({t, g:'Avec : '+s.n})));
   const sans = sides.filter(x => !x.s.s); if(sans.length) steps.push({t:'Préparer '+sans.map(x => lowFirst(x.s.n)).join(' et ')+'.', g:'Accompagnements'});
   const st = (ckRead()[cook.key] || {}).c || {};
-  let ni = 0; const total = groups.reduce((t,g) => t + g.rows.length, 0) + steps.length, done = Object.keys(st).length;
+  let ni = 0; const total = groups.reduce((t,g) => t + g.rows.length, 0) + steps.length, done = Object.keys(st).filter(k => st[k] && (/^s(\d+)$/.test(k) ? +k.slice(1) < steps.length : /^i(\d+)$/.test(k) && +k.slice(1) < total - steps.length)).length;
   const ingH = groups.map(g => `${g.t ? `<p class="ck-g">${esc(g.t)}</p>` : ''}<div class="ck-list">${g.rows.map(x => { const id = 'i'+(ni++);
     return `<label class="ck-row"><input type="checkbox" data-ck="${id}" ${st[id]?'checked':''}><span class="ck-tx"><span>${esc(x.n)}${x.note ? `<em>${esc(x.note)}</em>` : ''}</span><span class="ck-q">${esc(x.q)}</span></span></label>`; }).join('')}</div>`).join('');
   let lastG = null, sn = 0;
@@ -464,7 +490,7 @@ function texteRecette(it, i, withCode){
 }
 function texteDetail(){
   const m = S.menu; if(!m.date) return '';
-  const parts = []; LISTS.forEach(l => mlist(l).forEach((it,i) => parts.push(texteRecette(it,i))));
+  const parts = []; LISTS.forEach(l => mlist(l).forEach((it,i) => { const t = texteRecette(it,i); if(t) parts.push(t); }));
   return `MENU DÉTAILLÉ - semaine du ${m.date}\n\n` + parts.join('\n\n------------------------------\n\n');
 }
 function texteListe(){
@@ -535,12 +561,12 @@ function readNum(s){
   if(!m) return null;
   let v = m[1] ? +m[1] + m[2]/m[3] : m[4] ? +m[4] + FRACS[m[5]] : m[6] ? m[6]/m[7] : m[8] ? FRACS[m[8]] : parseFloat(m[9].replace(',','.'));
   let rest = s.slice(m[0].length);
-  const r = rest.match(/^\s*(?:à|a|-|–|ou)\s*(\d+(?:[.,]\d+)?|\d+\/\d+|[½¼¾⅓⅔])/);   /* 2 à 3 : on garde la moyenne */
-  if(r){ const w = readNum(r[1]); if(w) v = (v + w.v)/2; rest = rest.slice(r[0].length); }
+  const r = rest.match(/^\s*(?:à|a|-|–|ou)\s*(?=[\d½¼¾⅓⅔⅛⅜⅝⅞⅕])/);   /* 2 à 3, 1/2 à 3/4, 1 à 1 1/2 : on garde la moyenne */
+  if(r){ const w = readNum(rest.slice(r[0].length)); if(w){ v = (v + w.v)/2; rest = w.rest; } }
   return {v, rest};
 }
 function readMeasure(s){
-  s = s.trim();
+  s = s.trim().replace(/^d(?:e\s+|['’]\s*)(?=(?:tasses?|cups?|c\.|cuil|cuill|lb|livres?|kg|g\b|ml|l\b|oz|onces?))/i, '');
   for(const [re, f, u] of MESURES){ const m = s.match(re); if(m) return {f, u, rest:s.slice(m[0].length)}; }
   return null;
 }
@@ -580,11 +606,12 @@ function parseIngLine(line){
       const par = s.match(/^\(([^)]*)\)/);                          /* « 1 (796 ml) boîte » ou « 2 (env. 400 g) poitrines » */
       const pm = s.match(PIECES);
       if(pm){ piece = pm[0]; s = s.slice(pm[0].length).trim(); }
-      const sz = s.match(/^(?:de\s+)?\(?\s*(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg|oz|lb)\b\.?\s*\)?/i)
+      const pMetric = (() => { const p2 = s.match(/^(?:de\s+)?\(([^)]*)\)/); const mm = p2 && p2[1].match(/(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg)\b/i); if(mm){ s = s.slice(p2[0].length).trim(); return mm; } return null; })();
+      const sz = pMetric || s.match(/^(?:de\s+)?\(?\s*(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg|oz|lb)\b\.?\s*\)?/i)
              || (par ? par[1].match(/(\d+(?:[.,]\d+)?)\s*(ml|l|g|kg|lb)\b/i) : null);
       if(sz && piece && /bo[iî]te|conserve|paquet|sac|sachet|pot|bouteille|contenant|barquette|casseau|enveloppe/i.test(piece)){
         const me2 = readMeasure(sz[2]); const size = parseFloat(String(sz[1]).replace(',','.'))*me2.f;
-        q = n.v*size; u = me2.u; can = /bo[iî]te|conserve/i.test(piece); piece = ''; if(s.match(/^(?:de\s+)?\(?\s*\d/)) s = s.slice(sz[0].length).trim();
+        q = n.v*size; u = me2.u; can = /bo[iî]te|conserve/i.test(piece); piece = ''; if(!pMetric && s.match(/^(?:de\s+)?\(?\s*\d/)) s = s.slice(sz[0].length).trim();
       } else { q = n.v; u = 'un'; if(par && !pm) s = s.slice(par[0].length).trim();
         const wt = (s+' '+(par ? par[0] : '')).match(/(?:\bde\s+|\(\s*(?:env(?:iron|\.)?\s*)?)(\d+(?:[.,]\d+)?)\s*(kg|g|lb|ml|l)\b\.?(\s*(?:chacune?s?|ch\.|par morceau))?(?:\s*(?:au total|en tout))?\s*\)?/i);
         if(wt && !piece){ const me3 = readMeasure(wt[2]); const size = parseFloat(wt[1].replace(',','.'))*me3.f; q = wt[3] ? n.v*size : (/^\s*de\b/i.test(wt[0]) ? n.v*size : size); u = me3.u; s = s.replace(wt[0].trim(), ' ').replace(/\(\s*(au total|en tout)?\s*\)/i,' ').replace(/\s+(au total|en tout)\b/i,' ').trim(); } }
@@ -613,10 +640,13 @@ function parseWebRecipe(txt){
   /* temps et portions : n'importe où avant les étapes */
   let prep = 0, cook = 0, total = 0, portions = 0;
   for(let k = 0; k < i1; k++){
-    const l = lines[k], nx = lines[k+1]||''; const both = T_LINE.test(l) && !/\d/.test(l) ? l+' '+nx : l; const n = norm(both).replace(/^temps (de |d')?(?=preparation|cuisson)/,'');
-    if(/^preparation\b/.test(n) && /\d/.test(n)) prep = prep || minutesOf(n.replace(/^preparation\s*:?/,''));
-    else if(/^cuisson\b/.test(n) && /\d/.test(n)) cook = cook || minutesOf(n.replace(/^cuisson\s*:?/,''));
-    else if(/^(temps )?total\b/.test(n) && /\d/.test(n)) total = total || minutesOf(n);
+    const l = lines[k], nx = lines[k+1]||''; const both = T_LINE.test(l) && !/\d/.test(l) ? l+' '+nx : l;
+    const n = norm(both).replace(/^temps (de |d')?(?=preparation|cuisson)/,'');
+    /* une ligne peut contenir plusieurs temps : « Préparation 20 min Cuisson 1 h » */
+    n.split(/(?=\b(?:preparation|cuisson|(?:temps )?total|portions?|rendement)\b)/).forEach(sg => { sg = sg.trim();
+      if(/^preparation\b/.test(sg) && /\d/.test(sg)) prep = prep || minutesOf(sg.replace(/^preparation\s*:?/,''));
+      else if(/^cuisson\b/.test(sg) && /\d/.test(sg)) cook = cook || minutesOf(sg.replace(/^cuisson\s*:?/,''));
+      else if(/^(temps )?total\b/.test(sg) && /\d/.test(sg)) total = total || minutesOf(sg); });
     const pm = n.match(/^(?:portions?|rendement|donne|pour)\s*:?\s*(\d+)/) || n.match(/^(\d+)\s*(?:portions?|personnes|parts|services)\b/);
     if(pm && !portions) portions = +pm[1];
   }
@@ -667,7 +697,7 @@ function parseWebRecipe(txt){
 }
 const TM_OPTS = [10,15,20,25,30,35,40,45,50,60,75,90,120,150];
 function webToDraft(w){
-  const tm = TM_OPTS.find(v => v >= w.tm) || 150;
+  const tm = TM_L.find(v => v >= w.tm) || Math.max(10, Math.round(+w.tm || 30));
   drafts.new = {n:w.n, k:w.k, pr:'', st:[], t:'viande', tm:String(tm), tp:String(w.tp ? Math.min(TP_L.find(v => v >= w.tp) || 90, tm) : tm), mj:/mijoteuse|slow cooker/i.test(w.s||''), sf:'auto', sv:'auto', fam:false, m:'', s:w.s, rows:w.rows.length ? w.rows : emptyRows(4)};
 }
 
@@ -683,6 +713,17 @@ function importRecipes(txt){
   if(!found.length){ const o = parseRecetteTexte(txt); if(o) found.push(o); }
   const names = []; let skipped = 0;
   found.forEach(o => {
+    /* recette partagée : on ne garde que des champs du bon type (un code abîmé ne doit pas casser l'onglet Recettes) */
+    if(!o || typeof o.n!=='string' || !o.n.trim()) return;
+    o.n = o.n.trim().slice(0, 120);
+    o.i = (Array.isArray(o.i) ? o.i : []).filter(g => Array.isArray(g) && isFinite(+g[0]) && +g[0] >= 0 && ['g','ml','un'].includes(g[1]) && typeof g[2]==='string' && g[2].trim())
+      .map(g => [+g[0], g[1], g[2].trim().slice(0, 120), RAYONS.includes(g[3]) ? g[3] : guessRayon(g[2])]);
+    if(!o.i.length) return;
+    o.m = Array.isArray(o.m) ? o.m.filter(x => typeof x==='string') : [];
+    o.s = typeof o.s==='string' ? o.s : ''; o.e = typeof o.e==='string' ? o.e : '';
+    o.v = Array.isArray(o.v) ? o.v.filter(v => Array.isArray(v) && typeof v[0]==='string').map(v => [v[0], typeof v[1]==='string' ? v[1] : '', typeof v[2]==='string' ? v[2] : undefined].filter(x => x !== undefined)) : [];
+    ['tm','tp','mj'].forEach(k => { if(o[k] != null && !isFinite(+o[k])) delete o[k]; });
+    if(o.k && !KINDS[o.k]) delete o.k;
     const same = allRecipes().find(r => norm(r.n)===norm(o.n));
     if(same && JSON.stringify(same.i)===JSON.stringify(o.i)){ skipped++; return; }
     o.n = same ? uniqueName(o.n) : o.n; Object.assign(o, {c:true, nw:true, e:o.e||'', v:o.v||[]}); if(!o.m || !o.m.length) o.m = autoMots(o.i, o.n);
@@ -779,7 +820,7 @@ function assignDays(force){
     if(p && p.d){ for(const k of [2,3,1,4]){ i = pick.indexOf(addDays(p.d, k)); if(i >= 0) break; } if(i < 0) i = pick.findIndex(d => d > p.d); }
     x.d = i>=0 ? pick.splice(i,1)[0] : pick.shift(); });
   /* les restes planifiés viennent toujours après le plat qui les produit */
-  fol.forEach(x => { const p = L.find(y => y.r===x.after); if(p && p.d && x.d && x.d < p.d){ const t = p.d; p.d = x.d; x.d = t; } });
+  fol.forEach(x => { const p = L.find(y => y.r===x.after); if(p && p.d && x.d && x.d < p.d && !p.dfix && !x.dfix && !(isLong(byName(p.r)||{}) && !isOff(x.d))){ const t = p.d; p.d = x.d; x.d = t; } });
   L.forEach(x => { if(!x.d) delete x.d; });
   if(force) spreadDays();
 }
@@ -868,7 +909,7 @@ const primOf = it => it.after && S.p.reste!==false ? mlist('items').find(x => x.
 const follOf = it => S.p.reste!==false ? mlist('items').find(x => x.after===it.r) || null : null;
 function pickFollow(rp, taken, avoid){
   const fp = famOf(rp), pen = r => { const f = famOf(r); return (f && (f===fp || (avoid && avoid.has(f))) ? 3 : 0) + ((r.t||'viande')!=='viande' && r.t===rp.t ? 1.5 : 0); };
-  const c = allRecipes().filter(r => kindOf(r)==='souper' && !taken.has(r.n) && !S.dis[r.n] && !softBad(r) && pairs(rp, r)).map(r => ({r, s:score(r) - pen(r)})).sort((a,b) => b.s-a.s);
+  const c = allRecipes().filter(r => kindOf(r)==='souper' && !taken.has(r.n) && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !r.pp && pairs(rp, r)).map(r => ({r, s:score(r) - pen(r)})).sort((a,b) => b.s-a.s);
   return c.length ? c[0].r : null;
 }
 function linkFollow(it){
@@ -926,7 +967,8 @@ function buyList(){
   return (_BL = {rows, covered, verify});
 }
 const isoToday = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-const shopISO = () => S.dates.shop || isoToday();
+/* début de la semaine du menu : la date d'épicerie choisie, sinon le jour où le menu a été créé (les jours ne glissent plus chaque jour) */
+const shopISO = () => S.dates.shop || (S.menu && S.menu.date && S.menu.start) || isoToday();
 const fmtDate = iso => { try{ return new Date(iso+'T12:00:00').toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'}); }catch(e){ return iso; } };
 const nice = t => { t = String(t).trim(); return t.charAt(0).toUpperCase()+t.slice(1).toLowerCase(); };
 const cap = t => { t = String(t); return t.charAt(0).toUpperCase()+t.slice(1); };
@@ -935,331 +977,16 @@ const goStores = () => S.stores.filter(s => !(S.skip||[]).includes(s));
 /* produits de pharmacie et d'entretien qui partagent un mot avec un aliment (« crème », « savon au lait »…) */
 const NONFOOD = /\b(eucerin|nivea|aveeno|cetaphil|cerave|neutrogena|olay|vaseline|gillette|colgate|crest|oral-?b|listerine|sensodyne|tampax|kotex|pampers|huggies|kleenex|cottonelle|charmin|scotties|purex|tide|downy|bounce|sunlight|cascade|lysol|clorox|javex|febreze|glad|ziploc|duracell|energizer|garnier|pantene|aussie|tresemme|old spice|speed stick|tylenol|advil|motrin|reactine|centrum|jamieson|polysporin|vicks|benadryl|gaviscon|lubriderm|jergens|bioderma|vichy|la roche-posay|marcelle|lise watier|revlon|maybelline|covergirl|l.oreal)\b|creme (pour les |a )?mains|creme (hydratante|pour le corps|pour le visage|solaire|a raser|de nuit|de jour|antirides|corporelle)|ecran solaire|\blotions?\b|shampo|revitalisant|deodorant|antisudorifique|dentifrice|brosse a dents|rince-bouche|\bsavons?\b|gel douche|nettoyant|detergent|assouplissant|papier hygienique|essuie-tout|mouchoirs|couches(-culottes| pour| jetables)|lingettes|serviettes hygieniques|protege-dessous|rasoirs?\b|maquillage|mascara|vernis|eau de (toilette|parfum)|vitamines?\b|multivitamine|analgesique|comprimes|sirop contre la toux|\bpiles?\b|ampoules?\b|litiere|nourriture pour (chien|chat)|sacs a ordures|sacs poubelle|papier d.aluminium|pellicule plastique|soins? (de la peau|capillaires?)|\bbaume\b|cosmetique|teinture|coloration capillaire/;
 const isFood = t => !NONFOOD.test(norm(t||''));
-function autoItems(){ if(!S.auto) return []; const d = shopISO(), go = goStores(); return S.auto.items.filter(i => isFood(i.t) && (!i.vt || i.vt >= d) && (!i.vf || i.vf <= d) && (!S.stores.length || go.includes(i.s))); }
+function autoItems(){ if(!S.auto) return []; const d = shopISO(), go = goStores(); return S.auto.items.filter(i => isFood(i.t) && (S.auto.anyDate || ((!i.vt || i.vt >= d) && (!i.vf || i.vf <= d))) && (!S.stores.length || go.includes(i.s))); }
 let _AS = null;
-const allSpec = () => _AS || (_AS = S.spec.filter(s => !s.s || !(S.skip||[]).includes(s.s)).map(s => ({s:s.s, t:s.t, p:''})).concat(autoItems().map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0}))));
+const allSpec = () => _AS || (_AS = S.spec.filter(s => !s.s || !(S.skip||[]).includes(s.s)).map(s => ({s:s.s, t:s.t, p:''})).concat(autoItems().map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0, per:i.per||''}))));
 const specTxt = s => s.t+(s.p ? ' à '+s.p : '')+' ('+s.s+')';
 /* Mots composés qui changent d'aliment : « Pommes » ne doit pas prendre le spécial « Pommes de terre ». */
 const COMPOUNDS = ['pomme de terre','beurre d\'arachide','creme glacee','creme sure','lait de coco','noix de coco','fromage a la creme','pain de viande','sucre a glacer','pate a tarte'];
 
-/* ---------- prix habituels (estimations québécoises) ----------
-   Prix moyens au Québec de Statistique Canada (juillet 2026) quand ils existent, sinon prix courants estimés.
-   kg : prix au kilo, L : au litre, un : à l'unité ou au paquet. L'application remplace ces estimations
-   par les prix réguliers déduits des circulaires (rabais en %) et par les prix que tu corriges dans la liste. */
-const PRIX = [
-  /* noms qui contiennent le mot d'un autre aliment (pain à l'ail, nouilles aux oeufs, bouillon de poulet…) */
-  [/pain a l.ail/, {un:4}], [/clous? de girofle/, {un:0.05, L:80}], [/boites? d.egg rolls/, {un:6}], [/egg rolls/, {un:0.5}], [/tortellinis|gnocchi/, {kg:12}], [/nouilles aux oeufs/, {kg:5}], [/chorizo/, {kg:22}], [/cretons/, {kg:12}],
-  [/cereales de riz|riz souffle/, {kg:12}], [/pots? de cornichons/, {un:4}], [/cornichons/, {kg:10, un:0.4}], [/feuilles de lasagne/, {un:0.25}], [/feuilles de riz/, {un:0.15}], [/rondelles a empanadas/, {un:0.45}], [/fonds de tartelettes/, {un:0.3}], [/bouillon/, {L:3.3, un:2}], [/sauce bbq/, {L:8}], [/confiture/, {un:4.5, L:10}],
-  [/tartinade|sauce au chocolat/, {L:14}], [/gateau au fromage|tarte aux pommes/, {un:9}], [/boites? de creme de|boites? d.ananas/, {un:2}],
-  [/sachets?/, {un:1.5}], [/feuilles de laitue/, {un:0.25}], [/mangues? surgelees?/, {kg:6}], [/fecule/, {kg:5, L:4}], [/poireaux?/, {un:2}], [/abaisses?/, {un:2.3}],
-  /* formats de la liste de départ (sac, régime, paquet, emballage…) */
-  [/pommes \(sac\)|sac de pommes/, {un:5}], [/bananes \(regime\)/, {un:2.2}], [/(clementines|oranges).*\(sac\)/, {un:5.5}],
-  [/yogourt \(dejeuners\)/, {un:0.75}], [/fromage tranche \(paquet\)/, {un:5}], [/fromage ficelle \(sac\)/, {un:7}],
-  [/compotes? de pommes \(emballage\)/, {un:3.5}], [/boites de jus/, {un:4}], [/croustilles \(gros sac\)/, {un:4.5}],
-  [/oignons? verts?/, {un:0.3}],
-  [/poulets? (bbq|rotis?)|poulets rotis|poulet roti du comptoir/, {un:13}],
-  [/poulet.*(cuit|effiloche)|poulet cuit/, {kg:22}],
-  [/poitrines? de poulet panee|filets de poulet panes|doigts de poulet/, {kg:15, un:2.5}],
-  [/poitrines? de poulet/, {kg:14.03, un:4.5}],
-  [/ailes de poulet surgelees|sac d.ailes/, {un:13}],
-  [/ailes de poulet/, {kg:13}],
-  [/hauts? de cuisses?|cuisses? de poulet|pilons/, {kg:9.5, un:1.8}],
-  [/poulets? entiers?/, {kg:8.57, un:14}],
-  [/(poulet|dinde) hache/, {kg:13}],
-  [/dinde tranchee/, {kg:28}],
-  [/poulet/, {kg:13, un:4}],
-  [/boeuf hache|orignal|chevreuil/, {kg:15.59}],
-  [/filets? mignons?|tournedos/, {kg:45, un:9}],
-  [/steaks?/, {kg:30, un:9}],
-  [/contre-filet|surlonge|bavette/, {kg:26}],
-  [/boeuf (emince|en lanieres|en tranches)/, {kg:26}],
-  [/rosbif|boeuf cuit/, {kg:32}],
-  [/ragout/, {kg:22.51}],
-  [/\brotis?\b|palette|epaule de boeuf/, {kg:20}],
-  [/porc hache/, {kg:9}],
-  [/cotelettes? de porc/, {kg:11, un:2.5}],
-  [/filets? de porc/, {kg:12}],
-  [/cotes levees/, {kg:20}],
-  [/epaule de jambon/, {kg:7}],
-  [/jambon fume desosse/, {kg:11}],
-  [/jambon/, {kg:18}],
-  [/epaule de porc|porc effiloche|cubes de porc|lanieres de porc|porc emince|pattes de porc/, {kg:8.8}],
-  [/bacon cuit/, {kg:45}],
-  [/bacon|lardons|lard sale/, {kg:17.5}],
-  [/prosciutto/, {kg:60}],
-  [/pepperoni|salami/, {kg:30}],
-  [/bologne/, {kg:12}],
-  [/saucisses? a hot-dog/, {un:0.6, kg:11}],
-  [/saucisses?/, {kg:13, un:1.3}],
-  [/agneau/, {kg:28}], [/veau/, {kg:25}],
-  [/crevettes/, {kg:23}],
-  [/boites? de saumon/, {un:4}],
-  [/saumon/, {kg:28}], [/truite/, {kg:26}], [/aiglefin|morue/, {kg:25}], [/petoncles/, {kg:50}],
-  [/poisson|tilapia/, {kg:18}],
-  [/sushis/, {un:12}],
-  [/thon/, {un:2.3}],
-  [/lait de coco/, {L:6.25, un:2.5}],
-  [/babeurre/, {L:3.2}],
-  [/creme glacee|sorbet/, {un:6, L:3}],
-  [/creme 35/, {L:11}], [/creme 15|creme a cuisson|creme 10/, {L:9}], [/creme sure/, {L:7}],
-  [/yogourt grec/, {L:8, un:6}], [/yogourt/, {L:5.5, un:5}],
-  [/lait(?!ue)/, {L:2.7}],
-  [/beurre d.arachide/, {L:5.8, kg:5.51}],
-  [/beurre/, {kg:14.5}],
-  [/fromage a la creme/, {kg:16}], [/ricotta/, {kg:13}], [/feta/, {kg:24}], [/parmesan/, {kg:38}],
-  [/mozzarella fraiche/, {kg:30}], [/fromage ficelle|batonnets de fromage/, {un:0.7}],
-  [/tranches? de (fromage|cheddar)|fromage tranche/, {un:0.35, kg:22}],
-  [/chevre|fromage bleu/, {kg:35}], [/fromage en grains/, {kg:20}],
-  [/mozzarella|cheddar|fromage|gruyere|emmental|suisse|provolone/, {kg:22}],
-  [/\boeufs?\b/, {un:0.38}],
-  [/tofu/, {kg:9}],
-  [/tzatziki/, {L:12}], [/trempette|sauce ranch/, {L:9, un:4}],
-  [/(pommes de terre|patates) grelots/, {kg:4.4}],
-  [/patates? douces?/, {kg:4.4, un:1.6}],
-  [/pommes? de terre|patates/, {kg:1.8, un:0.45}],
-  [/oignons? verts?|ciboulette/, {un:1.3}],
-  [/echalote/, {un:0.7}],
-  [/oignon/, {un:0.55, kg:2.2}],
-  [/gousses? d.ail|\bail\b/, {un:0.2, kg:13}],
-  [/carottes mini/, {un:3}],
-  [/carottes?/, {un:0.3, kg:2.2}],
-  [/celeri/, {un:0.5}],
-  [/brocoli/, {kg:6, un:3}],
-  [/chou-fleur/, {un:4}],
-  [/salade de chou/, {kg:7, un:4}],
-  [/chou/, {kg:2.5, un:3}],
-  [/tomates cerises/, {kg:9}],
-  [/tomates? (sechees)/, {kg:30, L:25}],
-  [/tomates (broyees|en des)|puree de tomates|sauce tomate|marinara/, {L:3.2, un:2}],
-  [/pate de tomates/, {L:8}],
-  [/boites? de tomates/, {un:2}],
-  [/tomates?/, {un:1.1, kg:6.18}],
-  [/poivrons?/, {un:1.9}], [/jalapenos?/, {un:0.3}],
-  [/concombre/, {un:1.5}], [/courgettes?/, {un:1.3}], [/courge/, {kg:2.8}],
-  [/champignons|pleurotes/, {kg:11}],
-  [/epinards surgeles/, {kg:5}],
-  [/epinards|jeunes pousses|roquette|laitue melangee|chou frise/, {kg:16, un:5}],
-  [/feuilles de laitue/, {un:0.25}], [/coeurs de romaine/, {un:1.7}], [/sac de salade/, {un:5}], [/laitue/, {un:3.5}],
-  [/haricots verts/, {kg:7}], [/feves germees|pousses de soya/, {kg:5}], [/pak-choi/, {un:1.5}],
-  [/avocats?/, {un:1.54}], [/citrons?/, {un:0.9}], [/limes?/, {un:0.6}],
-  [/bananes?/, {un:0.33, kg:1.7}],
-  [/jus d.orange/, {L:3.5}], [/jus de pomme|jus/, {L:3, un:4}],
-  [/compotes? de pommes/, {un:0.6}],
-  [/pommes/, {un:0.8, kg:4.4}],
-  [/clementines?|oranges?/, {un:0.6, kg:3.09}],
-  [/poires/, {un:1, kg:5.65}], [/peches/, {un:1}], [/mangues?/, {un:1.8}],
-  [/raisins secs|canneberges sechees|dattes/, {kg:12}],
-  [/raisins/, {un:5, kg:6}],
-  [/fraises/, {kg:12.5}], [/bleuets|framboises|petits fruits/, {kg:9}], [/rhubarbe/, {kg:6}], [/barquette de fruits/, {un:6}],
-  [/basilic|coriandre|persil frais|aneth|menthe|bouquet|botte/, {un:2.5, L:40}],
-  [/gingembre/, {L:20, kg:9}],
-  [/pains? (a hamburger|a hot-dog|kaiser)|petits pains|sliders/, {un:0.6}],
-  [/pains? sous-marin/, {un:1.2}], [/baguettes?/, {un:3}], [/pain croute/, {un:4}],
-  [/tranches? de pain/, {un:0.2}], [/pain tranche/, {un:3.8}],
-  [/tortillas?|coquilles a tacos/, {un:0.45, kg:10}],
-  [/naan/, {un:1}], [/pitas?/, {un:0.6}], [/croissants?/, {un:1.2}], [/bagels ou muffins anglais/, {un:4.5}], [/bagels|muffins anglais/, {un:0.8}],
-  [/pates? a pizza/, {un:3.5}], [/croutons/, {kg:15}], [/brownies/, {un:1}],
-  [/frites|rissolees/, {kg:2.2}],
-  [/pizzas?/, {un:7}], [/lasagne surgelee/, {un:14}], [/pate chinois surgele/, {un:12}],
-  [/pates au poulet|tourtieres?/, {un:6}], [/egg rolls/, {un:6}], [/edamames/, {un:4}],
-  [/gateau au fromage|tarte aux pommes/, {un:9}],
-  [/abaisses|fonds de tartelettes|rondelles a empanadas/, {un:4.5}],
-  [/pogo/, {un:1.2}], [/pain a l.ail/, {un:4}],
-  [/legumes melanges|pois et carottes|pois verts|petits pois|mais en grains|mais surgele|legumes pour saute/, {kg:4, un:3}],
-  [/boites? de (mais|haricots|feves|pois chiches|coeurs|ananas|soupe|creme de)|ananas en conserve|boite de soupe/, {un:2}],
-  [/tortellinis|gnocchi/, {kg:12}],
-  [/paquets de nouilles ramen|ramen/, {un:0.8}],
-  [/feuilles de riz|feuilles de lasagne/, {un:4}],
-  [/spaghetti|linguine|fettuccine|penne|rotini|macaroni|pates|tagliatelles|nouilles|vermicelles/, {kg:4}],
-  [/riz/, {kg:3.5}],
-  [/flocons d.avoine|gruau/, {kg:4, un:4.5}], [/cereales/, {un:5.5, kg:12}], [/granola/, {kg:12}],
-  [/farine/, {kg:2.4, L:1.3}], [/sucre a glacer/, {kg:3}], [/cassonade/, {kg:3.5, L:2.2}], [/sucre/, {kg:1.4, L:1.2}],
-  [/cacao/, {kg:20}], [/chocolat|pepites/, {kg:15}],
-  [/fecule/, {L:4}],
-  [/huile d.olive/, {L:12}], [/huile de sesame/, {L:20}], [/huile/, {L:3.35}],
-  [/vinaigre balsamique|vinaigrette/, {L:10}], [/vinaigre/, {L:4}],
-  [/sirop d.erable/, {L:18.5}], [/miel/, {L:14}],
-  [/ketchup aux fruits/, {un:4.5}], [/ketchup/, {L:4.8}], [/mayonnaise/, {L:6.7}],
-  [/moutarde/, {L:6, un:3}], [/relish/, {L:6}], [/raifort/, {L:20}],
-  [/sauce soya|sauce soja/, {L:6}], [/sriracha/, {L:12}], [/salsa/, {L:9}], [/pesto/, {L:25}],
-  [/pate de (cari|chili|piment|tikka)|gochujang/, {L:20}], [/tahini/, {L:20}], [/tartinade/, {L:14}],
-  [/sauce|marinade/, {L:10, un:4}],
-  [/lentilles en conserve/, {L:3.5}], [/lentilles|pois (jaunes|verts)/, {kg:4}],
-  [/bouillon/, {L:3.3}],
-  [/cornichons|betteraves|olives/, {kg:10, un:4}],
-  [/confiture|cerises|airelles/, {un:4.5, L:10}],
-  [/croustilles|chips|mais souffle/, {un:3.8, kg:15}], [/craquelins/, {un:2.6}],
-  [/barres tendres/, {un:4}], [/biscuits/, {un:4}], [/melange de noix/, {un:8}],
-  [/noix|amandes|arachides|pignons|pacanes|graines de citrouille/, {kg:25}], [/guimauves|bonbons/, {kg:10}], [/tapioca/, {kg:8}],
-  [/boisson gazeuse|cola|eau petillante/, {un:6, L:2.5}], [/biere/, {L:8}], [/vin blanc|vin rouge/, {L:15}], [/cognac/, {L:45}],
-  [/cafe (chaud|fort)/, {L:1}], [/cafe/, {un:9.39}],
-  [/sachets?/, {un:1.5}], [/chapelure|panko/, {kg:6, L:3}],
-  [/vanille/, {L:150}],
-  [/cannelle|cumin|paprika|origan|cari|chili|muscade|girofle|herbes|assaisonnement|poivre|cayenne|piment|persil seche|sesame|chipotle/, {L:80}]
-];
-const PRIX_DEF = {'viandes':{kg:15}, 'poissonnerie':{kg:22}, 'produits laitiers':{kg:15, L:6, un:4}, 'fruits et légumes':{kg:5, un:1.5}, 'boulangerie':{un:3, kg:8}, 'surgelés':{un:6, kg:6}, 'épicerie':{un:4, kg:8, L:6}, 'garde-manger':{L:20, kg:5, un:4}};
-const BASE = {g:['kg',1000], ml:['L',1000], un:['un',1]};
-/* ---------- barème des prix réguliers (maxi.ca, octobre 2026) ----------
-   Formats réellement vendus et leur prix régulier, surtout les marques Sans Nom et le Choix du Président.
-   f : formats [quantité, prix] dans l'unité u (g, ml ou un). kg : prix au kilo pour ce qui se vend au poids
-   (gpu : poids d'une unité). Le coût d'un article est celui des formats à acheter, pas d'une fraction. */
-const BAREME = [
-  /* liste de départ : un « un » est un paquet */
-  [/pommes \(sac\)|sac de pommes/, {u:'un', f:[[1,7.50]]}], [/bananes \(regime\)/, {u:'un', f:[[1,2.00]]}], [/(clementines|oranges).*\(sac\)/, {u:'un', f:[[1,8.00]]}],
-  [/yogourt \(dejeuners\)|tubes de yogourt/, {u:'un', f:[[8,3.49]]}], [/jus \(2 l\)/, {u:'un', f:[[1,4.50]]}],
-  /* produits laitiers et oeufs */
-  [/beurre d.arachide/, {u:'ml', f:[[475,3.00],[950,4.50]]}],
-  [/^beurre|beurre (sale|non sale|demi)/, {u:'g', f:[[454,6.00]]}],
-  [/\boeufs?\b/, {u:'un', f:[[12,4.17],[30,10.19]]}],
-  [/lait de coco/, {u:'ml', f:[[400,2.00]]}],
-  [/^lait(?!ue| de coco| au chocolat)/, {u:'ml', f:[[4000,8.16],[2000,4.60],[1000,2.33]]}],
-  [/creme glacee/, {u:'un', f:[[1,4.75]]}],
-  [/creme 35|creme a fouetter/, {u:'ml', f:[[473,4.50],[237,3.50]]}],
-  [/creme sure/, {u:'ml', f:[[500,3.49],[250,2.49]]}],
-  [/fromage a la creme/, {u:'g', f:[[250,3.00]]}],
-  [/^creme|creme (15|10|18|a cuisson|champetre|de table)/, {u:'ml', f:[[473,4.00],[1000,7.57],[237,2.99]]}],
-  [/parmesan/, {u:'g', f:[[250,6.49]]}],
-  [/feta/, {u:'g', f:[[200,5.79]]}],
-  [/ricotta/, {u:'g', f:[[475,5.49]], e:1}],
-  [/fromage ficelle|batonnets de fromage/, {u:'un', f:[[12,6.79]]}],
-  [/cheddar tranche/, {u:'g', f:[[230,5.50]]}],
-  [/tranches? de (fromage|cheddar|provolone|mozzarella)|fromage tranche/, {u:'un', f:[[22,4.50]]}],
-  [/fromage en grains/, {u:'g', f:[[450,7.99]], e:1}],
-  [/rape|fromage mexicain|tre formaggi/, {u:'g', f:[[320,5.79],[900,15.50]]}],
-  [/gruyere|emmental|suisse|provolone|chevre|fromage bleu|mozzarella fraiche/, {u:'g', f:[[200,6.49]]}],
-  [/cheddar|mozzarella|fromage/, {u:'g', f:[[400,5.50],[700,9.29]]}],
-  [/yogourt grec/, {u:'ml', f:[[750,6.00]]}],
-  [/yogourt/, {u:'ml', f:[[750,3.49]]}],
-  /* viandes et poissons (au kilo ou au format) */
-  [/poitrines? de poulet panee|filets de poulet panes?|doigts de poulet|lanieres de poulet|pepites de poulet/, {u:'g', f:[[700,7.00],[1810,11.00]]}],
-  [/poulets? (bbq|rotis?)|poulet roti du comptoir/, {u:'un', f:[[1,13.99]], e:1}],
-  [/poitrines? de poulet(?! cuite)/, {kg:14.30, gpu:225}],
-  [/hauts? de cuisses?.*desosse|cuisses? de poulet desossee/, {kg:17.64, gpu:120}],
-  [/hauts? de cuisses?|cuisses? de poulet|pilons?/, {kg:9.24, gpu:150}],
-  [/poulets? entiers?/, {kg:12.13, gpu:1800}],
-  [/boeuf hache/, {kg:15.40}], [/porc hache/, {kg:11.50}],
-  [/bacon(?! cuit)|lardons/, {u:'g', f:[[375,7.00],[1000,15.00]]}],
-  [/jambon (tranche|cuit tranche|blanc)|jambon cuit$|jambon cuit (?!en)/, {u:'g', f:[[600,7.00],[200,7.50]]}],
-  [/epaule de jambon|jambon fume (desosse|epaule)/, {kg:12.00}],
-  [/saucisses? a hot-dog|saucisses fumees|wieners/, {u:'un', f:[[12,4.50]]}],
-  [/saucisses?/, {u:'g', f:[[450,6.79],[1100,10.00]]}],
-  [/cotelettes? de porc/, {kg:13.50, gpu:200}], [/filets? de porc/, {kg:13.21}], [/longe de porc/, {kg:14.33}],
-  [/cotes levees/, {kg:14.31}], [/epaule de porc|palette de porc|soc de porc/, {kg:8.50}],
-  [/pointe de poitrine|brisket/, {kg:24.00, e:1}],
-  [/contre-filet|faux-filet|entrecote|cote de boeuf|tomahawk/, {kg:50.00, gpu:300}],
-  [/filets? mignons?|tournedos/, {kg:90.00, gpu:170, e:1}],
-  [/picanha|haut de surlonge/, {kg:30.00, e:1}],
-  [/bavette|surlonge|lanieres de boeuf|boeuf (emince|en lanieres|en tranches)/, {kg:31.00}],
-  [/steaks?|biftecks?/, {kg:30.00, gpu:250, e:1}],
-  [/roti de palette|palette de boeuf|cotes croisees|boeuf a ragout|cubes de boeuf/, {kg:28.00}],
-  [/saumon/, {kg:35.00, gpu:150}],
-  [/crevettes/, {u:'g', f:[[300,7.99],[680,14.00]]}],
-  [/boites? de thon|^thon/, {u:'un', f:[[1,1.39]]}],
-  /* fruits et légumes */
-  [/oignons? verts?/, {u:'un', f:[[7,1.50]]}],
-  [/oignons? rouges?/, {kg:5.49, gpu:200}],
-  [/^oignons?$|oignons? jaunes?|^oignon /, {u:'un', f:[[9,3.00],[1,0.66]]}],
-  [/gousses? d.ail/, {u:'un', f:[[10,0.33],[30,1.00]]}],
-  [/carottes? mini|carottes miniatures/, {u:'un', f:[[1,3.00]]}],
-  [/^carottes?$/, {u:'un', f:[[18,3.99],[6,3.49]]}],
-  [/patates? douces?/, {kg:3.95, gpu:300}],
-  [/(pommes de terre|patates) grelots|petites pommes de terre/, {u:'g', f:[[1360,3.79],[680,4.49]]}],
-  [/pommes? de terre(?! rissol)|^patates?$/, {u:'g', f:[[2268,5.00],[4540,6.99]]}],
-  [/tomates cerises|tomates raisins/, {u:'g', f:[[283,3.00]]}],
-  [/tomates? (broyees|en des)|boites? de tomates/, {u:'ml', f:[[796,2.00]]}],
-  [/sauce tomate|sauce aux tomates|marinara|sauce pour pates/, {u:'ml', f:[[680,2.29]]}],
-  [/^tomates?$|tomates? (italiennes|roma)/, {kg:5.00, gpu:120}],
-  [/^poivrons?|gros poivrons/, {kg:7.50, gpu:200}],
-  [/celeri/, {u:'un', f:[[10,2.50]]}],
-  [/citrons?$/, {u:'un', f:[[1,0.97]]}], [/^limes?$/, {u:'un', f:[[1,0.69]]}],
-  [/concombres?/, {u:'un', f:[[1,1.25]]}],
-  [/coeurs de romaine/, {u:'un', f:[[3,2.99]]}],
-  [/feuilles de laitue/, {u:'un', f:[[15,2.29]]}],
-  [/salade cesar/, {u:'un', f:[[1,7.99]]}],
-  [/sac de (laitue|salade)(?! de chou)|laitue melangee|melange printanier|jeunes pousses/, {u:'g', f:[[312,6.49]]}],
-  [/salade de chou/, {u:'g', f:[[397,3.99]], e:1}],
-  [/^laitues?|laitue (romaine|boston|frisee)/, {u:'un', f:[[1,2.29]]}],
-  [/brocoli surgele|fleurons de brocoli/, {u:'g', f:[[500,4.50]]}],
-  [/^brocoli/, {u:'g', f:[[450,2.79]]}],
-  [/chou-fleur/, {u:'un', f:[[1,3.99]]}],
-  [/champignons/, {u:'g', f:[[227,2.50],[454,5.00]]}],
-  [/courgettes?/, {kg:5.49, gpu:250}],
-  [/epinards (surgeles|haches)/, {u:'g', f:[[300,2.00]]}],
-  [/epinards/, {u:'g', f:[[142,4.29],[312,6.49]]}],
-  [/^avocats?/, {u:'un', f:[[1,1.00]]}],
-  [/^bananes?/, {kg:1.74, gpu:120}],
-  [/^pommes(?! de terre)/, {kg:4.10, gpu:180}],
-  [/clementines?|mandarines?/, {kg:4.44, gpu:80}], [/^oranges?$/, {kg:3.87, gpu:150}],
-  [/^fraises/, {u:'g', f:[[420,4.99]]}],
-  [/petits fruits|fruits surgeles|fraises surgelees/, {u:'g', f:[[500,5.50]]}],
-  [/^ananas$|ananas frais/, {u:'un', f:[[1,3.99]], e:1}],
-  [/bouquet|botte|basilic frais|coriandre fraiche|persil frais/, {u:'un', f:[[1,2.49]], e:1}],
-  /* boulangerie */
-  [/tranches? de pain/, {u:'un', f:[[20,2.98]]}],
-  [/pain tranche/, {u:'un', f:[[1,2.98]]}],
-  [/pains? a hot-dog/, {u:'un', f:[[12,2.99]]}],
-  [/pains? (a hamburger|kaiser)|petits pains|sliders/, {u:'un', f:[[8,2.99]]}],
-  [/pains? sous-marin/, {u:'un', f:[[6,4.99]], e:1}],
-  [/baguettes?/, {u:'un', f:[[1,0.97]]}], [/pain croute|miche/, {u:'un', f:[[1,1.79]]}],
-  [/tortillas?|coquilles a tacos/, {u:'un', f:[[10,3.19]]}],
-  [/naan/, {u:'un', f:[[4,3.99]], e:1}], [/pitas?/, {u:'un', f:[[6,2.00]]}],
-  [/bagels ou muffins anglais/, {u:'un', f:[[1,2.79]]}],
-  [/bagels?/, {u:'un', f:[[6,2.79]]}], [/muffins anglais/, {u:'un', f:[[6,2.29]]}],
-  [/croissants?/, {u:'un', f:[[6,5.50]]}],
-  [/abaisses?|croutes a tarte/, {u:'un', f:[[2,3.79]]}],
-  [/pates au poulet|tourtieres?/, {u:'un', f:[[1,6.99]], e:1}],
-  /* épicerie */
-  [/farine/, {u:'g', f:[[2500,4.00]]}],
-  [/sucre a glacer/, {u:'g', f:[[1000,3.49]]}],
-  [/cassonade/, {u:'g', f:[[1000,3.49],[2000,6.49]]}],
-  [/^sucre/, {u:'g', f:[[2000,2.99]]}],
-  [/sirop d.erable/, {u:'ml', f:[[540,10.00]]}],
-  [/^miel/, {u:'ml', f:[[264,5.29],[352,7.00]]}],
-  [/^riz(?! souffle)|riz (blanc|basmati|jasmin|a grains)/, {u:'g', f:[[2000,5.00]]}],
-  [/nouilles aux oeufs/, {u:'g', f:[[375,2.49]], e:1}],
-  [/spaghetti|linguine|fettuccine|penne|rotini|macaroni|tagliatelles|^pates|petites pates/, {u:'g', f:[[900,2.00]]}],
-  [/sauce soya|sauce soja/, {u:'ml', f:[[450,2.39]]}],
-  [/bouillon/, {u:'ml', f:[[900,1.79]]}],
-  [/mayonnaise/, {u:'ml', f:[[890,6.50]]}],
-  [/^ketchup/, {u:'ml', f:[[1000,3.79]]}],
-  [/moutarde de dijon|moutarde a l.ancienne/, {u:'ml', f:[[250,3.19]]}],
-  [/salsa/, {u:'ml', f:[[430,3.79],[650,5.79]]}],
-  [/sauce bbq/, {u:'ml', f:[[455,2.79],[398,2.19]]}],
-  [/sauce teriyaki|marinade teriyaki/, {u:'ml', f:[[350,2.99]]}], [/sauce hoisin/, {u:'ml', f:[[397,3.99]], e:1}], [/worcestershire/, {u:'ml', f:[[284,4.99]], e:1}],
-  [/sauce brune/, {u:'ml', f:[[500,1.99]]}], [/trempette ranch/, {u:'un', f:[[1,5.49]]}], [/vinaigrette ranch|sauce ranch/, {u:'ml', f:[[475,2.50]]}],
-  [/gnocchi/, {u:'g', f:[[500,3.49],[1000,4.79]]}], [/vanille/, {u:'ml', f:[[125,3.49],[250,5.00]]}],
-  [/^(paprika|poudre d.ail|poudre d.oignon|origan|cumin|flocons de piment|herbes de provence|muscade|persil seche|thym|basilic seche|curcuma|gingembre moulu|piment de cayenne|graines de sesame|assaisonnement)/, {u:'ml', f:[[100,4.50]]}],
-  [/haricots verts/, {kg:6.59}],
-  [/brioches? a hamburger/, {u:'un', f:[[6,4.50]]}], [/^moules/, {u:'g', f:[[908,6.99]], e:1}], [/canard confit|cuisses? de canard/, {u:'un', f:[[2,15.99]], e:1}], [/bouts de cotes/, {kg:22.00, e:1}],
-  [/^brie/, {u:'g', f:[[200,6.49]], e:1}], [/pate feuilletee/, {u:'g', f:[[400,4.50]]}], [/mascarpone/, {u:'g', f:[[475,7.99]], e:1}],
-  [/doigts de dame/, {u:'un', f:[[1,4.49]], e:1}], [/lait concentre/, {u:'un', f:[[1,3.29]], e:1}], [/biscuits oreo|^oreo/, {u:'un', f:[[1,4.49]], e:1}],
-  [/biscuits graham/, {u:'g', f:[[400,4.49]], e:1}], [/chocolat (mi-sucre|noir|au lait|blanc)/, {u:'g', f:[[225,4.49]], e:1}], [/pacanes/, {u:'g', f:[[200,6.99]], e:1}],
-  [/^dattes/, {u:'g', f:[[375,4.49]], e:1}], [/biere|^canettes de biere/, {u:'ml', f:[[355,2.25]], e:1}], [/melange a gateau/, {u:'un', f:[[1,2.99]], e:1}],
-  [/tartinade chocolat/, {u:'ml', f:[[725,7.99]], e:1}], [/noix de coco rapee/, {u:'g', f:[[200,3.49]], e:1}], [/guimauves/, {u:'g', f:[[400,2.99]], e:1}],
-  [/pain brioche|pains? brioches/, {u:'un', f:[[1,4.49]], e:1}], [/choucroute/, {u:'g', f:[[796,3.49]], e:1}], [/gouda fume/, {u:'g', f:[[200,5.99]], e:1}],
-  [/jambon (cuit |fume )?en (des|cubes)/, {u:'g', f:[[175,3.99]], e:1}], [/pain a l.ail/, {u:'un', f:[[1,3.49]], e:1}], [/mais surgele|sac de mais/, {u:'un', f:[[1,3.00]]}],
-  [/vinaigre/, {u:'ml', f:[[1000,3.49]], e:1}], [/pots? de cornichons/, {u:'un', f:[[1,3.99]], e:1}], [/cornichons/, {u:'un', f:[[15,3.99]], e:1}],
-  [/sauce a pizza/, {u:'ml', f:[[398,2.49]], e:1}], [/pepperoni/, {u:'g', f:[[150,4.99]], e:1}],
-  [/panko/, {u:'g', f:[[227,4.00]]}], [/chapelure/, {u:'g', f:[[300,2.49]]}],
-  [/fecule/, {u:'g', f:[[454,3.79]]}], [/poudre a pate/, {u:'ml', f:[[480,5.00]]}],
-  [/flocons d.avoine|gruau/, {u:'g', f:[[1000,3.00]]}],
-  [/cereales(?! de riz)/, {u:'un', f:[[1,4.50]]}],
-  [/confiture/, {u:'ml', f:[[500,4.50]]}],
-  [/^cafe(?! chaud| fort)/, {u:'un', f:[[1,15.00]]}],
-  [/boites? de (haricots|pois chiches|lentilles|feves)/, {u:'un', f:[[1,1.50]]}],
-  [/boites? de mais/, {u:'un', f:[[1,1.25]]}],
-  [/croustilles|^chips|sac de chips/, {u:'un', f:[[1,4.00]]}],
-  [/barres tendres/, {u:'un', f:[[1,3.29]]}], [/^biscuits/, {u:'un', f:[[1,3.79]]}], [/craquelins/, {u:'un', f:[[1,2.88]]}],
-  [/compotes? de pommes/, {u:'un', f:[[6,3.29]]}], [/boites de jus/, {u:'un', f:[[1,4.00]]}],
-  [/jus d.orange/, {u:'ml', f:[[1500,4.75],[2500,7.29]]}],
-  [/boisson gazeuse|caisse de 12/, {u:'un', f:[[1,7.29]]}],
-  /* surgelés */
-  [/rissolees/, {u:'g', f:[[1000,3.99]], e:1}],
-  [/frites/, {u:'g', f:[[800,2.25],[2250,9.00]]}],
-  [/legumes melanges|macedoine|pois et carottes|legumes pour saute|melange de legumes/, {u:'g', f:[[750,3.00],[2000,6.99]]}],
-  [/petits pois|pois verts/, {u:'g', f:[[750,3.00]]}],
-  [/pizzas? surgelees?/, {u:'un', f:[[1,9.99]]}]
-];
+/* Prix de référence : voir prix-maxi.js (PRIX, PRIX_DEF, BASE, BAREME, PRIX_MAJ). */
+const PRIX_MAJ_TXT = () => { try{ return 'relevé du ' + new Date(PRIX_MAJ+'T12:00:00').toLocaleDateString('fr-CA', {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return PRIX_MAJ; } };
+const prixVieux = () => { try{ return gapDays(PRIX_MAJ, isoToday()) > 120; }catch(e){ return false; } };
 const _BMC = new Map();
 function baremeOf(name){
   const n = norm(name); if(_BMC.has(n)) return _BMC.get(n);
@@ -1332,6 +1059,9 @@ function unitsPer(row, t){
 function dealCost(s, row){
   const pr = priceOf(s); if(!isFinite(pr)) return null;
   const t = norm(s.t), sz = t.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|lb|l|ml)\b/);
+  /* prix au poids (« 3,88 /lb ») : coût = poids nécessaire × prix */
+  if(s.per==='lb' || s.per==='kg'){ const g = row.u==='g' ? row.buy : row.u==='un' ? row.buy * (gpuOf(norm(row.name)) || 0) : 0; if(g) return pr * g / (s.per==='lb' ? 453.6 : 1000); }
+  const mult = (() => { const m = t.match(/(\d+)\s*[x×]\s*\d/); return m && +m[1] > 1 && +m[1] <= 48 ? +m[1] : 1; })();
   if(row.u==='un'){
     const n = norm(row.name);
     if(PKG_RE.test(n)) return pr * row.buy;
@@ -1344,12 +1074,14 @@ function dealCost(s, row){
     return pr * row.buy;
   }
   if(sz){
-    let size = parseFloat(sz[1].replace(',','.')) * ({kg:1000, g:1, lb:454, l:1000, ml:1})[sz[2]];
+    let size = parseFloat(sz[1].replace(',','.')) * ({kg:1000, g:1, lb:454, l:1000, ml:1})[sz[2]] * mult;
     if((sz[2]==='l' || sz[2]==='ml') !== (row.u==='ml')) size = 0;
     if(size) return pr * Math.max(1, Math.ceil(row.buy/size - 0.05));
   }
   const pk = packOf(row.name, row.u); if(pk) return pr * Math.max(1, Math.ceil(row.buy/pk - 0.05));
   if(row.u==='g' && /viandes|poissonnerie/.test(row.rayon||'')) return pr * row.buy/454;
+  /* format absent du nom : on suppose le format courant du barème */
+  const bf = baremeOf(row.name); if(bf && bf[1].u===row.u && bf[1].f && bf[1].f[0][0] > 0) return pr * Math.max(1, Math.ceil(row.buy/bf[1].f[0][0] - 0.05));
   return pr;
 }
 /* « 4 douzaines », « 2 paquets de 8 », « ≈ 6 paquets de 375 g » sous l'article */
@@ -1381,13 +1113,14 @@ function rowEco(r){
   if(_ECO.has(r.k)) return _ECO.get(r.k);
   const L = (S.prices||{})[r.k], d = dealFor(r.name), est = costEst(r);
   let cost = est, reg = est;
-  if(d){ const dc = dealCost(d, r); if(dc != null){ cost = dc; reg = d.d > 0 && d.d < 95 ? dc/(1 - d.d/100) : Math.max(est, dc); } }
+  /* un « spécial » sans rabais connu qui coûte nettement plus que le prix habituel est ignoré (mauvais format ou mauvais produit) */
+  if(d){ const dc = dealCost(d, r); if(dc != null && (d.d > 0 || dc <= est*1.15 || (L && !L.sp))){ cost = dc; reg = d.d > 0 && d.d < 95 ? dc/(1 - d.d/100) : Math.max(est, dc); } }
   const o = {cost, reg, save:Math.max(0, reg-cost), mine: !!(L && !L.sp), deal: d};
   _ECO.set(r.k, o); return o;
 }
 function listTotals(rows){ let cost = 0, save = 0; rows.forEach(r => { const e = rowEco(r); cost += e.cost; save += e.save; }); return {cost, save}; }
 /* toutes les circulaires de tes épiceries, même celles où tu ne vas pas cette semaine (pour comparer) */
-const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d:0})).concat(S.auto ? S.auto.items.filter(i => { const d = shopISO(); return isFood(i.t) && (!i.vt || i.vt >= d) && (!i.vf || i.vf <= d) && (!S.stores.length || S.stores.includes(i.s)); }).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0})) : []));
+const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d:0})).concat(S.auto ? S.auto.items.filter(i => { const d = shopISO(); return isFood(i.t) && (S.auto.anyDate || ((!i.vt || i.vt >= d) && (!i.vf || i.vf <= d))) && (!S.stores.length || S.stores.includes(i.s)); }).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0, per:i.per||''})) : []));
 /* ---------- association d'un article à un spécial ----------
    On compare des mots entiers (« lait » ne prend pas « laitue », « oeuf » ne prend pas « boeuf »).
    Tous les mots importants de l'article doivent être dans le spécial. Un spécial qui annonce une autre forme du produit
@@ -1525,8 +1258,8 @@ function aubaines(){
     if(!disc && (ray==='viandes' || ray==='poissonnerie')){
       const hit = PRIX.find(([re]) => re.test(n)); const kg = hit && hit[1].kg;
       const sz = n.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|lb)\b/);
-      const perKg = sz ? pr / (parseFloat(sz[1].replace(',','.')) * ({kg:1, g:0.001, lb:0.454})[sz[2]]) : pr*2.2046;
-      if(kg) disc = Math.round((1 - perKg/kg)*100);
+      const perKg = s.per==='lb' ? pr*2.2046 : s.per==='kg' ? pr : sz ? pr / (parseFloat(sz[1].replace(',','.')) * ({kg:1, g:0.001, lb:0.454})[sz[2]]) : null;
+      if(kg && perKg) disc = Math.round((1 - perKg/kg)*100);
     }
     if(disc >= 35 && disc < 90 && !seen.has(n)){ seen.add(n); out.push({s, disc, tip}); }
   });
@@ -1540,7 +1273,7 @@ function renderAubaines(){
 
 /* Historique : à chaque recherche, le meilleur spécial trouvé pour chaque article connu (8 dernières semaines). */
 function noterPrix(){
-  const d = shopISO(), L = (S.auto && S.auto.items || []).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0})).filter(s => isFinite(priceOf(s)));
+  const d = shopISO(), L = (S.auto && S.auto.items || []).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0, per:i.per||''})).filter(s => isFinite(priceOf(s)));
   if(!L.length) return;
   const P = prep(L), arts = new Map(); S.ph = S.ph || {};
   const add = n => { if(n && !isMaison(n)) arts.set(artB(n), n); };
@@ -1605,7 +1338,7 @@ function score(r){
   let pts = 0;
   dealsOf(r).forEach(d => pts += GENERIC.includes(norm(d.mot)) ? .3 : 1.2);
   pts += .35 * [...r.e].filter(c => c!==' ' && c!=='️').length / 2;
-  let hit = 0; effective(r,0).forEach(g => { if(isMaison(g.name)) return; const sk = stockKey(g); if(sk) hit += Math.min(1, S.stock[sk].q/Math.max(g.q,1)); });
+  let hit = 0; effective(r,0).forEach(g => { if(isMaison(g.name)) return; const sk = skOf(g); if(sk) hit += Math.min(1, S.stock[sk].q/Math.max(normQU(g.name,g.q,g.u)[0],1)); });
   pts += Math.min(hit,5)*.4;
   if(S.fav[r.n]) pts += .8;
   if(tpOf(r)<=20) pts += .25;
@@ -1634,8 +1367,9 @@ function fill(n, keep, l, ban){
   const banned = new Set([...recentSet(), ...items.map(x => x.r), ...(ban||[])]);
   const pool = allRecipes().filter(r => kindOf(r)===kind && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !(ban && ban.has(r.n)));
   let cands = pool.filter(r => !banned.has(r.n));
+  /* pas assez de plats « frais » : on complète avec des plats récents, mais toujours après les nouveaux */
   if(cands.length < n - items.length) cands = pool.filter(r => !items.some(x => x.r===r.n));
-  cands = cands.map(r => ({r, s:score(r)})).sort((a,b) => b.s-a.s);
+  cands = cands.map(r => ({r, s:score(r) - (banned.has(r.n) ? 10 : 0)})).sort((a,b) => b.s-a.s);
   const taken = new Set(items.map(x => x.r));
   let pps = items.filter(x => (byName(x.r)||{}).pp).length;
   if(kind!=='souper'){
@@ -1663,10 +1397,46 @@ function fill(n, keep, l, ban){
 }
 function today(){ return fmtDate(shopISO()); }
 function genMenu(){
-  const m = S.menu, nm = {date:today(), chk:{}, extra:{}, achete:false, snap:null, useup:m.useup||{}, sn:m.date ? (m.sn||[]) : [], dinCook:{}, dinNo:{}, dsel:m.dsel||{}};
+  const m = S.menu, start = S.dates.shop || isoToday(), nm = {date:fmtDate(start), start, chk:{}, extra:{}, achete:false, snap:null, useup:m.useup||{}, sn:m.date ? (m.sn||[]) : [], dinCook:{}, dinNo:{}, dsel:m.dsel||{}};
   ['items','dej','ent','sou','des'].forEach(l => { nm[l] = fill(nOf(l), (m[l]||[]).filter(x => x.lock), l); });
   nm.din = (m.din||[]).filter(x => x.lock);
-  S.menu = nm; assignDays(true); assignDej(true); syncDin(true); save(); render();
+  S.menu = nm; assignDays(true); assignDej(true); syncDin(true); resetCaches();
+  const nb = budgetFit(); if(nb) S.flash = `Budget : ${nb} souper${nb>1?'s':''} remplacé${nb>1?'s':''} par ${nb>1?'des plats moins chers':'un plat moins cher'}.`;
+  save(); render();
+}
+/* coût approximatif d'un plat (au prorata, spéciaux compris) : sert seulement à comparer les plats entre eux */
+function dishCost(it){
+  let c = 0;
+  fullIngs(it).forEach(g => { if(isMaison(g.name) || g.rest || g.x) return; let x = prixBase(g.name, g.u, g.rayon) * g.q; const d = dealFor(g.name);
+    if(d){ const dc = dealCost(d, {name:g.name, u:g.u, buy:g.q, rayon:g.rayon, k:g.k}); if(dc != null && isFinite(dc)) x = Math.min(x, dc); }
+    if(isFinite(x)) c += x; });
+  return c;
+}
+/* Budget : tant que la liste dépasse, le souper le plus cher (non verrouillé) est remplacé par un plat bien noté
+   qui coûte au moins 20 % de moins. Au plus 6 remplacements; renvoie le nombre de plats changés. */
+function budgetFit(){
+  const b = +S.p.budget || 0; if(!b || !S.menu.date || S.menu.achete) return 0;
+  let changed = 0; const recent = recentSet(), tried = new Set();
+  for(let k = 0; k < 6; k++){
+    resetCaches();
+    if(listTotals(buyList().rows).cost <= b) break;
+    const L = mlist('items'), used = new Set(allItems().map(x => x.r));
+    const cand = L.map((it, i) => ({it, i, c: dishCost(it)})).filter(o => !o.it.lock && !o.it.dfix && !o.it.after && !follOf(o.it) && !tried.has(o.it.r) && byName(o.it.r)).sort((a, c) => c.c - a.c)[0];
+    if(!cand) break;
+    tried.add(cand.it.r);
+    const longOk = isLong(byName(cand.it.r));
+    const others = L.filter((_, j) => j !== cand.i);
+    let best = null;
+    allRecipes().forEach(r => {
+      if(kindOf(r)!=='souper' || used.has(r.n) || S.dis[r.n] || softBad(r) || !ppOk(r) || !simpleOk(r) || recent.has(r.n) || (isLong(r) && !longOk)) return;
+      const it = mkItem(r, usedSides(others), pickVar(r)); const c = dishCost(it);
+      if(c < cand.c * 0.8){ const s = score(r) - 2 * c / Math.max(1, cand.c); if(!best || s > best.s) best = {it, s}; }
+    });
+    if(!best) continue;
+    if(cand.it.d) best.it.d = cand.it.d;
+    L[cand.i] = best.it; changed++;
+  }
+  resetCaches(); return changed;
 }
 function ajuster(){
   const m = S.menu; if(!m.date) return;
@@ -1699,11 +1469,12 @@ let stFound = null;
 async function trouverEpiceries(){
   const msg = $('#st_msg'), cp = (S.cp||'').replace(/\s/g,'').toUpperCase();
   if(!cp){ say(msg, "Entre d'abord ton code postal."); return; }
+  if(!cpOk(cp)){ say(msg, 'Code postal invalide (exemple : G6V 6Z3).'); return; }
   say(msg, 'Recherche des épiceries près de chez toi…');
   try{
-    const fl = await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${cp}`);
+    const fl = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`));
     const names = new Map();
-    (Array.isArray(fl) ? fl : (fl.flyers||[])).forEach(f => {
+    fl.forEach(f => {
       const c = norm([].concat(f.categories||[]).join(' ')+' '+(f.categories_csv||''));
       if(!/grocer|epicer|aliment|food/.test(c) || /restaurant/.test(c)) return;
       const raw = String(f.merchant||'').trim(); if(!raw) return;
@@ -1712,7 +1483,7 @@ async function trouverEpiceries(){
     stFound = [...names.entries()].map(([n,known]) => ({n, known})).sort((a,b) => a.n.localeCompare(b.n,'fr'));
     render();
     say($('#st_msg'), stFound.length ? `${stFound.length} épicerie${stFound.length>1?'s':''} trouvée${stFound.length>1?'s':''} avec une circulaire pour ${cp}. Coche celles où tu vas.` : `Aucune circulaire d'épicerie trouvée pour ${cp}. Vérifie le code postal.`);
-  }catch(e){ say(msg, "La recherche est bloquée par le navigateur ou tu es hors ligne. Coche tes épiceries dans la liste, ou ajoute celles qui manquent à la main."); }
+  }catch(e){ say($('#st_msg') || msg, e.net ? "La recherche est bloquée par le navigateur ou tu es hors ligne. Coche tes épiceries dans la liste, ou ajoute celles qui manquent à la main." : 'La recherche a échoué ('+(e.message||'erreur')+'). Coche tes épiceries dans la liste.'); }
 }
 const storeChip = n => `<label class="chip"><input type="checkbox" data-store="${esc(n)}" ${S.stores.includes(n)?'checked':''}>${esc(n)}</label>`;
 function storePicker(){
@@ -1724,80 +1495,108 @@ function storePicker(){
     ${own.length ? `<div class="chips">${own.map(storeChip).join('')}</div><p class="small">Retirer : ${own.map(s => `<a href="#" data-a="stx_rm" data-s="${esc(s)}">${esc(s)}</a>`).join(', ')}</p>` : ''}
     <div class="grid2" style="grid-template-columns:1fr auto;align-items:end"><label class="f">Une épicerie manque ?<input type="text" id="stx_n" placeholder="Nom de l'épicerie" autocomplete="off"></label><button class="btn s" id="stx_add">Ajouter</button></div>`;
 }
-async function jget(u){
-  const url = S.relay ? S.relay + encodeURIComponent(u) : u;
-  const r = await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
+/* requête vers les circulaires : délai maximal, erreurs réseau étiquetées, réponse vérifiée */
+async function jget(u, ms){
+  const relay = /^https:\/\//.test(S.relay||'') ? S.relay : '';
+  const url = relay ? relay + encodeURIComponent(u) : u;
+  const ac = new AbortController(), to = setTimeout(() => ac.abort(), ms || 15000);
+  let r;
+  try{ r = await fetch(url, {signal: ac.signal}); }
+  catch(e){ throw Object.assign(new Error(e.name==='AbortError' ? 'délai dépassé' : 'réseau'), {net:true}); }
+  finally{ clearTimeout(to); }
+  if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {net:true});
+  let d; try{ d = await r.json(); }catch(e){ throw new Error('réponse illisible'); }
+  if(d && typeof d.contents==='string'){ try{ d = JSON.parse(d.contents); }catch(e){} }   /* relais de type allorigins */
+  return d;
 }
+const flyersOf = fl => { const a = Array.isArray(fl) ? fl : fl && Array.isArray(fl.flyers) ? fl.flyers : null; if(!a) throw new Error('format des circulaires inattendu'); return a; };
+const itemsOf = d => { const a = Array.isArray(d) ? d : d && Array.isArray(d.items) ? d.items : null; if(!a) throw new Error('format'); return a; };
+/* jour local (Québec) d'une date de circulaire : « 2026-10-21T23:59:59-04:00 » → 2026-10-21 */
+const dayOf = v => { if(!v) return ''; const s = String(v); if(/^\d{4}-\d\d-\d\d$/.test(s)) return s; const d = new Date(s); return isNaN(d) ? s.slice(0,10) : d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const covers = (f, day) => (!f.valid_from || dayOf(f.valid_from) <= day) && (!f.valid_to || dayOf(f.valid_to) >= day);
+const cpOk = cp => /^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(cp);
+let spBusy = false;
 function motsCles(){
   const set = new Set();
   allRecipes().forEach(r => r.m.forEach(m => { const n = norm(m); if(n.length>=4 && !GENERIC.includes(n)) set.add(n); }));
   ['lait','oeuf','pain','cereale','jus','croustille','gazeuse','yogourt','beurre','fromage','pates','pizza','bacon','banane','pomme','clementine','biscuit','cafe','jambon','creme','farine','riz','raisin','carotte','concombre','tomate','oignon','laitue','poulet','boeuf','porc','saucisse','frite','poisson','saumon','tortilla','sauce'].concat(SNACK_WORDS).forEach(x => set.add(norm(x)));
   return [...set];
 }
-const dayOf = v => v ? String(v).slice(0,10) : '';
 async function chercherSpeciaux(ignorerDate){
-  const st = $('#sp_status'), btn = $('#sp_go');
-  const say = t => { if(st) st.textContent = t; };
-  if(!btn) return;
-  btn.disabled = true;
+  /* le bouton et le message sont relus à chaque étape : l'écran peut être redessiné pendant la recherche */
+  const say = t => { const st = $('#sp_status'); if(st) st.textContent = t; };
+  if(spBusy) return;
   const cp = (S.cp||'').replace(/\s/g,'').toUpperCase();
-  if(!S.stores.length){ say('Choisis d\'abord tes épiceries dans Réglages.'); btn.disabled = false; return; }
-  if(!cp){ say('Entre d\'abord ton code postal dans Réglages.'); btn.disabled = false; return; }
+  if(!S.stores.length){ say('Choisis d\'abord tes épiceries dans Réglages.'); return; }
+  if(!cp){ say('Entre d\'abord ton code postal dans Réglages.'); return; }
+  if(!cpOk(cp)){ say('Code postal invalide dans Réglages (exemple : G6V 6Z3).'); return; }
+  spBusy = true; { const b = $('#sp_go'); if(b) b.disabled = true; }
   const shop = shopISO();
   try{
     say('Recherche des circulaires…');
-    const fl = await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${cp}`);
-    const all = (Array.isArray(fl) ? fl : (fl.flyers||[])).filter(f => { const s = marchand(f.merchant); return s && S.stores.includes(s); });
-    if(!all.length){ say("Aucune circulaire de tes épiceries trouvée pour ce code postal."); btn.disabled = false; return; }
-    const mid = new Date(shop+'T12:00:00').getTime();
-    let flyers = all.filter(f => new Date(f.valid_from).getTime() <= mid && new Date(f.valid_to).getTime() >= mid);
-    let note = '';
+    const all = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`)).filter(f => { const s = marchand(f.merchant); return s && S.stores.includes(s); });
+    if(!all.length){ say("Aucune circulaire de tes épiceries trouvée pour ce code postal."); return; }
+    let flyers = all.filter(f => covers(f, shop));
+    let note = '', anyDate = false;
     if(!flyers.length){
       if(!ignorerDate){
+        const later = all.filter(f => dayOf(f.valid_from) > shop).map(f => dayOf(f.valid_from)).sort()[0];
         const fin = all.map(f => dayOf(f.valid_to)).sort().pop();
-        say(`Aucune circulaire ne couvre le ${fmtDate(shop)} pour l'instant (les circulaires actuelles finissent le ${fin}). Les nouvelles sortent le jeudi : relance la recherche plus tard. `);
-        const a = document.createElement('button'); a.className = 'btn s'; a.textContent = 'Utiliser les circulaires actuelles quand même'; a.onclick = () => chercherSpeciaux(true); st.appendChild(a);
-        btn.disabled = false; return;
+        say(later ? `Les circulaires qui couvrent le ${fmtDate(shop)} commencent le ${fmtDate(later)} : relance la recherche à ce moment. `
+          : `Aucune circulaire ne couvre le ${fmtDate(shop)} pour l'instant (les circulaires actuelles finissent le ${fmtDate(fin)}). Les nouvelles sortent le jeudi : relance la recherche plus tard. `);
+        const st = $('#sp_status');
+        if(st){ const a = document.createElement('button'); a.className = 'btn s'; a.textContent = 'Utiliser les circulaires actuelles quand même'; a.onclick = () => chercherSpeciaux(true); st.appendChild(a); }
+        return;
       }
-      const now = Date.now(); flyers = all.filter(f => new Date(f.valid_from).getTime() <= now && new Date(f.valid_to).getTime() >= now);
-      note = ' (circulaires actuelles, possiblement expirées à la date de l\'épicerie)';
+      flyers = all.filter(f => covers(f, isoToday()));
+      if(!flyers.length) flyers = all;
+      note = ' (circulaires actuelles, possiblement expirées à la date de l\'épicerie)'; anyDate = true;
     }
-    flyers = flyers.filter(GROCERY_CAT).sort((a,b) => (/grocer|epicer/.test(norm(String(b.categories_csv||b.categories||'')))?1:0) - (/grocer|epicer/.test(norm(String(a.categories_csv||a.categories||'')))?1:0)).slice(0,18);
-    const mots = motsCles(); const items = []; let ok = 0;
+    const isGro = f => /grocer|epicer/.test(norm(String(f.categories_csv||f.categories||'')));
+    flyers = flyers.filter(GROCERY_CAT).sort((a,b) => (isGro(b)?1:0) - (isGro(a)?1:0));
+    /* au moins une circulaire par épicerie choisie, puis les autres, jusqu'à 24 */
+    { const seen = new Set(), first = flyers.filter(f => { const s = marchand(f.merchant); if(seen.has(s)) return false; seen.add(s); return true; });
+      flyers = first.concat(flyers.filter(f => !first.includes(f))).slice(0, 24); }
+    const mots = motsCles(); const items = []; let ok = 0, fail = 0;
     for(let k = 0; k < flyers.length; k++){
       const f = flyers[k]; say(`Lecture de la circulaire ${k+1} / ${flyers.length} : ${marchand(f.merchant)}…`);
       try{
-        const d = await jget(`${FLIPP}/flyers/${f.id}?locale=fr-ca&postal_code=${cp}`);
-        (Array.isArray(d) ? d : (d.items||[])).forEach(it => {
+        itemsOf(await jget(`${FLIPP}/flyers/${f.id}?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`)).forEach(it => {
           const nn = norm(it.name||''); if(!nn || !mots.some(w => nn.includes(w)) || !isFood(nn)) return;
-          const pr = parseFloat(it.price||it.current_price); 
-          items.push({s:marchand(f.merchant), t:it.name, p:isFinite(pr)&&pr>0 ? pr.toFixed(2).replace('.',',')+' $' : '', vf:dayOf(it.valid_from||f.valid_from), vt:dayOf(it.valid_to||f.valid_to), d:it.discount||0});
+          const pr = parseFloat(String(it.price ?? it.current_price ?? '').replace(',', '.'));
+          /* produits vendus au poids (Maxi, Provigo… : code « _KG ») : le prix affiché est à la livre */
+          const per = /_KG$/i.test(String(it.print_id || it.sku || '')) ? 'lb' : /\/\s*kg\b/i.test(String(it.price_text||'')) ? 'kg' : /\/\s*lb\b/i.test(String(it.price_text||'')) ? 'lb' : '';
+          const d = +it.discount;
+          items.push({s:marchand(f.merchant), t:String(it.name).slice(0, 200), p:isFinite(pr)&&pr>0 ? pr.toFixed(2).replace('.',',')+' $' : '', per, vf:dayOf(it.valid_from||f.valid_from), vt:dayOf(it.valid_to||f.valid_to), d: d > 0 && d < 95 ? Math.round(d) : 0});
         });
         ok++;
-      }catch(e){}
+      }catch(e){ fail++; if(e.net && fail >= 3 && !ok){ throw e; } }
     }
-    if(!ok){ say('Les circulaires ont été trouvées, mais leur contenu est illisible. Utilise le collage manuel ci-dessous.'); btn.disabled = false; return; }
     const uniq = new Map(); items.forEach(i => uniq.set(i.s+'|'+norm(i.t), i));
-    const list = [...uniq.values()].sort((a,b) => (b.d||0)-(a.d||0)).slice(0,400);
-    S.auto = {items:list, maj:isoToday(), src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
+    const list = [...uniq.values()].sort((a,b) => (b.d||0)-(a.d||0)).slice(0,600);
+    /* rien de lisible : on garde les spéciaux déjà trouvés plutôt que de les effacer */
+    if(!ok || !list.length){ say((S.auto && S.auto.items.length ? 'Aucun spécial lisible cette fois-ci : les spéciaux trouvés avant sont gardés. ' : 'Les circulaires ont été trouvées, mais leur contenu est illisible. ') + 'Réessaie plus tard ou utilise le collage manuel ci-dessous.'); return; }
+    S.auto = {items:list, maj:isoToday(), shop, anyDate, src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
     try{ noterPrix(); }catch(e){}
     save(); render();
-    const s2 = $('#sp_status'); if(s2) s2.textContent = `${list.length} spéciaux retenus dans ${ok} circulaires (${S.auto.src}) pour le ${fmtDate(shop)}${note}.` + ((S.skip||[]).some(s => S.stores.includes(s)) ? ` Cette semaine : ${autoItems().length} chez ${goStores().join(', ') || 'aucune épicerie'}.` : '');
+    say(`${list.length} spéciaux retenus dans ${ok} circulaire${ok>1?'s':''} (${S.auto.src}) pour le ${fmtDate(shop)}${note}.` + (fail ? ` ${fail} circulaire${fail>1?'s':''} illisible${fail>1?'s':''} : relance plus tard pour les avoir.` : '') + ((S.skip||[]).some(s => S.stores.includes(s)) ? ` Cette semaine : ${autoItems().length} chez ${goStores().join(', ') || 'aucune épicerie'}.` : ''));
   }catch(e){
-    say(e instanceof TypeError
-      ? "Le navigateur a bloqué la requête vers Flipp ou tu es hors ligne. Ouvre « Si la recherche ne fonctionne pas » : colle le texte d'une circulaire, ou ajoute un relais."
+    say(e.net
+      ? "Le navigateur a bloqué la requête vers Flipp, la connexion est trop lente ou tu es hors ligne. Réessaie, ou ouvre « Si la recherche ne fonctionne pas » : colle le texte d'une circulaire, ou ajoute un relais."
       : 'La recherche a échoué ('+(e.message||'erreur')+'). Réessaie plus tard ou colle le texte de la circulaire.');
-    btn.disabled = false; return;
+  }finally{
+    spBusy = false; const b = $('#sp_go'); if(b) b.disabled = false;
   }
 }
 
 /* ---------- copier pour envoyer ---------- */
+/* renvoie true seulement si le texte est vraiment dans le presse-papiers */
 async function copier(text, msgId){
-  const msg = $(msgId);
-  try{ await navigator.clipboard.writeText(text); msg.textContent = 'Copié. Colle-le dans un message.'; }
+  try{ await navigator.clipboard.writeText(text); const msg = $(msgId); if(msg) msg.textContent = 'Copié. Colle-le dans un message.'; return true; }
   catch(e){
+    const msg = $(msgId); if(!msg) return false;
     msg.innerHTML = 'Copie bloquée : sélectionne le texte ci-dessous.<textarea readonly id="exout" style="margin-top:6px;min-height:160px"></textarea>';
-    const ta = $('#exout'); ta.value = text; ta.focus(); ta.select();
+    const ta = $('#exout'); ta.value = text; ta.focus(); ta.select(); return false;
   }
 }
 function exportCard(idp){
@@ -1904,7 +1703,7 @@ function renderWeek(){
     <div class="grid4c">${countSelects('')}</div>
     <p class="small">Chaque souper donne ${totalPortions()} portions : ${S.p.souper} au souper et ${S.p.restes} pour le dîner du lendemain.${S.p.nDin && S.p.restes > 0 && S.p.dinRestes!==false ? ' Les dîners mangent d\'abord ces restes.' : ''}</p>
     ${S.stores.length > 1 ? storeWeek(m) : ''}
-    <div class="acts"><button class="btn" id="sp_go">Chercher les spéciaux</button>${m.date ? '<button class="btn" id="gen" data-armed="0">Refaire le menu</button>' : '<button class="btn p" id="gen">Créer le menu</button>'}</div>
+    <div class="acts"><button class="btn" id="sp_go" ${spBusy ? 'disabled' : ''}>${spBusy ? 'Recherche en cours…' : 'Chercher les spéciaux'}</button>${m.date ? '<button class="btn" id="gen" data-armed="0">Refaire le menu</button>' : '<button class="btn p" id="gen">Créer le menu</button>'}</div>
     <p class="small" id="sp_status">${status}</p>
     ${items.length?`<details class="panel"><summary>Voir les spéciaux <span class="rm">${items.length}</span></summary><div class="list">${items.slice(0,150).map(i=>`<div class="item"><span class="t">${tagHtml({t:nice(i.t), p:i.p||'', s:i.s})}${i.vt?`<small>Jusqu'au ${esc(fmtDate(i.vt))}</small>`:''}</span></div>`).join('')}</div></details>`:''}
     <details class="panel"><summary>Changer les dates</summary>
@@ -2025,7 +1824,7 @@ function renderSnacks(){
   const m = S.menu, add = (m.sn||[]).filter(x => !x.src), sug = snackSugg(); if(!add.length && !sug.length) return '';
   const dis = '';
   return `<div class="card"><h3>Collations en spécial</h3><p class="small">Des collations annoncées dans tes circulaires. « Ajouter » en met un paquet dans la liste d'épicerie, pour cette semaine seulement.</p><div class="list">`
-    + add.map((x,j) => `<div class="item"><span class="t">${tagHtml({t:x.t, p:x.p, s:x.s})}<small>Dans la liste</small></span><button class="btn s" data-a="snrm" data-i="${j}" ${dis}>Retirer</button></div>`).join('')
+    + (m.sn||[]).map((x,j) => [x,j]).filter(([x]) => !x.src).map(([x,j]) => `<div class="item"><span class="t">${tagHtml({t:x.t, p:x.p, s:x.s})}<small>Dans la liste</small></span><button class="btn s" data-a="snrm" data-i="${j}" ${dis}>Retirer</button></div>`).join('')
     + sug.map(s => `<div class="item"><span class="t">${tagHtml(s)}</span><button class="btn s p" data-a="snadd" data-t="${esc(s.t)}" ${dis}>Ajouter</button></div>`).join('')
     + `</div></div>`;
 }
@@ -2230,9 +2029,10 @@ const groupHtml = (gs, m) => gs.map(g => `<h2 class="sec">${esc(g.title)}<span>$
 const paidField = m => `<label class="f">Total payé à la caisse ($)<input type="text" inputmode="decimal" class="num" id="paid" value="${m.paid||''}" placeholder="0,00"></label>`;
 function budgetHtml(rows){
   const t = listTotals(rows), b = +S.p.budget || 0, rest = b - t.cost;
+  const fit = b && rest < 0 && S.menu.date && !S.menu.achete ? `<div class="acts"><button class="btn s" id="bfit">Remplacer des soupers par des plats moins chers</button></div>` : '';
   return `<div class="budget"><p><span class="small">Total estimé</span> <b>≈ ${money(t.cost)}</b>${t.save >= 1 ? `<span class="small"> · ≈ ${money(t.save)} économisés en spéciaux</span>` : ''}</p>
     ${b ? `<div class="bar ${rest<0?'over':''}"><i style="width:${Math.min(100, t.cost/b*100)}%"></i></div><p class="small">Budget ${money(b)} : ${rest >= 0 ? `il reste ≈ <b>${money(rest)}</b>` : `<b class="over">dépasse de ≈ ${money(-rest)}</b>`}</p>` : ''}
-    <p class="small">Prix réguliers du barème Maxi pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
+    ${fit}${prixVieux() ? `<p class="small over">Les prix de référence Maxi datent du ${esc(PRIX_MAJ_TXT().replace('relevé du ',''))} : le total est probablement sous-estimé.</p>` : ''}<p class="small">Prix réguliers du barème Maxi (${esc(PRIX_MAJ_TXT())}) pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
 }
 /* Épiceries laissées de côté cette semaine : combien on y sauverait (rien n'est changé dans la liste). */
 function ailleurs(rows){
@@ -2598,7 +2398,7 @@ function renderRecettes(){
     <p class="small"><b>Ingrédients pour 6 portions</b></p>
     ${ingBuilder('side', ds.rows)}
     <div id="ns_msg" class="note" hidden></div><button class="btn p" id="ns_save">Enregistrer l'accompagnement</button>
-    ${(S.sidesx||[]).length?`<p class="small">Les tiens : ${S.sidesx.map((s,j)=>`${esc(s.n)} <a href="#" data-a="sdel" data-i="${j}">retirer</a>`).join(', ')}</p>`:''}</div></details>
+    ${(S.sidesx||[]).length?`<p class="small">Les tiens : ${S.sidesx.map(s=>`${esc(s.n)} <a href="#" data-a="sdel" data-id="${esc(s.id)}">retirer</a>`).join(', ')}</p>`:''}</div></details>
     <details class="row" ${openRec.has('__imp')?'open':''} data-rec="__imp"><summary>Importer une recette copiée</summary><div class="rbody">
     <p class="small">Colle une recette copiée d'un site (Ricardo, 5-15, Pratico-pratiques, Trois fourchettes…) : sélectionne le titre, les ingrédients et la préparation, puis Copier. Le formulaire « Nouvelle recette » se remplit pour que tu vérifies avant d'enregistrer. Une recette copiée avec « Copier la recette » de l'application est ajoutée directement, versions comprises.</p>
     <textarea id="imp_txt" placeholder="Colle le message ici"></textarea>
@@ -2778,13 +2578,26 @@ function renderArticles(){
 
 /* ---------- rendu : réglages ---------- */
 function listEditor(id, arr){
-  return `<div id="${id}">` + arr.map((s,i) => `<div class="grid4" style="margin-bottom:6px"><input type="text" data-l="${id}" data-i="${i}" data-f="name" value="${esc(s.name)}" aria-label="Nom"><input type="text" inputmode="decimal" class="num" data-l="${id}" data-i="${i}" data-f="q" value="${s.q}" aria-label="Quantité"><select data-l="${id}" data-i="${i}" data-f="u" aria-label="Unité"><option value="un" ${s.u==='un'?'selected':''}>un</option><option value="g" ${s.u==='g'?'selected':''}>g</option><option value="ml" ${s.u==='ml'?'selected':''}>ml</option></select><button class="btn s d" data-a="ldel" data-l="${id}" data-i="${i}" aria-label="Retirer">×</button></div><select data-l="${id}" data-i="${i}" data-f="r" aria-label="Rayon" style="margin-bottom:10px">${RAYONS.map(r=>`<option ${s.r===r?'selected':''}>${r}</option>`).join('')}</select>`).join('') + `<button class="btn s" data-a="ladd" data-l="${id}">Ajouter une ligne</button></div>`;
+  return `<div id="${id}">` + arr.map((s,i) => `<div class="grid4" style="margin-bottom:6px"><input type="text" data-l="${id}" data-i="${i}" data-f="name" value="${esc(s.name)}" aria-label="Nom"><input type="text" inputmode="decimal" class="num" data-l="${id}" data-i="${i}" data-f="q" value="${esc(s.q)}" aria-label="Quantité"><select data-l="${id}" data-i="${i}" data-f="u" aria-label="Unité"><option value="un" ${s.u==='un'?'selected':''}>un</option><option value="g" ${s.u==='g'?'selected':''}>g</option><option value="ml" ${s.u==='ml'?'selected':''}>ml</option></select><button class="btn s d" data-a="ldel" data-l="${id}" data-i="${i}" aria-label="Retirer">×</button></div><select data-l="${id}" data-i="${i}" data-f="r" aria-label="Rayon" style="margin-bottom:10px">${RAYONS.map(r=>`<option ${s.r===r?'selected':''}>${r}</option>`).join('')}</select>`).join('') + `<button class="btn s" data-a="ladd" data-l="${id}">Ajouter une ligne</button></div>`;
 }
 function histHtml(){
   if(!S.hist.length) return '<p class="small">Aucune semaine terminée pour l\'instant.</p>';
   const paid = S.hist.map(w => w.paid).filter(x => x>0), avg = paid.length ? paid.reduce((a,b) => a+b, 0)/paid.length : 0;
   return (avg ? `<p class="small">Moyenne payée : <b>${money(avg)}</b> sur ${paid.length} semaine${paid.length>1?'s':''}${S.p.budget ? `, pour un budget de ${money(S.p.budget)}` : ''}.</p>` : '')
     + S.hist.slice().reverse().slice(0,12).map(w => `<p class="small"><b>${esc(w.date)}</b>${w.paid ? ` (${money(w.paid)})` : ''} : ${histItems(w).map(x => esc(x.r)).join(', ')}</p>`).join('');
+}
+/* Prix de référence : date du relevé Maxi, comment les garder à jour */
+function prixCard(){
+  const nPerso = Object.values(S.prices||{}).filter(x => x && !x.sp).length, nVus = Object.keys(S.ph||{}).length;
+  return `<div class="card"><h3>Prix de référence</h3>
+    <p class="small">Les prix réguliers viennent de maxi.ca (${esc(PRIX_MAJ_TXT())}). Ils servent quand un article n'est pas en spécial.${prixVieux() ? ' <b class="over">Ce relevé date de plus de 4 mois : les prix ont probablement monté.</b>' : ''}</p>
+    <p class="small">Ils se corrigent tout seuls avec tes données :</p>
+    <ul class="todo small">
+      <li><b>Prix payé</b> : dans Épicerie, touche le prix d'un article pour inscrire ce que tu as payé. Ce prix remplace celui de Maxi pour cet article. ${nPerso ? `(${nPerso} prix à toi)` : ''}</li>
+      <li><b>Prix habituel</b> : dans Articles, inscris le prix régulier d'un article.</li>
+      <li><b>Circulaires</b> : à chaque recherche, les spéciaux vus sont notés avec le prix habituel quand la circulaire indique le rabais. ${nVus ? `(${nVus} articles suivis)` : ''}</li>
+    </ul>
+    <p class="small">Pour refaire tout le relevé Maxi, demande à Claude de « mettre à jour les prix Maxi » : il relit maxi.ca et remplace le fichier prix-maxi.js du site.</p></div>`;
 }
 function backupCard(){
   const L = readCopies(), fmt = d => { try{ return new Date(d).toLocaleString('fr-CA', {day:'numeric', month:'long', hour:'2-digit', minute:'2-digit'}); }catch(e){ return d; } };
@@ -2824,10 +2637,13 @@ async function exportFile(){
   catch(e){ copier(txt, '#bk_msg'); }
 }
 function restoreFrom(raw, label){
-  const o = JSON.parse(raw); if(!o || typeof o!=='object' || !o.menu || !o.stock) throw new Error('invalide');
-  snapshot('Avant la restauration', JSON.stringify(S));
-  S = mergeState(o); S.appv = APPV; loadFailed = false; save(); render();
-  S.flash = label; const m = $('#bk_msg'); if(m) m.textContent = label;
+  const o = JSON.parse(raw); if(!isObj(o) || !isObj(o.menu) || !isObj(o.stock)) throw new Error('invalide');
+  const m = mergeState(o);   /* vérifie et complète AVANT de toucher aux données actuelles */
+  if(!loadFailed && !snapshot('Avant la restauration', JSON.stringify(S))){ const e = $('#bk_msg'); if(e) e.textContent = "Espace plein : enregistre d'abord une sauvegarde dans Fichiers, puis réessaie."; throw Object.assign(new Error('espace'), {shown:true}); }
+  const prev = S; S = m; S.appv = APPV;
+  try{ render(); }catch(e){ S = prev; try{ save(); render(); }catch(_){} throw e; }   /* copie qui ne s'affiche pas : on revient aux données d'avant */
+  loadFailed = false; save(); render();
+  S.flash = label; const bm = $('#bk_msg'); if(bm) bm.textContent = label;
 }
 function renderReglages(){
   const p = S.p;
@@ -2867,6 +2683,7 @@ function renderReglages(){
     <div class="card"><h3>Toujours à la maison</h3><p class="small">Séparés par des virgules. Ils ne vont pas dans la liste : ils s'affichent dans « Vérifier avant de partir ».</p><textarea id="maison">${esc(S.maison)}</textarea></div>
     <div class="card"><h3>Historique</h3>${histHtml()}
     ${S.hist.length?'<button class="btn s d" id="hclr" data-armed="0">Effacer l\'historique</button>':''}</div>
+    ${prixCard()}
     ${backupCard()}
     <p class="small" style="text-align:center">Version de l'application : ${esc(APPV)}</p>
     <div class="card"><h3>Tout remettre à zéro</h3><p class="small">Efface le menu, le stock et l'historique.</p><button class="btn s d" id="reset" data-armed="0">Réinitialiser</button></div>`;
@@ -2882,10 +2699,18 @@ function applyTheme(){
   const dark = t==='dark' || (t==='auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
   const m = document.getElementById('mtc'); if(m) m.content = dark ? '#1c1917' : '#f6eee0';
 }
+/* plats supprimés ou versions retirées : on nettoie les références au lieu de planter l'affichage */
+function fixRefs(){
+  let ch = false;
+  const ok = it => { if(!it || typeof it.r!=='string') return false; const r = byName(it.r); if(!r) return false; if(it.v && !(vars(r)[it.v-1])){ it.v = 0; ch = true; } return true; };
+  LISTS.forEach(l => { const L = S.menu[l]; if(Array.isArray(L)){ const K = L.filter(ok); if(K.length !== L.length){ S.menu[l] = K; ch = true; } } });
+  if(S.occ && Array.isArray(S.occ.items)){ const K = S.occ.items.filter(ok); if(K.length !== S.occ.items.length){ S.occ.items = K; ch = true; } }
+  return ch;
+}
 function render(){
   applyTheme();
   _AR = _ND = _BL = _AS = _PN = null; _DF = new Map(); _ASA = null; _ECO = new Map(); _CMP = new Map();
-  if(syncMeals()) save();
+  if(fixRefs() | syncMeals()) save();
   ({menu:renderMenu, epicerie:renderEpicerie, articles:renderArticles, maison:renderMaison, recettes:renderRecettes, reglages:renderReglages, aide:renderAide})[tab]();
   ['menu','epicerie','articles','maison','recettes','reglages','aide'].forEach(t => $('#tab-'+t).hidden = t!==tab);
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t===tab));
@@ -2902,6 +2727,8 @@ function arm(btn, label, fn){
   setTimeout(() => { if(btn.isConnected){ btn.dataset.armed='0'; btn.textContent = old; } }, 3500);
 }
 function terminerSemaine(){
+  /* articles cochés au magasin sans avoir touché « Épicerie terminée » : on les compte quand même dans Maison */
+  if(!S.menu.achete && Object.values(S.menu.chk||{}).some(Boolean)) epicerieFaite();
   needs().forEach(n => {
     if(isMaison(n.name)) return;
     const sk = stockKey(n); const st = sk ? S.stock[sk] : null; if(!st) return;
@@ -2954,15 +2781,16 @@ document.addEventListener('click', e => {
   if(id==='gen'){ if(S.menu.date && t.dataset.armed!=='1'){ arm(t,'Confirmer', ()=>{}); return; } genMenu(); return; }
   if(id==='addbtn'){ const r = byName($('#addsel').value); if(r){ addToMenu(r); save(); render(); } return; }
   if(id==='fin'){ arm(t,'Confirmer : terminer la semaine', terminerSemaine); return; }
-  if(id==='achete'){ epicerieFaite(); return; }
+  if(id==='achete'){ arm(t, Object.values(S.menu.chk||{}).some(Boolean) ? 'Confirmer : épicerie terminée' : 'Rien de coché : confirmer quand même ?', epicerieFaite); return; }
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
   if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
-  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { snapshot('Avant la remise à zéro', JSON.stringify(S)); S = DEFAULT(); S.appv = APPV; save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Réglages)."); return; } S = DEFAULT(); S.appv = APPV; save(); render(); }); return; }
   if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
   if(id==='help_hide'){ S.help=true; save(); render(); return; }
   if(id==='help_back'){ tab='menu'; render(); window.scrollTo(0,0); return; }
   if(id==='sp_go'){ chercherSpeciaux(false); return; }
+  if(id==='bfit'){ const n = budgetFit(); S.flash = n ? `${n} souper${n>1?'s':''} remplacé${n>1?'s':''} par ${n>1?'des plats moins chers':'un plat moins cher'}.` + (listTotals(buyList().rows).cost > (+S.p.budget||0) ? ' Le budget est encore dépassé : verrouille moins de plats, baisse les portions ou retire des articles.' : '') : "Aucun plat moins cher ne convient (plats verrouillés, déjà faits récemment ou exclus). Essaie de baisser les portions ou de retirer des articles."; save(); render(); const fm = $('#flash'); if(fm){ fm.textContent = S.flash; fm.hidden = false; } else setSync(S.flash); return; }
   if(id==='st_find'){ trouverEpiceries(); return; }
   if(id==='stx_add'){ const n = String(($('#stx_n')||{}).value||'').trim().replace(/\s+/g,' '); if(!n) { say($('#st_msg'), "Écris le nom de l'épicerie."); return; }
     const known = marchand(n) && STORES.includes(marchand(n)) ? marchand(n) : '';
@@ -2984,11 +2812,11 @@ document.addEventListener('click', e => {
     const box = document.querySelector('details[data-rec="__new"]'); if(box) box.scrollIntoView({block:'start'});
     drafts.new.note = `Recette lue : ${w.rows.length} ingrédient${w.rows.length>1?'s':''}${w.portions && w.k==='souper' ? `, ajustés de ${w.portions} à 6 portions` : ''}${w.unsure.length ? `. Quantité à vérifier : ${w.unsure.join(', ')}` : ''}. Vérifie les noms, les quantités, le genre et le temps, puis touche « Enregistrer la recette » en bas.`; render(); const box2 = document.querySelector('details[data-rec="__new"]'); if(box2) box2.scrollIntoView({block:'start'}); return; }
   if(id==='go_liste'){ tab='epicerie'; render(); window.scrollTo(0,0); return; }
-  if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg'); S.lastExport = isoToday(); save(); return; }
+  if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg').then(ok => { if(ok){ S.lastExport = isoToday(); save(); } }); return; }
   if(id==='bk_file'){ exportFile(); return; }
   if(id==='bk_imp'){ arm(t,'Confirmer : remplacer mes données', () => {
       try{ restoreFrom($('#bk_txt').value, 'Copie restaurée. Tes données d\'avant sont gardées dans les copies automatiques.'); }
-      catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette copie n'est pas valide."; t.dataset.armed='0'; t.textContent='Restaurer cette copie'; } }); return; }
+      catch(e){ const m = $('#bk_msg'); if(m && !e.shown) m.textContent = "Cette copie n'est pas valide. Rien n'a été changé."; t.dataset.armed='0'; t.textContent='Restaurer cette copie'; } }); return; }
   if(id==='bk_rescue'){ arm(t,'Confirmer : restaurer', () => { try{ restoreFrom(localStorage.getItem(RESCUE), 'Données restaurées.'); localStorage.removeItem(RESCUE); }catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Ces données n'ont pas pu être lues. Elles restent gardées."; } }); return; }
   if(id==='aadd'){
     const name = plain($('#an').value), am0 = $('#amsg'); let q = parseFloat(String($('#aq').value).replace(',','.')), u = $('#au').value;
@@ -3041,8 +2869,8 @@ document.addEventListener('click', e => {
   if(a==='occ_copy'){ copier(occText(), '#occ_msg'); return; }
   if(a==='occ_menu'){ occToMenu(); save(); render(); window.scrollTo(0,0); return; }
   if(a==='sdis'){ S.sdis = S.sdis||{}; if(S.sdis[t.dataset.id]) delete S.sdis[t.dataset.id]; else S.sdis[t.dataset.id] = true; openRec.add('side|'+t.dataset.id); save(); render(); return; }
-  if(a==='sdel2'){ S.sidesx = (S.sidesx||[]).filter(x => x.id!==t.dataset.id); save(); render(); return; }
-  if(a==='bk_restore'){ const c = readCopies()[+t.dataset.j]; if(c) arm(t, 'Confirmer', () => { try{ restoreFrom(c.data, `Copie du ${new Date(c.d).toLocaleDateString('fr-CA', {day:'numeric', month:'long'})} restaurée.`); }catch(e){ const m = $('#bk_msg'); if(m) m.textContent = "Cette copie n'a pas pu être lue."; } }); return; }
+  if(a==='sdel2'){ arm(t, 'Confirmer', () => { S.sidesx = (S.sidesx||[]).filter(x => x.id!==t.dataset.id); save(); render(); }); return; }
+  if(a==='bk_restore'){ const c = readCopies()[+t.dataset.j]; if(c) arm(t, 'Confirmer', () => { try{ restoreFrom(c.data, `Copie du ${new Date(c.d).toLocaleDateString('fr-CA', {day:'numeric', month:'long'})} restaurée.`); }catch(e){ const m = $('#bk_msg'); if(m && !e.shown) m.textContent = "Cette copie n'a pas pu être lue. Rien n'a été changé."; } }); return; }
   if(a==='bk_go'){ tab = 'reglages'; render(); const c = document.getElementById('sauvegarde'); if(c) c.scrollIntoView({block:'start'}); return; }
   if(a==='bk_hide'){ bkBar = false; render(); return; }
   if(a==='bk_later'){ S.bkSnooze = addDays(isoToday(), 14); save(); render(); return; }
@@ -3076,6 +2904,7 @@ document.addEventListener('click', e => {
   if(a==='rdis'){ const n = t.dataset.r; if(S.dis[n]) delete S.dis[n]; else S.dis[n] = true; save(); render(); return; }
   if(a==='vsave' || a==='vrm' || a==='vadd' || a==='vrestore' || a==='rsave' || a==='rreset'){
     const n = t.dataset.r, r = byName(n); if(!r) return;
+    const before = varRows(r).map(x => x.v);   /* pour garder la bonne version aux plats déjà au menu */
     if(a==='vrestore'){ e.preventDefault(); delete S.vared[n]; delete S.vardel[n]; Object.keys(drafts).forEach(k => { if(k.startsWith('va|'+n+'|')) delete drafts[k]; }); }
     else if(a==='rsave'){ saveRecEdit(t); return; }
     else if(a==='rreset'){ delete S.redit[n]; delete drafts['edit|'+n]; }
@@ -3087,7 +2916,7 @@ document.addEventListener('click', e => {
       else if(t.dataset.s==='b') (S.vared[n] = S.vared[n]||{})[+t.dataset.i] = val;
       else S.varx[n][+t.dataset.i] = val;
       delete drafts[key]; openPan.delete(key); }
-    resetV(n); openRec.add(n); save(); render(); return;
+    remapV(n, before, a); openRec.add(n); save(); render(); return;
   }
   if(a==='gorec'){ e.preventDefault(); tab='recettes'; openRec.add('__new'); render(); window.scrollTo(0,0); }
   else if(a==='rshare2'){ const r = byName(t.dataset.r); const fx = x => x==='auto' ? '' : (x||''); copier(texteRecette({r:r.n, v:0, sf:fx(r.sf), sv:fx(r.sv)}, 0, true), '#rm2_'+t.dataset.x); }
@@ -3095,13 +2924,13 @@ document.addEventListener('click', e => {
   else if(a==='addrec'){ const r = byName(t.dataset.r); if(r){ addToMenu(r); save(); render(); } }
   else if(a==='keepside'){ const o = S.stock[t.dataset.k]; if(o && !(S.sidesx||[]).some(s => norm(s.n)===norm(o.name))){ (S.sidesx = S.sidesx||[]).push({id:'x'+Date.now().toString(36), n:o.name, sl:o.cat, ty:['all'], i:[[Math.max(1,o.q), o.u, o.name, o.rayon||'épicerie']]}); save(); render(); const am = $('#amsg'); if(am) am.textContent = o.name+' est maintenant un accompagnement permanent (voir Recettes).'; } }
   else if(a==='fav'){ if(S.fav[t.dataset.r]) delete S.fav[t.dataset.r]; else S.fav[t.dataset.r] = true; openRec.add(t.dataset.r); save(); render(); }
-  else if(a==='sdel'){ e.preventDefault(); S.sidesx.splice(+t.dataset.i,1); save(); render(); }
+  else if(a==='sdel'){ e.preventDefault(); arm(t, 'confirmer ?', () => { S.sidesx = (S.sidesx||[]).filter(x => x.id!==t.dataset.id); save(); render(); }); }
   else if(a==='rdel'){ arm(t,'Confirmer', () => { S.custom = S.custom.filter(r => r.n!==t.dataset.r); delete S.varx[t.dataset.r]; openRec.delete(t.dataset.r); save(); render(); }); }
   else if(a==='spdel'){ e.preventDefault(); S.spec.splice(i,1); save(); render(); }
   else if(a==='manque'){ const k = t.dataset.k; if(S.menu.extra[k]) delete S.menu.extra[k]; else S.menu.extra[k] = true; save(); render(); }
   else if(a==='stp' || a==='stm'){ const o = S.stock[t.dataset.k]; if(!o) return; o.q += (a==='stp'?1:-1)*stepOf(o.u); if(o.q<=0) delete S.stock[t.dataset.k]; save(); render(); }
   else if(a==='ladd'){ S[t.dataset.l].push({name:'', q:1, u:'un', r:'épicerie'}); save(); renderReglages(); }
-  else if(a==='ldel'){ S[t.dataset.l].splice(i,1); save(); renderReglages(); }
+  else if(a==='ldel'){ arm(t, 'Confirmer', () => { S[t.dataset.l].splice(i,1); save(); renderReglages(); }); }
 });
 document.addEventListener('change', e => {
   const t = e.target;
@@ -3112,7 +2941,7 @@ document.addEventListener('change', e => {
   if(t.classList.contains('ib_n')){ const d = drafts[t.dataset.ib], x = d && d.rows[+t.dataset.j]; if(x){ x.n = t.value.trim(); const c = catFind(x.n), w = t.closest('.ibw');
       if(c){ x.ray = c.ray; if(!x.q){ x.u = c.u; w.querySelector('.ib_u').value = c.u; } w.querySelector('.ib_rw').innerHTML = ''; } else w.querySelector('.ib_rw').innerHTML = x.n ? rayPick(t.dataset.ib, +t.dataset.j, x) : ''; } return; }
   if(t.id==='an'){ anFill(catFind(t.value), true); return; }
-  if(t.dataset.p){ S.p[t.dataset.p] = +String(t.value).replace(',','.') || 0; ajuster(); save(); render(); return; }
+  if(t.dataset.p){ S.p[t.dataset.p] = numIn(t.value); ajuster(); save(); render(); return; }
   if(t.dataset.ps){ S.p[t.dataset.ps] = t.value; save(); render(); return; }
   if(t.dataset.pb){ S.p[t.dataset.pb] = t.checked; save(); render(); return; }
   if(t.dataset.off!==undefined){ const d = +t.dataset.off, o = new Set(S.p.off||[0,6]); if(t.checked) o.add(d); else o.delete(d); S.p.off = [...o]; save(); return; }
@@ -3169,8 +2998,8 @@ document.addEventListener('change', e => {
   if(t.dataset.a==='tpsel'){ (S.tpx = S.tpx||{})[t.dataset.r] = +t.value; openRec.add(t.dataset.r); save(); render(); return; }
   if(t.dataset.a==='sideq'){ const it = mlist(t.dataset.ml||'items')[+t.dataset.i]; if(it) it[t.dataset.s==='f'?'fm':'vm'] = parseFloat(t.value); save(); render(); return; }
   if(t.dataset.a==='portions'){ const it = mlist(t.dataset.ml||'items')[+t.dataset.i]; if(it){ if(+t.value) it.pt = +t.value; else delete it.pt; } save(); render(); return; }
-  if(t.dataset.a==='stq'){ const o = S.stock[t.dataset.k]; const v = parseFloat(String(t.value).replace(',','.')); if(o){ if(v>0) o.q = v; else delete S.stock[t.dataset.k]; save(); render(); } return; }
-  if(t.dataset.l){ const row = S[t.dataset.l][+t.dataset.i]; if(!row) return; const f = t.dataset.f; row[f] = f==='q' ? (parseFloat(String(t.value).replace(',','.'))||0) : t.value; save(); return; }
+  if(t.dataset.a==='stq'){ const o = S.stock[t.dataset.k]; const raw = String(t.value).trim(), v = parseFloat(raw.replace(/\s/g,'').replace(',','.')); if(o){ if(raw!=='' && isNaN(v)){ render(); return; } if(v>0) o.q = v; else delete S.stock[t.dataset.k]; save(); render(); } return; }
+  if(t.dataset.l){ const row = S[t.dataset.l][+t.dataset.i]; if(!row) return; const f = t.dataset.f; row[f] = f==='q' ? numIn(t.value) : t.value; save(); return; }
   if(t.id==='d_plan'){ S.dates.plan = t.value; save(); return; }
   if(t.id==='d_shop'){ S.dates.shop = t.value; save(); render(); return; }
   if(t.id==='relay_in'){ S.relay = t.value.trim(); save(); return; }
@@ -3303,12 +3132,20 @@ function renderAide(){
   try{ if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
     const had = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('sw.js', {updateViaCache: 'none'}).then(reg => { document.addEventListener('visibilitychange', () => { if(document.visibilityState==='visible') reg.update().catch(()=>{}); }); }).catch(()=>{});
-    navigator.serviceWorker.addEventListener('controllerchange', () => { if(had && !sessionStorage.getItem('maj_rechargee')){ try{ sessionStorage.setItem('maj_rechargee', '1'); }catch(e){} location.reload(); } });
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if(typeof drafts !== 'undefined' && Object.keys(drafts).length){ setSync('Nouvelle version prête : elle s\'appliquera à la prochaine ouverture.'); return; } if(had && !sessionStorage.getItem('maj_rechargee')){ try{ sessionStorage.setItem('maj_rechargee', '1'); }catch(e){} location.reload(); } });
   } }catch(e){}
   loadLocal();
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(e){}
-  render();
-  setSync('Enregistré sur cet appareil');
-  try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  try{ render(); }
+  catch(err){   /* données qui empêchent l'affichage : on les met de côté (rien n'est effacé) et on repart d'un état propre */
+    try{ const j = localStorage.getItem(KEY); if(j){ const old = localStorage.getItem(RESCUE); if(old && old !== j) localStorage.setItem(RESCUE+'_2', old); localStorage.setItem(RESCUE, j); } rescued = true; }catch(_){}
+    loadFailed = true; S = DEFAULT(); S.appv = APPV;
+    S.flash = "Tes données ont causé une erreur d'affichage. Elles sont gardées de côté, rien n'est effacé : Réglages → Sauvegarde → « Essayer de les restaurer ».";
+    render();
+  }
+  setSync(loadFailed ? 'Mode secours : tes données sont gardées de côté' : 'Enregistré sur cet appareil');
+  /* dernière protection : une erreur imprévue s'affiche au lieu de bloquer l'application en silence */
+  window.addEventListener('error', e => { setSync('Petit problème : ' + (e.message || 'erreur') + '. Tes données sont intactes.'); });
+  window.addEventListener('unhandledrejection', e => { setSync('Petit problème : ' + ((e.reason && e.reason.message) || 'erreur') + '. Tes données sont intactes.'); });
 })();

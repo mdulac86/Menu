@@ -1,7 +1,7 @@
 /* Service worker : réseau d'abord (toujours la dernière version en ligne), cache en secours (hors ligne). */
 importScripts('version.js');
 const C = 'menu-semaine-' + self.APP_VERSION;
-const FILES = ['./', 'index.html', 'style.css', 'version.js', 'recettes.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
+const FILES = ['./', 'index.html', 'style.css', 'version.js', 'recettes.js', 'prix-maxi.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   /* cache:'reload' : on contourne le cache HTTP pour ne pas mélanger d'anciens fichiers avec les nouveaux */
@@ -20,8 +20,9 @@ self.addEventListener('fetch', e => {
     try{
       const r = await fetch(req.url, {cache: 'no-cache', credentials: 'same-origin', signal: ctl.signal});
       clearTimeout(t);
-      if(r.ok){ const k = r.clone(); caches.open(C).then(c => c.put(req, k)).catch(() => {}); }
-      return r;
+      if(r.ok){ const k = r.clone(); caches.open(C).then(c => c.put(req, k)).catch(() => {}); return r; }
+      /* erreur du serveur (404, 500… pendant une mise en ligne) : la copie gardée vaut mieux qu'une page cassée */
+      return (await caches.match(req, {ignoreSearch: true})) || r;
     }catch(err){
       clearTimeout(t);
       const hit = await caches.match(req, {ignoreSearch: true});
