@@ -61,11 +61,24 @@ async function exportFile(){
   try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'application/json'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); done(); }
   catch(e){ copier(txt, '#bk_msg'); }
 }
+/* passage des données d'une version précédente à la 2.0 (au chargement et à chaque restauration) */
+function migrer(){
+  const m = S.menu, dow = iso => new Date(iso+'T12:00:00').getDay();
+  /* un menu créé par l'ancienne version garde ses jours et sa date d'épicerie */
+  if(m.date && !m.start) m.start = S.dates.shop || isoToday();
+  if(m.date && !m.shop) m.shop = S.dates.shop || m.start;
+  /* profil créé d'après les portions actuelles (sans les changer), à vérifier par l'utilisateur */
+  if(S.setup && !isObj(S.profil)){
+    const n = Math.max(1, Math.round(+S.p.souper || 4)), a = Math.min(2, n), ram = S.dates.shop ? dow(S.dates.shop) : m.shop ? dow(m.shop) : 6;
+    S.profil = Object.assign(PROFIL0(), {membres: Array.from({length:n}, (_, i) => i < a ? {a:'adulte', ap:'normal', l:(S.p.restes||0) > i} : {a:'enfant', age:14, ap:'normal', l:(S.p.restes||0) > i}),
+      jours:{plan:(ram + 5) % 7, cmd:(ram + 6) % 7, ram, cuis: m.start ? dow(m.start) : ram}, princ:S.p.main || S.stores[0] || '', verifier:true});
+  }
+}
 function restoreFrom(raw, label){
   const o = JSON.parse(raw); if(!isObj(o) || !isObj(o.menu) || !isObj(o.stock)) throw new Error('invalide');
   const m = mergeState(o);   /* vérifie et complète AVANT de toucher aux données actuelles */
   if(!loadFailed && !snapshot('Avant la restauration', JSON.stringify(S))){ const e = $('#bk_msg'); if(e) e.textContent = "Espace plein : enregistre d'abord une sauvegarde dans Fichiers, puis réessaie."; throw Object.assign(new Error('espace'), {shown:true}); }
-  const prev = S; S = m; S.appv = APPV;
+  const prev = S; S = m; S.appv = APPV; migrer();
   try{ render(); }catch(e){ S = prev; try{ save(); render(); }catch(_){} throw e; }   /* copie qui ne s'affiche pas : on revient aux données d'avant */
   loadFailed = false; save(); render();
   S.flash = label; const bm = $('#bk_msg'); if(bm) bm.textContent = label;
@@ -87,11 +100,10 @@ const portionsFamille = () => profil().membres.reduce((t, m) => t + portionDe(m)
 const portionsLunch = () => profil().membres.filter(m => m.l).reduce((t, m) => t + portionDe(m), 0);
 /* applique le profil aux réglages de portions déjà utilisés partout dans l'application */
 function appliquerProfil(){
+  /* seulement les portions du souper et des restes pour les lunchs : les autres réglages restent ceux de l'utilisateur */
   const P = profil(), f = Math.max(1, Math.round(portionsFamille())), l = Math.round(portionsLunch());
-  S.p.souper = Math.min(12, f); S.p.restes = Math.min(10, l); S.p.pDej = 0; S.p.pDin = l || 0;
-  if(l && !(S.p.nDin > 0)) S.p.nDin = 5;
-  if(!l) S.p.nDin = 0;
-  S.p.dinRestes = true;
+  S.p.souper = Math.min(12, f); S.p.restes = Math.min(10, l);
+  if(S.p.nDin === undefined) S.p.nDin = l ? 5 : 0;
   if(P.princ){ S.p.main = P.princ; if(!S.stores.includes(P.princ)) S.stores = [P.princ].concat(S.stores); }
 }
 /* prochain jour de la semaine `dow` à partir de la date iso (le jour même compte) */
@@ -152,11 +164,12 @@ async function exportProfil(){
 function importProfil(txt){
   const o = JSON.parse(txt); if(!isObj(o) || o.type!=='menu-profil' || !isObj(o.p)) throw new Error('format');
   if(!snapshot('Avant le chargement d\'un profil', JSON.stringify(S))) throw new Error('espace');
-  const m = mergeState(Object.assign(JSON.parse(JSON.stringify(S)), o.p, {p: Object.assign({}, S.p, isObj(o.p.reglages) ? o.p.reglages : {})}));
+  const keep = {}; PROFIL_KEYS.forEach(k => { if(o.p[k] !== undefined) keep[k] = o.p[k]; });   /* jamais le menu, l'historique ni les recettes */
+  const m = mergeState(Object.assign(JSON.parse(JSON.stringify(S)), keep, {p: Object.assign({}, S.p, isObj(o.p.reglages) ? o.p.reglages : {})}));
   delete m.reglages; S = m; S.setup = true; profil(); appliquerProfil(); save(); render();
 }
 /* ---------- assistant de départ ---------- */
-let wiz = 0;
+let wiz = 0, wizEss = false;
 function renderWizard(){
   const steps = ['La famille','L\'horaire','Les épiceries','Les repas','Le budget'];
   const nav = `<div class="acts">${wiz > 0 ? '<button class="btn s" data-a="wiz" data-v="-1">← Retour</button>' : ''}${wiz < steps.length-1 ? '<button class="btn s p" data-a="wiz" data-v="1">Continuer →</button>' : '<button class="btn p" id="setup_done">Commencer</button>'}</div>`;
@@ -168,7 +181,7 @@ function renderWizard(){
       <p class="small">Coche les épiceries où tu vas, ou touche le bouton pour voir celles qui ont une circulaire près de chez toi.</p>${storePicker()}
       <label class="f">Épicerie principale<select data-pf="princ"><option value="">Choisir…</option>${(S.stores.length ? S.stores : allStores()).map(s => `<option ${profil().princ===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label></div>`;
   else if(wiz===3) body = `<div class="card"><h3>Les repas à planifier</h3><div class="grid2">${countSelects()}</div>
-      <label class="check"><input type="checkbox" id="su_ess" ${S.ess.length ? 'checked disabled' : ''}> Ajouter une liste de départ pour les déjeuners, lunchs, collations et boissons</label></div>`;
+      <label class="check"><input type="checkbox" id="su_ess" ${S.ess.length ? 'checked disabled' : wizEss ? 'checked' : ''}> Ajouter une liste de départ pour les déjeuners, lunchs, collations et boissons</label></div>`;
   else body = `<div class="card"><h3>Le budget</h3><label class="f">Budget d'épicerie par semaine ($, 0 si aucun)<input type="text" inputmode="decimal" class="num" data-p="budget" value="${S.p.budget||0}"></label>
       <p class="small">Quand le menu dépasse ce montant, les soupers les plus chers sont remplacés par des plats moins chers.</p></div>`;
   return head + body + nav;
@@ -279,6 +292,7 @@ function etape(){
   const futur = m.date && m.start && m.start > today;
   if(!m.date || (!futur && (!active || gapDays(today, np) <= 3) && np > (m.shop || ''))) return 'preparer';
   if(!m.achete && today <= (m.shop || today)) return 'commander';
+  if(!m.achete) return 'ramassage';
   if(m.achete && !(m.paid > 0)) return 'payer';
   return 'cuisiner';
 }
@@ -286,8 +300,8 @@ function prepareCard(){
   const np = nextPickup(), start = startFrom(np), busy = S.menu.date && S.menu.start <= isoToday();
   return `<div class="card call"><h3>Préparer ma semaine</h3>
     <p class="small">Ramassage ${esc(fmtDate(np))}, menu du ${esc(dayLbl(start).toLowerCase())} au ${esc(dayLbl(addDays(start, 6)).toLowerCase())}. Un seul bouton : les spéciaux de tes épiceries, le menu varié, le budget et la liste.</p>
-    ${busy ? `<p class="small">La semaine en cours sera terminée d'abord (elle va dans l'historique et ce qui reste va dans Maison).</p>` : ''}
-    <div class="acts"><button class="btn p" id="prep_week" data-armed="0">Préparer ma semaine</button></div>
+    ${busy ? `<p class="small">Les soupers qui restent cette semaine sont gardés jusqu'au ${esc(dayLbl(start).toLowerCase())}; la semaine en cours passe dans l'historique.</p>` : ''}
+    <div class="acts"><button class="btn p" id="prep_week" data-armed="0" ${prepBusy ? 'disabled' : ''}>${prepBusy ? 'Préparation en cours…' : 'Préparer ma semaine'}</button></div>
     <p class="small" id="sp_status" aria-live="polite"></p></div>`;
 }
 function commanderCard(){
@@ -341,12 +355,13 @@ function renderSemaine(){
   const el = $('#tab-semaine');
   if(!S.setup){ el.innerHTML = renderWizard(); return; }
   let h = `<p class="note" id="flash" ${S.flash ? '' : 'hidden'}>${esc(S.flash||'')}</p>`; S.flash = '';
-  if(S.profil && S.profil.verifier) h += `<div class="card call"><h3>Nouveau : le profil de la famille</h3><p class="small">Les portions et les lunchs se calculent maintenant d'après la famille (adultes, enfants, appétit). Vérifie qu'il te ressemble : ${esc(famLine())}.</p><div class="acts"><button class="btn s p" data-a="view" data-v="famille">Vérifier le profil</button><button class="btn s" data-a="pf_ok">C'est bon</button></div></div>`;
+  if(S.profil && S.profil.verifier) h += `<div class="card call"><h3>Nouveau : le profil de la famille</h3><p class="small">Les portions et les lunchs se calculent maintenant d'après la famille (adultes, enfants, appétit). Vérifie qu'il te ressemble : ${esc(famLine())}, ramassage le ${esc(DOW[profil().jours.ram])}, cuisine dès le ${esc(DOW[profil().jours.cuis])}.</p><div class="acts"><button class="btn s p" data-a="view" data-v="famille">Vérifier le profil</button><button class="btn s" data-a="pf_ok">C'est bon</button></div></div>`;
   const st = etape();
   h += renderToday();
   if(st==='preparer') h += prepareCard();
   else if(st==='commander') h += commanderCard();
   else if(st==='payer') h += payerCard();
+  else if(st==='ramassage') h += `<div class="card call"><h3>Ramassage fait ?</h3><p class="small">Touche « Épicerie terminée » : les articles cochés entrent dans Maison. Inscris aussi le total de la facture pour suivre le budget.</p>${paidField(S.menu)}<div class="acts"><button class="btn s p" data-a="view" data-v="epicerie">Ouvrir la liste</button></div></div>`;
   h += prepDimancheCard();
   if(prixRappel()) h += `<div class="card"><h3>Mise à jour des prix</h3><p class="small">Les prix de référence ont été ${esc(PRIX_MAJ_TXT())}. Prends quelques minutes pour vérifier les principaux sur maxi.ca : le coût de l'épicerie et le budget seront plus justes.</p><div class="acts"><button class="btn s p" data-a="pm_go">Mettre à jour les prix</button><button class="btn s" data-a="pm_snooze">Dans une semaine</button></div></div>`;
   if(S.menu.date){ const rows = buyList().rows; h += `<div class="card"><h3>La semaine du ${esc(dayLbl(weekStart()).toLowerCase())}</h3>${weekStrip()}${budgetHtml(rows)}</div>`; h += renderAubaines(); }
@@ -355,8 +370,9 @@ function renderSemaine(){
 }
 /* bande compacte des 7 jours : le souper de chaque jour */
 function weekStrip(){
-  const L = mlist('items'), today = isoToday();
-  return `<div class="cal">${weekDates().map(d => { const i = L.findIndex(x => x.d===d), it = L[i], r = it && byName(it.r);
+  const L = mlist('items'), today = isoToday(), PV = (S.menu.prev || []).filter(x => x.d >= today && byName(x.r));
+  const pv = PV.map(it => `<div class="calday prev${it.d===today ? ' today' : ''}"><span class="cd">${esc(dayLbl(it.d))}</span><span class="cm"><b>${esc(it.r)}</b><small>semaine en cours</small></span><button class="btn s" data-a="cook" data-ml="prev" data-i="${(S.menu.prev||[]).indexOf(it)}">Cuisiner</button></div>`).join('');
+  return `<div class="cal">${pv}${weekDates().map(d => { const i = L.findIndex(x => x.d===d), it = L[i], r = it && byName(it.r);
     const tags = it ? [itemDeals(it, r||{i:[],m:[]}).length ? 'spécial' : '', it.after ? 'restes' : '', r && mjOf(r)===1 ? 'mijoteuse' : ''].filter(Boolean) : [];
     return `<div class="calday${d===today ? ' today' : ''}"><span class="cd">${esc(dayLbl(d))}</span><span class="cm">${it ? `<b>${esc(it.r)}</b><small>${r ? esc(tmShort(r)) : ''}${tags.length ? ' · ' + esc(tags.join(' · ')) : ''}</small>` : '<small>—</small>'}</span>${it ? `<button class="btn s" data-a="cook" data-ml="items" data-i="${i}" aria-label="Cuisiner ${esc(it.r)}">Cuisiner</button>` : ''}</div>`; }).join('')}</div>`;
 }
@@ -377,25 +393,40 @@ async function menuFrigo(){
     if(sub){ g.fillStyle = '#7a6a58'; g.fillText(fit(sub, W - 380, 28, 400), 330, y + 104); } });
   g.fillStyle = '#7a6a58'; g.font = font(400, 24); g.fillText('Fait avec Menu de la semaine', 64, c.height - 36);
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); if(!blob) return;
-  const f = new File([blob], 'menu-semaine.png', {type:'image/png'});
-  try{ if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title:'Menu de la semaine'}); return; } }catch(e){ if(e && e.name==='AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu-semaine.png'; document.body.appendChild(a); a.click(); a.remove();
+  frigoFile = new File([blob], 'menu-semaine.png', {type:'image/png'});
+  /* l'image s'affiche : appui long pour l'enregistrer dans Photos, ou « Partager » (un nouveau toucher, exigé par l'iPhone) */
+  const box = $('#frigo_box'); if(box){ box.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Menu de la semaine" style="width:100%;border-radius:12px;margin-top:10px"><p class="small">Appuie longuement sur l'image pour l'enregistrer dans Photos, ou :</p><div class="acts"><button class="btn s p" id="frigo_share">Partager l'image</button></div>`; }
+}
+let frigoFile = null;
+async function partagerFrigo(){
+  if(!frigoFile) return;
+  try{ if(navigator.canShare && navigator.canShare({files:[frigoFile]})){ await navigator.share({files:[frigoFile], title:'Menu de la semaine'}); return; } }catch(e){ if(e && e.name==='AbortError') return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(frigoFile); a.download = 'menu-semaine.png'; document.body.appendChild(a); a.click(); a.remove();
 }
 /* « Préparer ma semaine » : spéciaux → menu → budget, en une fois */
+let prepBusy = false;
 async function preparerSemaine(){
+  if(prepBusy) return; prepBusy = true;
+  try{ await preparerSemaine0(); } catch(e){ prepBusy = false; render(); throw e; } finally { prepBusy = false; }
+}
+async function preparerSemaine0(){
   const say = t => { const s = $('#sp_status'); if(s) s.textContent = t; };
-  if(S.menu.date && S.menu.start <= isoToday()) terminerSemaine();
+  const today = isoToday();
+  /* les soupers qui restent cette semaine (déjà achetés) restent au menu jusqu'au début de la nouvelle */
+  let prev = [];
+  if(S.menu.date && S.menu.start <= today){ prev = mlist('items').filter(x => x.d && x.d >= today).map(x => Object.assign({}, x, {lock:true})); terminerSemaine(); }
   tab = 'semaine';
-  S.dates.shop = nextPickup();
+  if(!(S.dates.man && S.dates.shop && S.dates.shop >= today)){ S.dates.shop = nextPickup(); S.dates.man = false; }
   const P = profil();
   if(P.princOnly !== false && S.p.main && S.stores.length > 1){ S.skip = S.stores.filter(s => s !== S.p.main); S.goSome = false; }
   save(); render();
   if(S.stores.length && S.cp && !(S.auto && S.auto.shop === S.dates.shop && S.auto.maj === isoToday())){ say('Recherche des spéciaux…'); try{ await chercherSpeciaux(false); }catch(e){} }
   const sp = (S.auto && S.auto.shop === S.dates.shop) ? autoItems().length : 0;
   genMenu();
+  S.menu.prev = prev.filter(x => x.d < S.menu.start);
   const rows = buyList().rows, t = listTotals(rows), aub = aubaines().length;
   S.flash = `Menu prêt : ${mlist('items').length} soupers du ${dayLbl(S.menu.start).toLowerCase()} au ${dayLbl(addDays(S.menu.start, 6)).toLowerCase()}, ≈ ${money(t.cost)}${S.p.budget ? ' (budget ' + money(S.p.budget) + ')' : ''}${t.save >= 1 ? ', ≈ ' + money(t.save) + ' économisés en spéciaux' : ''}.`
     + (sp ? '' : ' Les circulaires de cette semaine ne sont pas encore lues : relance « Chercher les spéciaux » jeudi pour un menu qui en profite.')
     + (aub ? ` ${aub} vraie${aub>1?'s':''} aubaine${aub>1?'s':''} à considérer pour faire des réserves.` : '');
-  tab = 'semaine'; save(); render(); window.scrollTo(0, 0);
+  tab = 'semaine'; prepBusy = false; save(); render(); window.scrollTo(0, 0);
 }

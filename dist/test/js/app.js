@@ -11,6 +11,7 @@ const secOf = v => GROUPS.profil.includes(v) ? 'profil' : v;
 const lastView = {};
 const RENDER = {semaine:() => renderSemaine(), menu:() => renderMenu(), historique:() => renderReglages(), epicerie:() => renderEpicerie(), articles:() => renderArticles(), prix:() => renderPrixTab(), maison:() => renderMaison(), recettes:() => renderRecettes(), aide:() => renderAide()};
 GROUPS.profil.filter(v => v!=='aide').forEach(v => RENDER[v] = () => renderReglages());
+function renderView(){ (RENDER[tab] || renderSemaine)(); const nav = subNav(groupOf(tab)); if(nav) $('#tab-'+secOf(tab)).insertAdjacentHTML('afterbegin', nav); }
 function subNav(g){ const L = GROUPS[g]; if(L.length < 2) return '';
   return `<div class="seg subnav" role="tablist" aria-label="Sous-menus">${L.map(v => `<button role="tab" class="${v===tab?'on':''}" data-a="view" data-v="${v}" aria-selected="${v===tab}">${esc(VLBL[v])}</button>`).join('')}</div>`; }
 function renderPrixTab(){ $('#tab-prix').innerHTML = `<div class="card"><input type="text" id="ar_q" value="${esc(artF.q)}" placeholder="Chercher un article" aria-label="Chercher un article" autocomplete="off"></div>` + prixView(); }
@@ -66,7 +67,7 @@ function terminerSemaine(){
   S.menu = {date:'', items:(S.report||[]).map(x => Object.assign({}, x, {lock:true, rep:true})), din:[], dej:[], dinCook:{}, dinNo:{}, dsel:{}, ent:[], sou:[], des:[], chk:{}, extra:{}, achete:false, snap:null, useup:{}};
   S.report = [];
   S.spec = [];
-  S.dates.shop = '';   /* la prochaine semaine repart du prochain jour de ramassage */
+  S.dates.shop = ''; S.dates.man = false;   /* la prochaine semaine repart du prochain jour de ramassage */
   save(); tab = 'menu'; render(); window.scrollTo(0,0);
 }
 function epicerieFaite(){
@@ -76,7 +77,7 @@ function epicerieFaite(){
     const q = Math.max(r.buy, r.def||0), o = S.stock[r.k]; if(o) o.q += q; else S.stock[r.k] = {name:r.name, u:r.u, q, rayon:r.rayon};
   });
   S.menu.snap = (S.menu.snap||[]).filter(x => x.ok).concat(rows.map(r => ({name:r.name, u:r.u, buy:r.buy, ok:!!S.menu.chk[r.k]})));
-  S.menu.est = Math.round(listTotals(rows).raw * 100) / 100;
+  S.menu.est = Math.round(((S.menu.achete ? (S.menu.est || 0) : 0) + listTotals(rows.filter(r => S.menu.chk[r.k])).raw) * 100) / 100;
   S.menu.chk = {}; S.menu.extra = {}; S.menu.achete = true; storeMode = false; save(); render();
 }
 function ajouterSpeciaux(){
@@ -106,14 +107,15 @@ document.addEventListener('click', e => {
     if(msg){ S.flash = msg; save(); render(); const fm = $('#flash'); if(fm){ fm.textContent = msg; fm.hidden = false; } window.scrollTo(0, 0); } return; }
   if(a==='ck_reset'){ if(cook){ const o = ckRead(); delete o[cook.key]; ckWrite(o); renderCook(); } return; }
   if(id==='pf_export'){ exportProfil(); return; }
+  if(id==='frigo_share'){ partagerFrigo(); return; }
   if(id==='frigo'){ menuFrigo().catch(() => setSync("L'image n'a pas pu être créée.")); return; }
-  if(id==='prep_week'){ if(S.menu.date && S.menu.start <= isoToday() && t.dataset.armed!=='1'){ arm(t, 'Confirmer : terminer la semaine en cours', () => {}); return; } t.disabled = true; preparerSemaine().catch(e => setSync('Petit problème : ' + (e.message||'erreur'))); return; }
+  if(id==='prep_week'){ if(prepBusy) return; if(S.menu.date && S.menu.start <= isoToday() && t.dataset.armed!=='1'){ arm(t, 'Confirmer : préparer la prochaine semaine', () => {}); return; } t.disabled = true; preparerSemaine().catch(e => setSync('Petit problème : ' + (e.message||'erreur'))); return; }
   if(id==='test_copy'){ arm(t, 'Confirmer : remplacer les données de test', () => { const msg = $('#test_msg'); try{ restoreFrom(localStorage.getItem(REAL_KEY), 'Vraies données copiées dans la version de test.'); profil(); appliquerProfil(); save(); render(); }catch(e){ if(msg){ msg.textContent = 'La copie a échoué : ' + (e.message||'erreur') + '. Rien n\'a été changé.'; msg.hidden = false; } } }); return; }
-  if(id==='setup_done'){ profil(); appliquerProfil(); wiz = 0; S.setup = true; const c = $('#su_ess'); if(c && c.checked && !S.ess.length) S.ess = ESS_START(); save(); render(); window.scrollTo(0,0); return; }
+  if(id==='setup_done'){ profil(); appliquerProfil(); wiz = 0; S.setup = true; if(wizEss && !S.ess.length) S.ess = ESS_START(); save(); render(); window.scrollTo(0,0); return; }
   if(id==='ess_preset'){ S.ess = ESS_START(); save(); render(); return; }
   if(id==='gen'){ if(S.menu.date && t.dataset.armed!=='1'){ arm(t,'Confirmer', ()=>{}); return; } genMenu(); return; }
   if(id==='addbtn'){ const r = byName($('#addsel').value); if(r){ addToMenu(r); save(); render(); } return; }
-  if(id==='fin'){ arm(t,'Confirmer : terminer la semaine', terminerSemaine); return; }
+  if(id==='fin'){ if(S.menu.start && S.menu.start > isoToday()) return; arm(t,'Confirmer : terminer la semaine', terminerSemaine); return; }
   if(id==='achete'){ arm(t, Object.values(S.menu.chk||{}).some(Boolean) ? 'Confirmer : épicerie terminée' : 'Rien de coché : confirmer quand même ?', epicerieFaite); return; }
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
@@ -363,7 +365,7 @@ document.addEventListener('change', e => {
   if(t.dataset.a==='stq'){ const o = S.stock[t.dataset.k]; const raw = String(t.value).trim(), v = parseFloat(raw.replace(/\s/g,'').replace(',','.')); if(o){ if(raw!=='' && isNaN(v)){ render(); return; } if(v>0) o.q = v; else delete S.stock[t.dataset.k]; save(); render(); } return; }
   if(t.dataset.l){ const row = S[t.dataset.l][+t.dataset.i]; if(!row) return; const f = t.dataset.f; row[f] = f==='q' ? numIn(t.value) : t.value; save(); return; }
   if(t.id==='d_plan'){ S.dates.plan = t.value; save(); return; }
-  if(t.id==='d_shop'){ S.dates.shop = t.value; save(); render(); return; }
+  if(t.id==='d_shop'){ S.dates.shop = t.value; S.dates.man = !!t.value; save(); render(); return; }
   if(t.id==='relay_in'){ S.relay = t.value.trim(); save(); return; }
   if(t.id==='p_cool'){ S.p.cool = +t.value; save(); }
   if(t.classList && t.classList.contains('pm_in')){   /* prix inscrit dans « Mise à jour des prix » */
@@ -375,6 +377,7 @@ document.addEventListener('change', e => {
     if(o.f || o.kg) o.d = isoToday(); else delete S.bx[k];
     save(); return; }
   if(t.id==='pm_pct'){ const v = parseFloat(String(t.value).replace(/[\s%]/g,'').replace(',','.')); pmaj().pct = isFinite(v) ? Math.max(-50, Math.min(100, v)) : 0; save(); render(); return; }
+  if(t.id==='su_ess'){ wizEss = t.checked; return; }
   if(t.id==='pm_rappel'){ pmaj().rappel = t.checked; save(); return; }
   else if(t.id==='p_var'){ S.p.varMode = t.value; save(); }
   else if(t.id==='p_sou'){ S.p.souper = +t.value; save(); render(); }
@@ -397,7 +400,7 @@ document.addEventListener('input', e => {
   if(t.classList.contains('ar_sq')){ const b = t.dataset.b; artSq[b] = t.value; const box = document.querySelector(`.ar_sr[data-b="${CSS.escape(b)}"]`); if(box) box.innerHTML = artSearchRows(b, t.value); return; }
   if(['cv_q','cv_u','cv_i'].includes(t.id)){ cv[t.id.slice(3)] = t.value; const o = $('#cv_out'); if(o) o.innerHTML = convOut(); return; }
   if(t.id==='cvp_q' || t.id==='cvp_u'){ cv[t.id==='cvp_q' ? 'pq' : 'pu'] = t.value; const o = $('#cvp_out'); if(o) o.innerHTML = convPrix(); return; }
-  if(t.id==='ar_q'){ artF.q = t.value; const pos = t.selectionStart; render(); const f = $('#ar_q'); if(f){ f.focus(); f.setSelectionRange(pos, pos); } return; }
+  if(t.id==='ar_q'){ artF.q = t.value; const pos = t.selectionStart; renderView(); const f = $('#ar_q'); if(f){ f.focus(); f.setSelectionRange(pos, pos); } return; }
   if(t.id==='pk_q'){ pick.q = t.value; pick.msg = ''; const box = $('#pk_res'); if(box) box.innerHTML = pickRows(t.value); return; }
   if(t.id==='an'){ const box = $('#an_sugg'); if(box) box.innerHTML = sugBtns(catSearch(t.value, 8), 'data-a="an_pick"'); return; }
 });
@@ -522,11 +525,7 @@ const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeo
     navigator.serviceWorker.addEventListener('controllerchange', () => { if(draftsDirty()){ setSync('Nouvelle version prête : elle s\'appliquera à la prochaine ouverture.'); return; } if(had && !sessionStorage.getItem(PFX+'maj')){ try{ sessionStorage.setItem(PFX+'maj', '1'); }catch(e){} location.reload(); } });
   } }catch(e){}
   loadLocal();
-  /* un menu créé par l'ancienne version garde ses jours */
-  if(S.menu.date && !S.menu.start){ S.menu.start = S.dates.shop || isoToday(); S.menu.shop = S.dates.shop || S.menu.start; }
-  /* passage à la 2.0 : un profil est créé d'après les portions actuelles, à vérifier par l'utilisateur */
-  if(S.setup && !isObj(S.profil)){ const n = Math.max(1, Math.round(+S.p.souper || 4)), a = Math.min(2, n);
-    S.profil = Object.assign(PROFIL0(), {membres: Array.from({length:n}, (_, i) => i < a ? {a:'adulte', ap:'normal', l:(S.p.restes||0) > i} : {a:'enfant', age:10, ap:'normal', l:(S.p.restes||0) > i}), princ:S.p.main || S.stores[0] || '', verifier:true}); }
+  migrer();
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(e){}
   try{ render(); }

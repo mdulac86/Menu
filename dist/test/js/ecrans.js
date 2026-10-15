@@ -185,7 +185,7 @@ function renderReport(){
 function renderToday(){
   const m = S.menu; if(!m.date) return '';
   const td = isoToday(), tmw = addDays(td,1), L = mlist('items');
-  const tonight = L.find(x => x.d===td), tomorrow = L.find(x => x.d===tmw);
+  const PV = (S.menu.prev || []).filter(x => x.d && byName(x.r)); const tonight = L.find(x => x.d===td) || PV.find(x => x.d===td), tomorrow = L.find(x => x.d===tmw) || PV.find(x => x.d===tmw);
   const dej = mlist('dej').find(x => x.d===td), dejT = mlist('dej').find(x => x.d===tmw);
   const P = dinPlan(), dinP = P.find(p => p.d===td && (p.it || p.rest)), dinT = P.find(p => p.d===tmw);
   if(!tonight && !tomorrow && !dej && !dinP) return '';
@@ -198,7 +198,7 @@ function renderToday(){
   if(tomorrow && mij(tomorrow)) todo.push(`Ce soir : préparer les ingrédients de ${tomorrow.r}; demain matin, partir la mijoteuse.`);
   if(tonight && dinT && dinT.rest===tonight) todo.push(`Garde ${S.p.restes} portion${S.p.restes>1?'s':''} de ${tonight.r} pour le dîner de demain.`);
   if(dejT){ const r = byName(dejT.r); if(r && /la veille/.test(norm(r.s||''))) todo.push(`Ce soir : préparer ${dejT.r} pour demain matin.`); }
-  const ti = tonight ? L.indexOf(tonight) : -1;
+  const ti = tonight ? (L.includes(tonight) ? L.indexOf(tonight) : (S.menu.prev||[]).indexOf(tonight)) : -1, tml = tonight && !L.includes(tonight) ? 'prev' : 'items';
   const midi = dinP ? (dinP.rest ? 'Restes de '+dinP.rest.r : dinP.it.r) : '';
   /* le prochain repas selon l'heure est mis en avant */
   const hr = new Date().getHours(), slots = [dej ? 'matin' : '', midi ? 'midi' : '', tonight ? 'soir' : ''].filter(Boolean);
@@ -211,7 +211,7 @@ function renderToday(){
   return `<div class="card today"><p class="td-k">Aujourd'hui</p><h2 class="td-d">${esc(dl)}</h2>
     ${dej ? row('matin', 'Ce matin', dej.r, rx(dej), cb('dej', mlist('dej').indexOf(dej), now==='matin')) : ''}
     ${midi ? row('midi', 'Ce midi', midi, dinP.rest ? 'Les restes du souper d\'hier' : rx(dinP.it), dinP.it ? cb('din', dinP.i, now==='midi') : '') : ''}
-    ${tonight ? row('soir', 'Ce soir', tonight.r, [rx(tonight), avecTxt(tonight) ? 'avec '+avecTxt(tonight).split(' + ').map(lowFirst).join(' et ') : ''].filter(Boolean).join(' · '), cb('items', ti, now==='soir')) : ''}
+    ${tonight ? row('soir', 'Ce soir', tonight.r, [rx(tonight), avecTxt(tonight) ? 'avec '+avecTxt(tonight).split(' + ').map(lowFirst).join(' et ') : ''].filter(Boolean).join(' · '), cb(tml, ti, now==='soir')) : ''}
     <div class="td-f">${todo.length?`<ul class="todo">${todo.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}
     ${tomorrow?`<p class="td-tm"><span class="small">Demain soir</span> <b>${esc(tomorrow.r)}</b></p>`:''}
     <p class="td-resto"><span class="small">On mange au resto :</span>${dej ? '<button class="lnk2" data-a="resto" data-m="matin">ce matin</button>' : ''}${midi ? '<button class="lnk2" data-a="resto" data-m="midi">ce midi</button>' : ''}${tonight ? '<button class="lnk2" data-a="resto" data-m="soir">ce soir</button>' : ''}</p></div></div>`;
@@ -379,7 +379,7 @@ function renderMenu(){
     const {rows} = buyList(), nDeal = rows.filter(r => dealFor(r.name)).length;
     if(m.achete) h += `<p class="note">Épicerie faite. Tu peux encore changer les plats, les portions ou ajouter un repas : ce qui manque s'ajoute à la liste, sous « À acheter en plus ».</p>`;
     h += `<div class="card tally"><p><b>${rows.length}</b> article${rows.length>1?'s':''} à acheter${nDeal?`, dont <b>${nDeal}</b> en spécial`:''}<br><span class="small" style="color:inherit;opacity:.85">≈ ${money(listTotals(rows).cost)}${S.p.budget ? ` sur ${money(+S.p.budget)} de budget` : ''}</span></p><button class="btn s p" id="go_liste">Voir la liste</button></div>`;
-    h += `<div class="card"><h3>La semaine en un coup d'œil</h3>${weekStrip()}<div class="acts"><button class="btn s" id="frigo">Menu pour le frigo (image)</button></div></div>`;
+    h += `<div class="card"><h3>La semaine en un coup d'œil</h3>${weekStrip()}<div class="acts"><button class="btn s" id="frigo">Menu pour le frigo (image)</button></div><div id="frigo_box"></div></div>`;
     h += renderPicker();
     h += renderOcc();
     LISTS.forEach(l => {
@@ -396,7 +396,7 @@ function renderMenu(){
     h += renderUtiliser();
     h += `<button class="btn wide" id="gen" data-armed="0">Refaire le menu (les plats gardés restent)</button>`;
     h += exportCard('xm_');
-    h += `<div class="card"><h3>Fin de la semaine</h3><p class="small">Retire de la maison ce qui a été utilisé, garde les restes et range les plats dans l'historique pour ne pas les répéter.</p><button class="btn p" id="fin" data-armed="0">Terminer la semaine</button></div>`;
+    if(!(m.start && m.start > isoToday())) h += `<div class="card"><h3>Fin de la semaine</h3><p class="small">Retire de la maison ce qui a été utilisé, garde les restes et range les plats dans l'historique pour ne pas les répéter.</p><button class="btn p" id="fin" data-armed="0">Terminer la semaine</button></div>`;
   }
   el.innerHTML = h;
 }

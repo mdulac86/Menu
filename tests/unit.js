@@ -39,7 +39,7 @@ const serveur = require('./serveur');
   const errs = []; page.on('pageerror', e => errs.push(e.message));
   await page.route(/fonts\.(googleapis|gstatic)/, r => r.abort());
   await page.goto('http://localhost:8765/index.html');
-  const res = await page.evaluate(C => {
+  const res = await page.evaluate(async C => {
     const out = [];
     C.match.forEach(([a, t, exp]) => { const L = [{s: 'Maxi', t, p: '3,99 $'}]; const got = dealCands(a, prep(L)).length > 0; if(got !== exp) out.push(`association « ${a} » ↔ « ${t} » : attendu ${exp ? 'oui' : 'non'}`); });
     /* prix des circulaires */
@@ -94,6 +94,18 @@ const serveur = require('./serveur');
     if(new Date(S.menu.start+'T12:00:00').getDay() !== 0) out.push('le menu ne commence pas le dimanche : ' + S.menu.start);
     if(weekDates()[0] !== S.menu.start) out.push('semaine du menu');
     try{ prepTasks(); whyOf(mlist('items')[0]); const A = altsFor(mlist('items')[0], 'items'); if(A.length > 3) out.push('plus de 3 choix'); }catch(e){ out.push('préparation / choix : ' + e.message); }
+    /* préparer la semaine suivante pendant la semaine en cours : les soupers qui restent sont gardés */
+    { const td = isoToday(), dw = n => new Date(addDays(td, n)+'T12:00:00').getDay();
+      S.setup = true; S.stores = []; S.cp = ''; S.hist = []; S.profil.jours = {plan:dw(0), cmd:dw(1), ram:dw(2), cuis:dw(3)};
+      S.dates.shop = addDays(td, -4); S.menu = DEFAULT().menu; genMenu(); S.menu.start = addDays(td, -3); S.menu.shop = addDays(td, -4); S.dates.shop = '';
+      const L = mlist('items'); L.forEach((x, k) => { x.d = addDays(S.menu.start, k); x.dfix = true; });
+      const tonight = L.find(x => x.d===td).r;
+      await preparerSemaine();
+      if(S.menu.start !== addDays(td, 3)) out.push('nouvelle semaine : ' + S.menu.start);
+      if(!(S.menu.prev||[]).some(x => x.r===tonight && x.d===td)) out.push('le souper de ce soir a disparu');
+      if(!renderToday().includes(esc(tonight))) out.push('« Aujourd\'hui » ne montre pas le souper de ce soir');
+      if(etape() !== 'commander') out.push('étape après préparation : ' + etape());
+      if(S.hist.length !== 1) out.push('semaine précédente non archivée'); }
     S.hist = [{paid:110, est:100},{paid:120, est:100},{paid:105, est:100}]; if(Math.abs(calF() - 1.1) > .001) out.push('calibrage ' + calF()); S.hist = [];
     return out;
   }, CASES);
