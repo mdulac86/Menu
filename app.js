@@ -1394,37 +1394,104 @@ const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d
    (pané, haché, sauce, soupe, jus, chips…) est écarté si l'article ne la nomme pas, sauf dans « X ou Y ».
    L'onglet Articles permet de choisir le bon spécial, d'en retenir un produit, de changer les mots ou d'en exclure. */
 const STOPW = new Set(['de','du','des','la','le','les','a','au','aux','et','en','d','l','pour','avec','sur','un','une','x','g','kg','ml','lb','oz','ou','par','sans','dans','ch','chacun','prix','special']);
-const OPTW = new Set(['frais','fraiche','gros','grosse','moyen','moyenne','petit','petite','nature','regulier','reguliere','classique','original','originale','extra','desosse','peau','maigre','mi','surgele','rape','tranche','entier','entiere','bio','biologique','familial','format','choix','filet','mur','mure','blanc','blanche','jaune','rouge','vert','verte','emince','coupe','piece','tout','usage','lave','bebe','mini','jumbo','paquet','boite','sac','emballage','regime','caisse','pot','bouteille','contenant','barquette','unite','portion','individuel','individuelle','lunch','lunchs','dejeuner','dejeuners','collation','famille','roties','rotie','cuit','cuite','congele']);
-const FORMW = new Set(['hache','roti','steak','cotelette','cote','poitrine','cuisse','haut','pilon','aile','epaule','longe','saucisse','bacon','cube','laniere','pane','croquette','burger','boulette','bouillon','soupe','sauce','assaisonnement','marinade','marine','chip','croustille','biscuit','barre','jus','boisson','yogourt','creme','glace','gateau','muffin','tarte','pizza','lasagne','repas','sandwich','vinaigrette','trempette','tartinade','poudre','sirop','nourriture','chien','chat','compote','puree','broye','pain','hamburger','dog','baguette','bagel','croissant','tortilla','pita','naan','brioche','salade','chocolat','the','cafe','cereale','granola','nouille','sec','seche','bbq','kit','melange','gelee','confiture','dinde','latte','cappuccino','frappuccino','capsule']);
-const sing = w => w.length > 3 && /[sx]$/.test(w) && !/(ss|is|us|ais|ois|oix|as)$/.test(w) ? w.slice(0,-1) : w;
-const toks = (s, keepParen) => { let t = norm(s); if(!keepParen) t = t.replace(/\([^)]*\)/g,' ');
+const OPTW = new Set(['frais','fraiche','gros','grosse','moyen','moyenne','petit','petite','nature','regulier','reguliere','classique','original','originale','extra','desosse','peau','maigre','mi','surgele','rape','tranche','bio','biologique','familial','format','choix','filet','mur','mure','blanc','blanche','jaune','rouge','vert','verte','emince','coupe','piece','tout','usage','lave','bebe','mini','jumbo','paquet','boite','sac','emballage','regime','caisse','pot','bouteille','contenant','barquette','unite','portion','individuel','individuelle','lunch','lunchs','dejeuner','dejeuners','collation','famille','roties','rotie','cuit','cuite','congele']);
+const FORMW = new Set(['hache','roti','steak','cotelette','cote','poitrine','cuisse','haut','pilon','aile','epaule','longe','saucisse','bacon','cube','laniere','pane','croquette','burger','boulette','bouillon','soupe','sauce','assaisonnement','marinade','marine','chip','croustille','biscuit','barre','jus','boisson','yogourt','creme','glace','gateau','muffin','tarte','pizza','lasagne','repas','sandwich','vinaigrette','trempette','tartinade','poudre','sirop','nourriture','chien','chat','compote','puree','broye','pain','hamburger','dog','baguette','bagel','croissant','tortilla','pita','naan','brioche','salade','chocolat','the','cafe','cereale','granola','nouille','sec','seche','bbq','kit','melange','gelee','confiture','dinde','latte','cappuccino','frappuccino','capsule','tartiner','teriyaki','aigre','carbonara','frit','frite','tao','shawarma','plat','simili','stroganov','mein','pastrami','garni','farci','fume','endes','conserve','collation','fouette','vegetale','vegetal','patissiere','evapore','concentre','condense','aromatise','sucre','croquant','enrobe','glacage','fondant','friandise','bonbon','gomme','jujube','guimauve','surprise','kinder']);
+const sing = w => w.length > 3 && /[sx]$/.test(w) && !/(ss|is|us|ais|ois|oix|as)$/.test(w) && !/^(gros|dos|repos|frais|sans|sous)$/.test(w) ? w.slice(0,-1) : w;
+/* corrections avant la normalisation (les accents distinguent pâté et pâtes) */
+const rawFix = s => String(s||'').toLowerCase().replace(/(?<![a-zà-ÿ])p[âa]t[ée]s?(?![a-zà-ÿ])/g, m => /é/.test(m) ? 'terrine' : m).replace(/\ben d[ée]s\b/g, 'endes').replace(/\bpommes? terre\b/g, 'pomme de terre');
+const toks = (s, keepParen) => { let t = norm(rawFix(s)); if(!keepParen) t = t.replace(/\([^)]*\)/g,' ');
   return t.replace(/['’]/g,' ').split(/[^a-z0-9%]+/).filter(w => w && !STOPW.has(w) && !/^\d/.test(w)).map(w => { w = sing(w); return w.length > 4 && w.endsWith('ee') ? w.slice(0,-1) : w; }); };
 const reqToks = name => { const t = toks(name), r = t.filter(w => !OPTW.has(w)); return r.length ? r : t; };
 const spId = s => s.s+'|'+norm(s.t);
 const _PREP = new WeakMap();
+/* ---------- association spécial ↔ article ----------
+   Un nom de circulaire est découpé en « segments » : la partie anglaise (après « | ») et les tailles entre
+   parenthèses sont retirées, puis le nom est coupé aux « ou » (« Carottes ou oignons jaunes » = 2 produits).
+   Un article correspond à un segment seulement si son mot principal y est le produit lui-même :
+   « Oeufs blancs » oui, mais pas « Nouilles aux oeufs », « Casserole d'oeufs » ni « Oeufs Kinder Surprise ». */
+const CONNW = new Set(['de','d','du','des','a','au','aux','avec','en','sur','pour','et','farci','farcie','farcis','barde','bardee','bardes','enrobe','enrobee','fourre','fourree','saveur','style','facon','sauce']);
+const ARTW = new Set(['la','le','les','l','un','une']);
+/* coupes et formats : « Poitrines de poulet », « Sac de carottes » restent du poulet et des carottes */
+const CUTW = new Set(['poitrine','cuisse','haut','pilon','aile','filet','cube','laniere','epaule','longe','cotelette','cote','steak','roti','bavette','surlonge','tranche','morceau','jarret','contre','intérieur','interieur','exterieur','ronde','croupe','palette','flanc','cuisseau','gigot','carre','demi','quartier','tournedo','medaillon','escalope','brochette',
+  'sac','paquet','boite','caisse','emballage','barquette','format','tube','pot','bouteille','contenant','plateau','bloc','rouleau','douzaine','botte','regime','couronne','tete','pied','coeur','bouquet','grappe','casseau','livre','lb','kg','g','ml','l','economique','familial','gros','grosse','petit','petite']);
+/* friandises et produits non alimentaires qui partagent des mots avec les aliments */
+const CANDY_RE = /\b(kinder|surprise|friandises?|bonbons?|cadbury|lindt|ferrero|hershey|reese|smarties|m ?& ?m|mars|twix|kit ?kat|aero|caramilk|coffee crisp|toblerone|guimauves?|reglisses?|halloween|paques|jujubes?|gommes?)\b/;
+const SMOKED = new Set(['bacon','jambon','saucisse','saucisson','kielbasa']);
+const VARIETY = {
+  fromage: {all:new Set(['chevre','feta','brie','camembert','oka','bocconcini','parmesan','mozzarella','mozzarellissima','gouda','suisse','havarti','ricotta','mascarpone','halloumi','cottage','raclette','bleu','emmental','kashkaval','tuma','provolone','gruyere','cheddar','colby','monterey','jack','tresse','grec','paneer','asiago','romano','fontina','swiss','cracker','vache','babybel','ficelle','quark']), def:new Set(['cheddar','mozzarella','mozzarellissima','colby','monterey','jack'])},
+  lait: {all:new Set(['coco','amande','soya','soja','avoine','chocolat','riz','cajou','evapore','condense','beurre','frappe']), def:new Set()},
+  riz: {all:new Set(['lait','croustillant','souffle','galette','cereale']), def:new Set()}
+};
+/* conserves : un article en boîte prend un spécial en boîte, pas le saumon frais */
+const CANNED_RE = /\bboites?\b|conserve|\bcans?\b|canned|endes|\bpelee|\bpolpa\b|mutti|unico|aylmer|rio mare|clover|gold seal|\b(1[0-9]{2}|[2-9][0-9]{2}) ?ml\b/;
+const CANNABLE = new Set(['tomate','saumon','thon','mais','pois','haricot','ananas','peche','poire','champignon','pomme']);
+const NAMEFIX = [[/\bou\s*\/\s*or\b/g, ' ou '], [/\b(\d+)\s*%/g, '$1pc']];
+function nameSegs(t){
+  let n = norm(rawFix(t)).split('|')[0]; NAMEFIX.forEach(([re, r]) => n = n.replace(re, r));
+  n = n.replace(/\([^)]*\)/g, ' ').replace(/\b\d+(?:[.,]\d+)?\s*(?:x|×)\s*\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|lb|oz)\b/g, ' ').replace(/\b\d+(?:[.,]\d+)?(?:\s*[-à\/]\s*\d+(?:[.,]\d+)?)?\s*(?:g|kg|ml|l|lb|oz|un|unites?)\b\.?/g, ' ');
+  return n.split(/\bou\b|\bor\b|;|\s-\s|,(?!\d)/).map(seg => seg.replace(/['’]/g, ' ').split(/[^a-z0-9]+/).filter(Boolean).map(w => { if(/^\d+pc$/.test(w)) return w; w = sing(w); return w.length > 4 && w.endsWith('ee') ? w.slice(0,-1) : w; }).filter(w => w==='et' || !/^\d/.test(w) || /pc$/.test(w))).filter(W => W.length);
+}
+let _PN = null;
+/* noms de produits connus : un tel mot devant l'article (« Poulet au beurre » pour Beurre) change le produit */
+function prodNouns(){
+  if(_PN) return _PN;
+  _PN = new Set([...FORMW].filter(w => !CUTW.has(w)).concat(['casserole','tartelette','chou','brownie','macaroni','beigne','nouille','pappardelle','linguine','spaghetti','penne','raviolis','ravioli','tortellini','gnocchi','roule','pate','pogo','quiche','tourtiere','pate','mousse','pouding','galette','crepe','gaufre','omelette','fondue','pizza','poutine','burrito','taco','nacho','wrap','hummus','houmous','tzatziki','charqui','minicroissant','croquant','poulet','boeuf','porc','dinde','veau','agneau','saumon','thon','crevette','fromage','beurre','lait','oeuf','riz','yogourt','legume','fruit','pomme','tomate','patate','oignon']));
+  try{ catalog().forEach(c => { const r = reqToks(c.n); if(r[0] && r[0].length > 2) _PN.add(r[0]); }); }catch(e){}
+  return _PN;
+}
+/* l'article (mots requis R, mot principal R[0]) est-il le produit de ce segment ? */
+function segFits(R, mine, W){
+  const PN = prodNouns(), head = R[0];
+  if(!R.every(w => W.includes(w))) return false;
+  const i = W.indexOf(head), pre = W.slice(0, i).filter(w => !ARTW.has(w));
+  let j = -1; pre.forEach((w, k) => { if(CONNW.has(w)) j = k; });
+  if(j >= 0){ const bef = pre.slice(0, j); if(!bef.length || !bef.every(w => CUTW.has(w) || CONNW.has(w))) return false; }
+  else if(pre.some(w => PN.has(w) && !mine.has(w) && !CUTW.has(w) && !OPTW.has(w))) return false;
+  /* après le mot principal : « Beurre aux pois chiches », « Riz au lait » sont d'autres produits */
+  const post = W.slice(i + 1);
+  for(let k = 0; k < post.length; k++){
+    if(!CONNW.has(post[k])) continue;
+    let w = post[k+1]; let m = k+1; while(w && ARTW.has(w)){ m++; w = post[m]; }
+    if(w && PN.has(w) && !mine.has(w) && !OPTW.has(w) && !CUTW.has(w)) return false;
+  }
+  /* forme ou préparation qui n'est pas dans le nom de l'article (pané, haché, en sauce…) */
+  if(W.some(w => FORMW.has(w) && !mine.has(w) && !(w==='fume' && SMOKED.has(head)))) return false;
+  /* variétés : « Fromage râpé » prend le cheddar ou la mozzarella, pas le chèvre ni le brie */
+  const V = VARIETY[head];
+  if(V){ const own = [...mine].some(w => V.all.has(w)), other = W.filter(w => V.all.has(w) && !mine.has(w));
+    if(other.length && (own || !other.every(w => V.def.has(w)))) return false; }
+  /* pourcentages : Crème 35 % ne prend pas la crème 10 %, Lait 2 % pas le lait 1 % */
+  const pm = [...mine].filter(w => /pc$/.test(w)), pw = W.filter(w => /pc$/.test(w));
+  if(pm.length && pw.length && !pm.some(w => pw.includes(w))) return false;
+  return true;
+}
 function prep(list){
   let P = _PREP.get(list);
-  if(!P){ P = list.map(s => { const tk = toks(s.t, true); return {s, tk:new Set(tk), f:tk.filter(w => FORMW.has(w)), b:baseOf(s.t), alt:/ ou |\/|,/.test(norm(s.t))}; }); _PREP.set(list, P); }
+  if(!P){ P = list.map(s => { const tk = toks(s.t, true), sg = nameSegs(s.t); return {s, tk:new Set(tk.concat(sg.flat())), segs:sg, f:tk.filter(w => FORMW.has(w)), b:baseOf(rawFix(s.t)), candy:CANDY_RE.test(norm(s.t)), alt:/ ou /.test(norm(s.t))}; }); _PREP.set(list, P); }
   return P;
 }
 /* réglages d'un article (onglet Articles) */
 const artB = name => baseOf(plain(name));
 const art = name => (S.art||{})[artB(name)] || {};
+const pcToks = name => (norm(name).match(/\b\d+\s*%/g) || []).map(x => x.replace(/\s*%/, 'pc'));
 function dealCands(name, P){
   const A = art(name), nb = baseOf(name), alts = [];
-  if(A.kw) A.kw.split(',').forEach(x => { const t = toks(x); if(t.length) alts.push({t, free:false}); });
+  if(A.kw) A.kw.split(',').forEach(x => { const t = toks(x); if(t.length) alts.push({t, free:false, kw:true}); });
   else { const r = reqToks(name); if(r.length) alts.push({t:r, free:false}); }
   (A.learn||[]).forEach(t => { if(t.length) alts.push({t, free:true}); });
   if(!alts.length) return [];
   const no = A.no ? A.no.split(',').flatMap(x => toks(x)) : [];
-  const mine = new Set(toks(name).concat(alts.flatMap(a => a.t)));
+  const mine = new Set(toks(name).concat(alts.flatMap(a => a.t), pcToks(name)));
+  const candyOk = CANDY_RE.test(norm(name)) || /chocolat|bonbon|friandise/.test(norm(name));
+  const canned = /\bboites?\b|conserve/.test(norm(name)) && !/\bboites? (de|d)( |')?(oeufs?|cereales?|biscuits?|craquelins?|the|cafe|mouchoirs?|chocolats?)/.test(norm(name)), ex = new Set(A.ex || []);
   return P.filter(x => {
-    if(no.some(w => x.tk.has(w))) return false;
-    const a = alts.find(a => a.t.every(w => x.tk.has(w))); if(!a) return false;
-    if(a.free) return true;
+    if(no.some(w => x.tk.has(w)) || ex.has(norm(x.s.t))) return false;
+    if(alts.some(a => a.free && a.t.every(w => x.tk.has(w)))) return true;
+    if(x.candy && !candyOk) return false;
+    if(canned ? !CANNED_RE.test(norm(rawFix(x.s.t))) : (CANNABLE.has(reqToks(name)[0]) && /endes|\bpelee|\bpolpa\b|conserve|\bboites?\b/.test(norm(rawFix(x.s.t))))) return false;
     if(COMPOUNDS.some(c => x.b.includes(c) && !nb.includes(c) && nb.split(' ').includes(c.split(' ')[0]))) return false;
-    const conf = x.f.filter(w => !mine.has(w));
-    return !conf.length || (x.alt && x.f.some(w => mine.has(w)));
+    /* mots choisis à la main (Articles) : tous présents dans un même segment, sans autre contrôle de forme */
+    return alts.some(a => !a.free && x.segs.some(W => a.kw ? a.t.every(w => W.includes(w)) : segFits(a.t, mine, W)));
   }).map(x => x.s);
 }
 const matchesFor = (name, list) => dealCands(name, prep(list));
@@ -1531,7 +1598,7 @@ function dealsOf(r){
   const out = [], ing = norm(r.n+' '+r.i.map(g => g[2]).join(' '));
   const fits = s => { const t = norm(s.t); return SHAPE_RE.every(([w,re]) => !re.test(t) || ing.includes(w)); };
   const P = prep(allSpec());
-  for(const mot of (r.m||[])){ const mt = toks(mot); if(!mt.length) continue; const x = P.find(x => mt.every(w => x.tk.has(w)) && fits(x.s)); const hit = x && x.s; if(hit && !out.some(y => y.hit===hit)) out.push({mot,hit}); }
+  for(const mot of (r.m||[])){ if(!toks(mot).length) continue; const hit = dealCands(mot, P).find(fits); if(hit && !out.some(y => y.hit===hit)) out.push({mot,hit}); }
   return out;
 }
 function score(r){
@@ -2634,7 +2701,7 @@ function artBody(x){
   if(!have) h += `<p class="small">Cherche d'abord les spéciaux (carte de la semaine, onglet Menu).</p>`;
   else {
     if(man==='none') h += `<p class="small">Tu as choisi : aucun spécial pour cet article cette semaine.</p>`;
-    h += C.length ? `<div class="list">${C.slice(0,6).map(({s,c}) => { const on = cur && spId(cur)===spId(s); return `<div class="item"><span class="t">${tagHtml(s)}${x.row && isFinite(c) ? `<small>≈ ${money(c)} pour ${esc(qt(row.buy, row.u))}</small>` : ''}</span>${on ? '<span class="small ok">Associé</span>' : `<button class="btn s" data-a="ar_pick" ${bA} data-id="${esc(spId(s))}">Choisir</button>`}</div>`; }).join('')}</div>`
+    h += C.length ? `<div class="list">${C.slice(0,6).map(({s,c}) => { const on = cur && spId(cur)===spId(s); return `<div class="item"><span class="t">${tagHtml(s)}${x.row && isFinite(c) ? `<small>≈ ${money(c)} pour ${esc(qt(row.buy, row.u))}</small>` : ''}</span>${on ? '<span class="small ok">Associé</span>' : `<button class="btn s" data-a="ar_pick" ${bA} data-id="${esc(spId(s))}">Choisir</button>`}<button class="btn s d" data-a="ar_ex" ${bA} data-id="${esc(spId(s))}" title="Ce produit n'est pas cet article : ne plus jamais l'associer">Pas ce produit</button></div>`; }).join('')}</div>`
       : `<p class="small">Aucun spécial trouvé avec les mots « ${esc((A.kw || reqToks(x.n).join(' ')))} ».</p>`;
     h += `<div class="acts">${man!=='none' ? `<button class="btn s" data-a="ar_none" ${bA}>Aucun spécial cette semaine</button>` : ''}${man ? `<button class="btn s" data-a="ar_auto" ${bA}>Revenir à l'automatique</button>` : ''}</div>
       <label class="f">Chercher le bon spécial dans les circulaires<input type="text" class="ar_sq" data-b="${esc(b)}" value="${esc(artSq[b]||'')}" placeholder="Un mot du produit ou de la marque" autocomplete="off"></label>
@@ -2648,6 +2715,7 @@ function artBody(x){
   h += `<p class="sgrp">Trouver ses spéciaux</p>
     <label class="f">Mots recherchés (une virgule sépare deux façons de le nommer)<input type="text" class="ar_in" data-k="kw" ${bA} value="${esc(A.kw||'')}" placeholder="${esc(reqToks(x.n).join(' '))}"></label>
     <label class="f">Mots à exclure<input type="text" class="ar_in" data-k="no" ${bA} value="${esc(A.no||'')}" placeholder="pané, assaisonné, bio…"></label>
+    ${(A.ex||[]).length ? `<p class="small">Produits écartés : ${esc(A.ex.slice(-5).join(' ; '))}${A.ex.length > 5 ? ' …' : ''}. <a href="#" data-a="ar_unex" ${bA}>Les reprendre</a></p>` : ''}
     ${(A.learn||[]).length ? `<p class="small">Produits retenus : ${esc(A.learn.map(t => t.join(' ')).join(' ; '))}. <a href="#" data-a="ar_unlearn" ${bA}>Oublier</a></p>` : ''}
     <p class="sgrp">Classement, format et prix</p>
     <div class="grid2"><label class="f">Rayon<select class="ar_in" data-k="ray" ${bA}><option value="">Automatique</option>${RAYONS.map(r => `<option value="${r}" ${A.ray===r?'selected':''}>${esc(cap(r))}</option>`).join('')}</select></label>
@@ -2816,7 +2884,7 @@ function applyTheme(){
 }
 function render(){
   applyTheme();
-  _AR = _ND = _BL = _AS = null; _DF = new Map(); _ASA = null; _ECO = new Map(); _CMP = new Map();
+  _AR = _ND = _BL = _AS = _PN = null; _DF = new Map(); _ASA = null; _ECO = new Map(); _CMP = new Map();
   if(syncMeals()) save();
   ({menu:renderMenu, epicerie:renderEpicerie, articles:renderArticles, maison:renderMaison, recettes:renderRecettes, reglages:renderReglages, aide:renderAide})[tab]();
   ['menu','epicerie','articles','maison','recettes','reglages','aide'].forEach(t => $('#tab-'+t).hidden = t!==tab);
@@ -2982,6 +3050,8 @@ document.addEventListener('click', e => {
   if(a==='stx_rm'){ e.preventDefault(); const s = t.dataset.s; S.storesx = (S.storesx||[]).filter(x => x!==s); S.stores = S.stores.filter(x => x!==s); save(); render(); return; }
   if(a==='ar_go'){ e.preventDefault(); const b = t.dataset.b; tab = 'articles'; artF = {q:'', f:'week'}; openPan.add('art|'+b); render(); const d = document.querySelector(`details.art[data-b="${CSS.escape(b)}"]`); if(d) d.scrollIntoView({block:'start'}); return; }
   if(a==='ar_f'){ artF.f = t.dataset.v; renderArticles(); return; }
+  if(a==='ar_unex'){ const b = t.dataset.b, A = (S.art||{})[b]; if(A) delete A.ex; openPan.add('art|'+b); save(); render(); return; }
+  if(a==='ar_ex'){ const b = t.dataset.b, s = allSpec().find(x => spId(x)===t.dataset.id); if(s){ const A = (S.art||{})[b] || {}; artSet(b, {n:t.dataset.n, ex:[...new Set((A.ex||[]).concat(norm(s.t)))].slice(-60)}); if(S.menu.dsel && S.menu.dsel[b]===t.dataset.id) delete S.menu.dsel[b]; } openPan.add('art|'+b); save(); render(); return; }
   if(a==='ar_pick' || a==='ar_none' || a==='ar_auto' || a==='ar_spick'){ const b = t.dataset.b; S.menu.dsel = S.menu.dsel || {};
     if(a==='ar_none') S.menu.dsel[b] = 'none'; else if(a==='ar_auto') delete S.menu.dsel[b];
     else { S.menu.dsel[b] = t.dataset.id;
