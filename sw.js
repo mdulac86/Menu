@@ -1,3 +1,4 @@
+/* © 2026 mdulac86. Tous droits réservés. Reproduction, modification et publication interdites sans permission (voir LICENSE). */
 /* Service worker : réseau d'abord (toujours la dernière version en ligne), cache en secours (hors ligne). */
 importScripts('version.js');
 const PRE = self.APP_TEST ? 'menu-test-' : 'menu-semaine-', C = PRE + self.APP_VERSION;

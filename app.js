@@ -1,3 +1,4 @@
+/* © 2026 mdulac86. Tous droits réservés. Reproduction, modification et publication interdites sans permission (voir LICENSE). */
 /* Menu de la semaine — Utilitaires, état des données, sauvegarde et protection.
    Les fichiers de js/ partagent les mêmes variables globales; ils sont chargés dans l'ordre de index.html. */
 /* ---------- utilitaires ---------- */
@@ -370,6 +371,43 @@ function renderUtiliser(){
    + L.map(x => { const id = ideesPour(x.o); return `<div class="item" style="flex-wrap:wrap"><span class="t"><b>${esc(x.o.name)}</b><small>${fq(x.o.q,x.o.u)} en stock</small></span><button class="btn s ${x.eat?'p':''}" data-a="eat" data-k="${esc(x.k)}">${x.eat?'Au menu ✓':'Je le mange'}</button>${id.length?`<div class="chips" style="width:100%">${id.map(r => `<button class="btn s" data-a="addrec" data-r="${esc(r.n)}">+ ${esc(r.n)}</button>`).join('')}</div>`:''}</div>`; }).join('') + `</div>`;
 }
 
+/* ---------- iPhone ou Android : l'aide, la sauvegarde et l'installation en dépendent ---------- */
+const UA = navigator.userAgent || '';
+const ANDROID = /Android/i.test(UA);
+const IOS = !ANDROID && (/iPhone|iPad|iPod/i.test(UA) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints > 1));
+const FICH = IOS ? 'Fichiers' : 'Téléchargements';            /* où va une copie enregistrée */
+const NAVI = IOS ? 'Safari' : ANDROID ? 'Chrome' : 'le navigateur';
+const isInstalled = () => { try{ return navigator.standalone===true || matchMedia('(display-mode: standalone)').matches; }catch(e){ return false; } };
+/* Android (Chrome) : l'invitation à installer est gardée pour un bouton « Installer l'application » */
+let instEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); instEvt = e; try{ render(); }catch(_){} });
+window.addEventListener('appinstalled', () => { instEvt = null; try{ render(); }catch(_){} });
+async function installApp(){
+  if(!instEvt) return; const ev = instEvt;
+  try{ ev.prompt(); const c = await ev.userChoice; if(c && c.outcome==='accepted') instEvt = null; }catch(e){ instEvt = null; }
+  render();
+}
+const instBtn = () => instEvt && !isInstalled() ? `<button class="btn s p" data-a="inst_go">Installer l'application</button>` : '';
+/* bouton Retour d'Android (et glisser vers la gauche) : ferme Cuisiner, quitte le mode magasin, revient à Ma semaine.
+   Seulement ensuite, il quitte l'application. Une seule entrée d'historique, sans changer l'adresse. */
+const navDeep = () => !!cook || storeMode || tab!=='semaine';
+let navBack = false;
+function navSync(){
+  try{
+    const g = !!(history.state && history.state.mds);
+    if(navDeep() && !g) history.pushState({mds:1}, '');
+    else if(!navDeep() && g && !navBack){ navBack = true; history.back(); setTimeout(() => { navBack = false; }, 800); }
+  }catch(e){}
+}
+try{ history.scrollRestoration = 'manual'; }catch(e){}
+window.addEventListener('popstate', () => {
+  if(navBack){ navBack = false; navSync(); return; }
+  if(cook){ cook = null; wakeOff(); renderCook(); }
+  else if(storeMode){ storeMode = false; lockScreen(false); render(); window.scrollTo(0, 0); }
+  else if(tab!=='semaine'){ tab = 'semaine'; render(); window.scrollTo(0, 0); }
+  navSync();
+});
+
 /* ---------- mode Cuisiner : ingrédients et étapes à cocher ---------- */
 let cook = null, wl = null;
 const CK = PFX + 'cuisine';   /* cases cochées, à part des données (pas de sauvegarde pour ça) */
@@ -444,9 +482,9 @@ function openCook(o){
   if(o.r) cook = {r:o.r, v:o.v||0, pt:o.pt||0, ms:!!o.ms, cm:o.cm||'', key:'r|'+o.r+(o.pt ? '|'+o.pt : '')};
   else { const it = mlist(o.l)[o.i]; if(!it) return; cook = {l:o.l, i:o.i, key:o.l+'|'+it.r+'|'+(it.d||S.menu.date||'')}; }
   renderCook(); const el = $('#cook'); if(el) el.scrollTop = 0;
-  wakeOn();
+  wakeOn(); navSync();
 }
-function closeCook(){ cook = null; wakeOff(); renderCook(); }
+function closeCook(){ cook = null; wakeOff(); renderCook(); navSync(); }
 function ckProgress(){
   const el = $('#cook'); if(!el) return; const all = el.querySelectorAll('input[data-ck]'), done = el.querySelectorAll('input[data-ck]:checked').length;
   const pg = $('#ck_prog'), br = $('#ck_bar'); if(pg) pg.textContent = `${done} sur ${all.length} cochés`; if(br) br.style.width = (all.length ? Math.round(done/all.length*100) : 0)+'%';
@@ -1195,7 +1233,7 @@ function rowEco(r){
 }
 function listTotals(rows){ let cost = 0, save = 0; rows.forEach(r => { const e = rowEco(r); cost += e.cost; save += e.save; }); return {cost: cost * calF(), save, raw: cost}; }
 /* toutes les circulaires de tes épiceries, même celles où tu ne vas pas cette semaine (pour comparer) */
-const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d:0})).concat(S.auto ? S.auto.items.filter(i => { const d = shopISO(); return isFood(i.t) && (S.auto.anyDate || ((!i.vt || i.vt >= d) && (!i.vf || i.vf <= d))) && (!S.stores.length || S.stores.includes(i.s)); }).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0, per:i.per||''})) : []));
+const allSpecAll = () => _ASA || (_ASA = S.spec.map(s => ({s:s.s, t:s.t, p:'', d:0})).concat(S.auto ? S.auto.items.filter(i => { const d = shopISO(); return isFood(i.t) && (S.auto.anyDate || ((!i.vt || i.vt >= d) && (!i.vf || i.vf <= d))) && (!S.stores.length || S.stores.includes(i.s)); }).map(i => ({s:i.s, t:nice(i.t), p:i.p||'', d:i.d||0, per:i.per||'', o:i.o||''})) : []));
 /* ---------- association d'un article à un spécial ----------
    On compare des mots entiers (« lait » ne prend pas « laitue », « oeuf » ne prend pas « boeuf »).
    Tous les mots importants de l'article doivent être dans le spécial. Un spécial qui annonce une autre forme du produit
@@ -1555,6 +1593,119 @@ function ajuster(){
 }
 
 
+/* ---------- code de la famille : les spéciaux et les prix du robot sont chiffrés ----------
+   Le robot (GitHub) lit les circulaires une fois par semaine et chiffre le résultat avec le code de la famille
+   (secret MENU_CLE). Le téléphone le déchiffre avec le même code : AES-GCM, clé tirée du code par PBKDF2-SHA256.
+   Le code n'est écrit nulle part dans le code de l'application; il reste sur ce téléphone, hors des sauvegardes. */
+const CODE_KEY = PFX + 'code', SP_ENC = 'speciaux.enc.json', PE_ENC = 'prix-epiceries.enc.json';
+const familleCode = () => { try{ return localStorage.getItem(CODE_KEY) || ''; }catch(e){ return ''; } };
+const b64u8 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
+/* le code tel qu'on le dit : sans majuscules, sans accents, espaces simples (comme robot/chiffre.mjs) */
+const codeNorm = c => String(c || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const _CLES = new Map();
+async function cleDe(code, salt, it){
+  const k = salt + '|' + it + '|' + code; if(_CLES.has(k)) return _CLES.get(k);
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(codeNorm(code)), 'PBKDF2', false, ['deriveKey']);
+  const cle = await crypto.subtle.deriveKey({name:'PBKDF2', salt:b64u8(salt), iterations:it, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+  _CLES.set(k, cle); return cle;
+}
+async function dechiffrer(env, code){
+  if(!env || env.v !== 1 || !env.ct || !env.salt || !env.iv || !(env.it > 0)) throw Object.assign(new Error('fichier illisible'), {code:'format'});
+  if(!(self.crypto && crypto.subtle)) throw Object.assign(new Error('navigateur trop ancien'), {code:'vieux'});
+  let data;
+  try{ data = new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM', iv:b64u8(env.iv)}, await cleDe(code, env.salt, env.it), b64u8(env.ct))); }
+  catch(e){ throw Object.assign(new Error('code incorrect'), {code:'cle'}); }
+  if(env.z === 'gzip') data = await gunzip(data);
+  return JSON.parse(new TextDecoder().decode(data));
+}
+/* un fichier du robot : null s'il n'existe pas (robot pas encore lancé) */
+async function lireChiffre(url, code){
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 15000);
+  let r; try{ r = await fetch(url, {cache:'no-store', signal:ctl.signal}); } finally { clearTimeout(tm); }
+  if(r.status === 404) return null; if(!r.ok) throw new Error('HTTP ' + r.status);
+  return dechiffrer(await r.json(), code);
+}
+async function gunzip(u8){
+  if(typeof DecompressionStream === 'function'){ try{ return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()); }catch(e){} }
+  return inflateGzip(u8);
+}
+/* gzip pour les vieux téléphones (iOS 15 et moins n'ont pas DecompressionStream) : inflate minimal, d'après tinf */
+function inflateGzip(d){
+  if(d[0] !== 31 || d[1] !== 139 || d[2] !== 8) throw new Error('gzip');
+  const fl = d[3]; let p = 10;
+  if(fl & 4) p += 2 + (d[10] | d[11] << 8);
+  if(fl & 8) while(d[p++]);
+  if(fl & 16) while(d[p++]);
+  if(fl & 2) p += 2;
+  return inflateRaw(d.subarray(p));
+}
+function inflateRaw(src){
+  let out = new Uint8Array(Math.max(1024, src.length * 6)), op = 0, bp = 0, bb = 0, bn = 0;
+  const need = n => { if(op + n > out.length){ const o = new Uint8Array(Math.max(out.length * 2, op + n)); o.set(out); out = o; } };
+  const bits = n => { while(bn < n){ if(bp >= src.length) throw new Error('inflate : fin'); bb |= src[bp++] << bn; bn += 8; } const v = bb & ((1 << n) - 1); bb >>>= n; bn -= n; return v; };
+  const table = (L, n) => { const c = new Uint16Array(16), sy = new Uint16Array(n), off = new Uint16Array(16);
+    for(let i = 0; i < n; i++) c[L[i]]++; c[0] = 0;
+    for(let i = 0, t = 0; i < 16; i++){ off[i] = t; t += c[i]; }
+    for(let i = 0; i < n; i++) if(L[i]) sy[off[L[i]]++] = i;
+    return {c, sy}; };
+  const sym = t => { let sum = 0, cur = 0, len = 0;
+    do{ cur = 2 * cur + bits(1); if(++len > 15) throw new Error('inflate : code'); sum += t.c[len]; cur -= t.c[len]; } while(cur >= 0);
+    return t.sy[sum + cur]; };
+  const LB = [3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258], LE = [0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+  const DB = [1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577], DE = [0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+  let fixe = null;
+  for(let fin = 0; !fin;){
+    fin = bits(1); const type = bits(2);
+    if(type === 0){ bb = 0; bn = 0; const n = src[bp] | src[bp+1] << 8; bp += 4; if(bp + n > src.length) throw new Error('inflate : bloc'); need(n); out.set(src.subarray(bp, bp + n), op); op += n; bp += n; continue; }
+    let lt, dt;
+    if(type === 1){
+      if(!fixe){ const L = new Uint8Array(288); L.fill(8, 0, 144); L.fill(9, 144, 256); L.fill(7, 256, 280); L.fill(8, 280, 288); fixe = [table(L, 288), table(new Uint8Array(30).fill(5), 30)]; }
+      [lt, dt] = fixe;
+    } else if(type === 2){
+      const hl = bits(5) + 257, hd = bits(5) + 1, hc = bits(4) + 4, O = [16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15], cl = new Uint8Array(19);
+      for(let i = 0; i < hc; i++) cl[O[i]] = bits(3);
+      const ct = table(cl, 19), L = new Uint8Array(hl + hd);
+      for(let i = 0; i < hl + hd;){
+        const v = sym(ct);
+        if(v < 16) L[i++] = v;
+        else { let r, x = 0; if(v === 16){ if(!i) throw new Error('inflate : répétition'); x = L[i-1]; r = 3 + bits(2); } else if(v === 17) r = 3 + bits(3); else r = 11 + bits(7);
+          if(i + r > hl + hd) throw new Error('inflate : longueurs'); L.fill(x, i, i + r); i += r; }
+      }
+      lt = table(L.subarray(0, hl), hl); dt = table(L.subarray(hl), hd);
+    } else throw new Error('inflate : bloc inconnu');
+    for(;;){
+      const v = sym(lt);
+      if(v < 256){ need(1); out[op++] = v; continue; }
+      if(v === 256) break;
+      const li = v - 257; if(li >= 29) throw new Error('inflate : longueur');
+      const len = LB[li] + bits(LE[li]), di = sym(dt); if(di >= 30) throw new Error('inflate : distance');
+      const dist = DB[di] + bits(DE[di]); if(dist > op) throw new Error('inflate : distance');
+      need(len); for(let k = 0; k < len; k++, op++) out[op] = out[op - dist];
+    }
+  }
+  return out.subarray(0, op);
+}
+/* spéciaux du robot (gardés 10 min en mémoire) et la zone la plus proche du code postal */
+let _SPR = null;
+async function robotSpeciaux(code){
+  if(_SPR && _SPR.code === code && Date.now() - _SPR.t < 6e5) return _SPR.d;
+  const d = await lireChiffre(SP_ENC, code); _SPR = {d, code, t: Date.now()}; return d;
+}
+const zoneDe = (d, cp) => { const Z = d && Array.isArray(d.zones) ? d.zones.filter(z => z && Array.isArray(z.flyers) && isObj(z.items)) : []; if(!Z.length) return null;
+  const c = String(cp||'').replace(/\s/g,'').toUpperCase();
+  return Z.find(z => z.cp === c) || (c ? Z.find(z => z.cp && z.cp.slice(0,3) === c.slice(0,3)) : null) || Z.find(z => z.cp && c && z.cp[0] === c[0]) || Z[0]; };
+/* prix régulier d'un article de circulaire : indiqué (« rég. 5,99 $ », « économisez 2 $ »), sinon déduit du rabais en % */
+function regOf(it, pr){
+  const num = v => { const m = String(v ?? '').replace(',', '.').match(/\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
+  if(!(pr > 0)) return 0;
+  let r = num(it.original_price);
+  const txt = norm([it.sale_story, it.pre_price_text, it.post_price_text, it.price_text].filter(Boolean).join(' '));
+  if(!(r > pr)){ const m = txt.match(/\b(?:prix\s+)?reg(?:ulier)?\b\.?\s*:?\s*(\d+(?:[.,]\d{1,2})?)\s*\$/); if(m) r = num(m[1]); }
+  if(!(r > pr)){ const m = txt.match(/\b(?:economisez|epargnez|save)\s+(\d+(?:[.,]\d{1,2})?)\s*\$/); if(m) r = pr + num(m[1]); }
+  if(!(r > pr)){ const d = +it.discount; if(d > 0 && d < 95) r = pr / (1 - d/100); }
+  return r > pr * 1.01 && r < pr * 4 ? Math.round(r * 100) / 100 : 0;
+}
+
 /* ---------- recherche des spéciaux (Flipp) ---------- */
 const FLIPP = 'https://backflipp.wishabi.com/flipp';
 /* Épiceries du Québec, regroupées. Le nom affiché est reconnu dans le nom du marchand des circulaires. */
@@ -1578,7 +1729,9 @@ async function trouverEpiceries(){
   if(!cpOk(cp)){ say(msg, 'Code postal invalide (exemple : G6V 6Z3).'); return; }
   say(msg, 'Recherche des épiceries près de chez toi…');
   try{
-    const fl = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`));
+    let fl = null; const code = familleCode();
+    if(code){ try{ const z = zoneDe(await robotSpeciaux(code), cp); if(z) fl = z.flyers; }catch(e){} }
+    if(!fl) fl = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`));
     const names = new Map();
     fl.forEach(f => {
       const c = norm([].concat(f.categories||[]).join(' ')+' '+(f.categories_csv||''));
@@ -1633,15 +1786,24 @@ async function chercherSpeciaux(ignorerDate){
   /* le bouton et le message sont relus à chaque étape : l'écran peut être redessiné pendant la recherche */
   const say = t => { const st = $('#sp_status'); if(st) st.textContent = t; };
   if(spBusy) return;
-  const cp = (S.cp||'').replace(/\s/g,'').toUpperCase();
+  const cp = (S.cp||'').replace(/\s/g,'').toUpperCase(), code = familleCode();
+  if(!code){ say('Les spéciaux sont réservés à la famille et aux amis : entre le code de la famille dans Profil → Épiceries.'); return; }
   if(!S.stores.length){ say('Choisis d\'abord tes épiceries dans Profil.'); return; }
-  if(!cp){ say('Entre d\'abord ton code postal dans Profil.'); return; }
-  if(!cpOk(cp)){ say('Code postal invalide dans Profil (exemple : G6V 6Z3).'); return; }
   spBusy = true; { const b = $('#sp_go'); if(b) b.disabled = true; }
   const shop = shopISO();
   try{
-    say('Recherche des circulaires…');
-    const all = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`)).filter(f => { const s = marchand(f.merchant); return s && S.stores.includes(s); });
+    say('Lecture des spéciaux de la semaine…');
+    /* d'abord le fichier du robot; Flipp seulement s'il manque ou ne couvre pas le jour de l'épicerie */
+    const mine = f => { const s = marchand(f.merchant); return s && S.stores.includes(s); };
+    let src = null, all = [];
+    try{ const z = zoneDe(await robotSpeciaux(code), cp); if(z){ src = {robot:true, items: async f => z.items[f.id] || []}; all = z.flyers.filter(mine); } }
+    catch(e){ if(e.code === 'cle'){ say('Le code de la famille ne correspond plus aux spéciaux du robot : vérifie-le dans Profil → Épiceries.'); return; } }
+    if(!src || !all.some(f => covers(f, shop))){
+      if(cpOk(cp)){ try{ const fl = flyersOf(await jget(`${FLIPP}/flyers?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`)).filter(mine);
+          if(fl.length && (!src || fl.some(f => covers(f, shop)))){ src = {robot:false, items: async f => itemsOf(await jget(`${FLIPP}/flyers/${f.id}?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`))}; all = fl; } }
+        catch(e){ if(!src) throw e; } }
+      else if(!src){ say(cp ? 'Code postal invalide dans Profil (exemple : G6V 6Z3).' : 'Entre d\'abord ton code postal dans Profil.'); return; }
+    }
     if(!all.length){ say("Aucune circulaire de tes épiceries trouvée pour ce code postal."); return; }
     let flyers = all.filter(f => covers(f, shop));
     let note = '', anyDate = false;
@@ -1666,15 +1828,16 @@ async function chercherSpeciaux(ignorerDate){
       flyers = first.concat(flyers.filter(f => !first.includes(f))).slice(0, 24); }
     const mots = motsCles(); const items = []; let ok = 0, fail = 0;
     for(let k = 0; k < flyers.length; k++){
-      const f = flyers[k]; say(`Lecture de la circulaire ${k+1} / ${flyers.length} : ${marchand(f.merchant)}…`);
+      const f = flyers[k]; if(!src.robot) say(`Lecture de la circulaire ${k+1} / ${flyers.length} : ${marchand(f.merchant)}…`);
       try{
-        itemsOf(await jget(`${FLIPP}/flyers/${f.id}?locale=fr-ca&postal_code=${encodeURIComponent(cp)}`)).forEach(it => {
+        (await src.items(f)).forEach(it => {
           const nn = norm(it.name||''); if(!nn || !mots.some(w => nn.includes(w)) || !isFood(nn)) return;
           const pr = parseFloat(String(it.price ?? it.current_price ?? '').replace(',', '.'));
           /* produits vendus au poids (Maxi, Provigo… : code « _KG ») : le prix affiché est à la livre */
           const per = /_KG$/i.test(String(it.print_id || it.sku || '')) ? 'lb' : /\/\s*kg\b/i.test(String(it.price_text||'')) ? 'kg' : /\/\s*lb\b/i.test(String(it.price_text||'')) ? 'lb' : '';
           const d = +it.discount;
-          items.push({s:marchand(f.merchant), t:String(it.name).slice(0, 200), p:isFinite(pr)&&pr>0 ? pr.toFixed(2).replace('.',',')+' $' : '', per, vf:dayOf(it.valid_from||f.valid_from), vt:dayOf(it.valid_to||f.valid_to), d: d > 0 && d < 95 ? Math.round(d) : 0});
+          const rg = regOf(it, pr);
+          items.push({s:marchand(f.merchant), t:String(it.name).slice(0, 200), p:isFinite(pr)&&pr>0 ? pr.toFixed(2).replace('.',',')+' $' : '', per, vf:dayOf(it.valid_from||f.valid_from), vt:dayOf(it.valid_to||f.valid_to), d: d > 0 && d < 95 ? Math.round(d) : 0, o: rg ? rg.toFixed(2).replace('.',',')+' $' : ''});
         });
         ok++;
       }catch(e){ fail++; if(e.net && fail >= 3 && !ok){ throw e; } }
@@ -1683,7 +1846,7 @@ async function chercherSpeciaux(ignorerDate){
     const list = [...uniq.values()].sort((a,b) => (b.d||0)-(a.d||0)).slice(0,600);
     /* rien de lisible : on garde les spéciaux déjà trouvés plutôt que de les effacer */
     if(!ok || !list.length){ say((S.auto && S.auto.items.length ? 'Aucun spécial lisible cette fois-ci : les spéciaux trouvés avant sont gardés. ' : 'Les circulaires ont été trouvées, mais leur contenu est illisible. ') + 'Réessaie plus tard ou utilise le collage manuel ci-dessous.'); return; }
-    S.auto = {items:list, maj:isoToday(), shop, anyDate, src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
+    S.auto = {items:list, maj:isoToday(), shop, anyDate, robot:src.robot, src:[...new Set(flyers.map(f => marchand(f.merchant)))].join(', ')};
     try{ noterPrix(); }catch(e){}
     spBusy = false; save(); render();
     say(`${list.length} spéciaux retenus dans ${ok} circulaire${ok>1?'s':''} (${S.auto.src}) pour le ${fmtDate(shop)}${note}.` + (fail ? ` ${fail} circulaire${fail>1?'s':''} illisible${fail>1?'s':''} : relance plus tard pour les avoir.` : '') + ((S.skip||[]).some(s => S.stores.includes(s)) ? ` Cette semaine : ${autoItems().length} chez ${goStores().join(', ') || 'aucune épicerie'}.` : ''));
@@ -1735,10 +1898,15 @@ async function peFetch(force){
   if(peBusy || (!force && PE && (S.pe||{}).f === isoToday())) return false;
   peBusy = true;
   try{
-    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null; const tm = ctl ? setTimeout(() => ctl.abort(), 10000) : 0;
-    const r = await fetch(PE_URL, {cache:'no-store', signal: ctl ? ctl.signal : undefined}); clearTimeout(tm);
-    if(!r.ok) throw new Error('HTTP ' + r.status);
-    const o = await r.json(); if(!peOk(o)) throw new Error('relevé illisible');
+    /* le relevé chiffré (code de la famille), sinon l'ancien fichier en clair tant que le robot n'a pas le code */
+    let o = null; const code = familleCode();
+    if(code){ try{ o = await lireChiffre(PE_ENC, code); }catch(e){ if(e.code !== 'cle') throw e; } }
+    if(!o){
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null; const tm = ctl ? setTimeout(() => ctl.abort(), 10000) : 0;
+      const r = await fetch(PE_URL, {cache:'no-store', signal: ctl ? ctl.signal : undefined}); clearTimeout(tm);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      o = await r.json(); }
+    if(!peOk(o)) throw new Error('relevé illisible');
     PE = o; try{ localStorage.setItem(PE_KEY, JSON.stringify(o)); }catch(e){}
     S.pe = Object.assign({}, S.pe, {f: isoToday()}); peSel(); resetCaches(); return true;
   } finally { peBusy = false; }
@@ -1816,7 +1984,18 @@ function ecart(store){
   const D = peData(store), M = peData('Maxi');
   if(D && M){ const R = Object.keys(D).map(k => { const a = peUnit(D[k]), b = peUnit(M[k]); return a && b ? a/b : 0; }).filter(x => x > 0.4 && x < 2.5).sort((a,b) => a-b);
     if(R.length >= 15) v = Math.max(0.85, Math.min(1.4, R[Math.floor(R.length/2)])); }
+  else if(!D){ const R = ecartCirc(store);   /* sans relevé : les prix réguliers de ses circulaires, mêlés à la valeur de départ */
+    if(R.length >= 4){ const med = R[Math.floor(R.length/2)]; v = Math.max(0.85, Math.min(1.4, (R.length * med + 6 * v) / (R.length + 6))); } }
   return (_PEX[store] = Math.round(v*1000)/1000);
+}
+/* prix régulier de la circulaire ÷ référence Maxi, pour les articles de la liste en spécial dans cette épicerie */
+function ecartCirc(store){
+  let rows = []; try{ rows = buyList().rows; }catch(e){ return []; }
+  const R = [];
+  rows.forEach(r => { const d = dealsAll(r.name).find(s => s.s === store && s.o); if(!d) return;
+    const rc = dealCost(Object.assign({}, d, {p:d.o}), r), lm = peLine(r, 'Maxi'), ref = lm && lm.reg != null ? lm.reg : estBase(r);
+    if(rc > 0 && ref > 0){ const x = rc / ref; if(x > 0.4 && x < 2.5) R.push(x); } });
+  return R.sort((a,b) => a-b);
 }
 /* spéciaux des circulaires (toutes tes épiceries) qui correspondent à un article */
 function dealsAll(name){
@@ -1839,6 +2018,12 @@ function costAt(r, store){
   dealsAll(r.name).filter(s => s.s === store).forEach(d => { const dc = dealCost(d, r);
     /* moins de 40 % du prix habituel sans rabais annoncé : probablement un prix à la livre ou un autre format */
     if(dc != null && dc < cost - 0.005 && (d.d > 0 || dc <= reg*1.15 || mine) && (dc >= reg*0.4 || d.d >= 55)){ cost = dc; deal = d; rsp = null; } });
+  /* épicerie sans relevé : sa circulaire donne son vrai prix (rabais et prix régulier), mieux qu'une estimation */
+  if(src === 'est' || src === 'marque'){
+    const d2 = deal && deal.o ? deal : dealsAll(r.name).find(s => s.s === store && s.o);
+    if(d2){ const rc = dealCost(Object.assign({}, d2, {p:d2.o}), r), dc = dealCost(d2, r);
+      if(rc != null && dc != null && rc > dc && rc > reg * 0.4 && rc < reg * 2.5){ reg = rc; src = 'circ'; if(!deal || dc < cost - 0.005){ cost = dc; deal = d2; rsp = null; } } }
+  }
   const o = {cost, reg: Math.max(reg, cost), src, deal, rsp};
   _CAT_S.set(key, o); return o;
 }
@@ -2036,13 +2221,14 @@ function renderWeek(){
   const go = goStores();
   const status = S.stores.length && !go.length ? 'Coche au moins une épicerie pour voir ses spéciaux.'
     : S.auto ? `${items.length} spécia${items.length>1?'ux':'l'} valide${items.length>1?'s':''} ce jour-là, dans ${esc(go.join(', ') || S.auto.src || 'les circulaires')}.`
-    : S.stores.length ? 'Les spéciaux de tes épiceries ne sont pas encore cherchés.' : 'Choisis tes épiceries dans Profil pour chercher les spéciaux.';
+    : !familleCode() ? 'Sans le code de la famille, le menu se fait sans les spéciaux.' : S.stores.length ? 'Les spéciaux de tes épiceries ne sont pas encore cherchés.' : 'Choisis tes épiceries dans Profil pour chercher les spéciaux.';
   return `<div class="card week">
     <h2>Épicerie du ${esc(fmtDate(shop))}</h2>
     <div class="grid4c">${countSelects('')}</div>
     <p class="small">Chaque souper donne ${totalPortions()} portions : ${S.p.souper} au souper et ${S.p.restes} pour le dîner du lendemain.${S.p.nDin && S.p.restes > 0 && S.p.dinRestes!==false ? ' Les dîners mangent d\'abord ces restes.' : ''}</p>
     ${S.stores.length > 1 ? storeWeek(m) : ''}
-    <div class="acts"><button class="btn" id="sp_go" ${spBusy ? 'disabled' : ''}>${spBusy ? 'Recherche en cours…' : 'Chercher les spéciaux'}</button>${m.date ? '<button class="btn" id="gen" data-armed="0">Refaire le menu</button>' : '<button class="btn p" id="gen">Créer le menu</button>'}</div>
+    ${familleCode() ? '' : `<p class="note">Les spéciaux sont réservés à la famille et aux amis. <button class="btn s" data-a="view" data-v="epiceries">Entrer le code de la famille</button></p>`}
+    <div class="acts">${familleCode() ? `<button class="btn" id="sp_go" ${spBusy ? 'disabled' : ''}>${spBusy ? 'Recherche en cours…' : 'Chercher les spéciaux'}</button>` : ''}${m.date ? '<button class="btn" id="gen" data-armed="0">Refaire le menu</button>' : '<button class="btn p" id="gen">Créer le menu</button>'}</div>
     <p class="small" id="sp_status">${status}</p>
     ${items.length?`<details class="panel"><summary>Voir les spéciaux <span class="rm">${items.length}</span></summary><div class="list">${items.slice(0,150).map(i=>`<div class="item"><span class="t">${tagHtml({t:nice(i.t), p:i.p||'', s:i.s})}${i.vt?`<small>Jusqu'au ${esc(fmtDate(i.vt))}</small>`:''}</span></div>`).join('')}</div></details>`:''}
     <details class="panel"><summary>Changer les dates</summary>
@@ -2446,12 +2632,12 @@ function renderMenu(){
   const el = $('#tab-menu'); const m = S.menu; let h = '';
   if(m.date) assignDays(false);
   if(!S.setup){ el.innerHTML = `<div class="card call"><h3>Bienvenue</h3><p class="small">Commence par décrire ta famille et ton horaire : ça prend une minute.</p><div class="acts"><button class="btn p" data-a="view" data-v="semaine">Commencer</button></div></div>`; return; }
-  else if(!S.help) h += `<div class="card call"><h3>Première fois ?</h3><p class="small">L'aide explique comment installer l'application sur l'iPhone, préparer la première semaine et copier la liste.</p><div class="acts"><button class="btn s p" id="help_open">Lire l'aide</button><button class="btn s" id="help_hide">Plus tard</button></div></div>`;
+  else if(!S.help) h += `<div class="card call"><h3>Première fois ?</h3><p class="small">L'aide explique comment installer l'application sur ${IOS ? "l'iPhone" : 'ton téléphone'}, préparer la première semaine et copier la liste.</p><div class="acts">${instBtn()}<button class="btn s p" id="help_open">Lire l'aide</button><button class="btn s" id="help_hide">Plus tard</button></div></div>`;
   h += `<p class="note" id="flash" ${S.flash ? '' : 'hidden'}>${esc(S.flash||'')}</p>`; S.flash = '';
   if(bkBar && S.setup && S.p.bkOpen!==false && (S.bkDirty || !S.lastExport))
     h += `<div class="bkbar"><span><b>Sauvegarde</b> Des changements depuis ta dernière copie${S.lastExport ? ' ('+esc(dShort(S.lastExport))+')' : ''}.</span><button class="btn s p" id="bk_file">Sauvegarder</button><button class="ib_x" data-a="bk_hide" aria-label="Pas maintenant">×</button></div>`;
   { const n = Object.keys(S.stock||{}).length + (S.custom||[]).length*3 + Object.keys(S.prices||{}).length, old = !S.lastExport || addDays(S.lastExport, 30) < isoToday();
-    if(S.p.bkOpen===false && S.setup && n >= 10 && old && !(S.bkSnooze && S.bkSnooze > isoToday())) h += `<div class="card"><h3>Protège tes données</h3><p class="small">${S.lastExport ? 'Ta dernière copie dans Fichiers date de plus d\'un mois.' : 'Ton garde-manger et tes recettes ne sont gardés que sur ce téléphone.'} Une copie dans Fichiers les protège si l'icône est supprimée ou si tu changes de téléphone.</p><div class="acts"><button class="btn s p" data-a="bk_go">Faire une copie</button><button class="btn s" data-a="bk_later">Plus tard</button></div></div>`; }
+    if(S.p.bkOpen===false && S.setup && n >= 10 && old && !(S.bkSnooze && S.bkSnooze > isoToday())) h += `<div class="card"><h3>Protège tes données</h3><p class="small">${S.lastExport ? 'Ta dernière copie dans ' + FICH + ' date de plus d\'un mois.' : 'Ton garde-manger et tes recettes ne sont gardés que sur ce téléphone.'} Une copie dans ${FICH} les protège si l'icône est supprimée ou si tu changes de téléphone.</p><div class="acts"><button class="btn s p" data-a="bk_go">Faire une copie</button><button class="btn s" data-a="bk_later">Plus tard</button></div></div>`; }
   h += renderWeek();
   if(!m.date){
     h += renderPicker();
@@ -2524,7 +2710,7 @@ function cmpLine(r){ const c = cheaper(r); if(!c) return '';
 function priceBtn(r){
   const e = rowEco(r);
   if(prEdit===r.k) return `<input type="text" inputmode="decimal" class="num prin" data-a="pr_in" data-k="${esc(r.k)}" placeholder="Prix payé" aria-label="Prix payé pour ${esc(r.name)}" autofocus>`;
-  return `<button type="button" class="prix${e.mine?' mine':''}" data-a="pr_edit" data-k="${esc(r.k)}" aria-label="Corriger le prix">${e.deal || e.mine || e.rsp || e.src==='robot' ? '' : '≈ '}${money(e.cost)}</button>`;
+  return `<button type="button" class="prix${e.mine?' mine':''}" data-a="pr_edit" data-k="${esc(r.k)}" aria-label="Corriger le prix">${e.deal || e.mine || e.rsp || e.src==='robot' || e.src==='circ' ? '' : '≈ '}${money(e.cost)}</button>`;
 }
 const groupHtml = (gs, m) => gs.map(g => `<h2 class="sec">${esc(g.title)}<span>${g.sub.reduce((a,s) => a+s.rows.length, 0)}</span></h2><div class="card list">` + g.sub.map(s => (s.ray ? `<p class="aisle">${esc(cap(s.ray))}</p>` : '') + s.rows.map(r => rowHtml(r,m)).join('')).join('') + `</div>`).join('');
 const paidField = m => `<label class="f">Total payé à la caisse ($)<input type="text" inputmode="decimal" class="num" id="paid" value="${m.paid||''}" placeholder="0,00"></label>`;
@@ -3127,8 +3313,9 @@ function backupCard(){
     ${res ? `<p class="note">Des données n'ont pas pu être lues et ont été mises de côté sans rien effacer. <button class="btn s" id="bk_rescue" data-armed="0">Essayer de les restaurer</button></p>` : ''}
     <p class="small"><b>Copies automatiques sur ce téléphone</b> : avant chaque mise à jour et une fois par jour, les 5 plus récentes. Elles protègent contre une erreur, mais pas si l'icône de l'application est supprimée.</p>
     ${L.length ? `<div class="list">${L.map((c,j) => `<div class="item"><span class="t"><b>${esc(c.label)}</b><small>${esc(fmt(c.d))}</small></span><button class="btn s" data-a="bk_restore" data-j="${j}" data-armed="0">Restaurer</button></div>`).join('')}</div>` : '<p class="small">Aucune copie pour l’instant.</p>'}
-    <p class="small"><b>Copie dans Fichiers</b> : la seule qui survit si l'icône est supprimée ou si tu changes de téléphone. « Enregistrer dans Fichiers » ne remplace jamais l'ancienne copie : l'iPhone ajoute 2, 3, 4… au nom. Pour garder un seul fichier à jour, crée une fois le raccourci ci-dessous et choisis « Sauvegarde Menu » dans le partage. ${S.lastExport ? `Dernière copie : ${esc(fmtDate(S.lastExport))}.` : 'Aucune copie dans Fichiers pour l’instant.'}</p>
-    <details class="panel"><summary>Créer le raccourci « Sauvegarde Menu » (une seule fois)</summary>
+    ${IOS ? `<p class="small"><b>Copie dans Fichiers</b> : la seule qui survit si l'icône est supprimée ou si tu changes de téléphone. « Enregistrer dans Fichiers » ne remplace jamais l'ancienne copie : l'iPhone ajoute 2, 3, 4… au nom. Pour garder un seul fichier à jour, crée une fois le raccourci ci-dessous et choisis « Sauvegarde Menu » dans le partage. ${S.lastExport ? `Dernière copie : ${esc(fmtDate(S.lastExport))}.` : 'Aucune copie dans Fichiers pour l’instant.'}</p>`
+    : `<p class="small"><b>Copie dans ${FICH}</b> : la seule qui survit si l'application est désinstallée, si les données ${ANDROID ? 'de Chrome' : 'du navigateur'} sont effacées ou si tu changes de ${ANDROID ? 'téléphone' : 'appareil'}. « Sauvegarder une copie » enregistre le fichier menu-semaine-sauvegarde.json dans ${FICH}. L'ancienne copie n'est pas remplacée : le nom reçoit (1), (2)… Pour restaurer, choisis la plus récente, ou plusieurs : l'application prend la plus récente.${canShareFiles() ? ` Pour la garder ailleurs que sur ${ANDROID ? 'le téléphone' : "l'appareil"}, touche « Envoyer une copie » et choisis Google Drive ou ton courriel.` : ''} ${S.lastExport ? `Dernière copie : ${esc(fmtDate(S.lastExport))}.` : `Aucune copie dans ${FICH} pour l’instant.`}</p>`}
+    ${IOS ? `<details class="panel"><summary>Créer le raccourci « Sauvegarde Menu » (une seule fois)</summary>
       <ol class="small steps-l">
         <li>Ouvre l'app Raccourcis, touche + et nomme le raccourci « Sauvegarde Menu ».</li>
         <li>Touche ⓘ (Détails) et active « Afficher dans la feuille de partage ». Dans le bloc « Recevoir… » en haut, garde seulement « Fichiers ».</li>
@@ -3137,23 +3324,33 @@ function backupCard(){
         <li>Touche OK. Ensuite : « Sauvegarder », puis « Sauvegarde Menu » dans la liste du partage. Le fichier menu-semaine-sauvegarde.json est remplacé, sans numéro.</li>
       </ol>
       <p class="small">Les copies numérotées déjà créées peuvent être supprimées dans Fichiers. Pour restaurer, tu peux aussi toutes les choisir : l'application prend la plus récente.</p>
-    </details>
+    </details>` : ''}
     <label class="check"><input type="checkbox" data-pb="bkOpen" ${S.p.bkOpen!==false?'checked':''}> À chaque ouverture, proposer la sauvegarde s'il y a des changements</label>
-    <div class="acts"><button class="btn s p" id="bk_file">Sauvegarder une copie</button><button class="btn s" id="bk_copy">Copier en texte</button></div>
+    <div class="acts"><button class="btn s p" id="bk_file">Sauvegarder une copie</button>${!IOS && canShareFiles() ? '<button class="btn s" id="bk_send">Envoyer une copie</button>' : ''}<button class="btn s" id="bk_copy">Copier en texte</button></div>
     <label class="f">Restaurer une copie : choisis le fichier (ou plusieurs : la plus récente est prise), ou colle le texte<input type="file" id="bk_pick" multiple accept=".json,application/json,text/plain"></label>
     <textarea id="bk_txt" placeholder="Ou colle ici une copie en texte" aria-label="Sauvegarde"></textarea>
     <button class="btn s d" id="bk_imp" data-armed="0">Restaurer cette copie</button><div class="small" id="bk_msg"></div></div>`;
 }
-async function exportFile(){
+/* iPhone : le partage (« Enregistrer dans Fichiers »). Android et ordinateur : le fichier va dans Téléchargements.
+   mode 'share' : toujours le partage (Google Drive, courriel…). Rend 'share', 'dl', ou '' si annulé. */
+const canShareFiles = () => { try{ return !!(navigator.canShare && navigator.canShare({files:[new File(['{}'], 'x.json', {type:'application/json'})]})); }catch(e){ return false; } };
+async function saveFile(txt, name, title, mode, type){
+  const f = new File([txt], name, {type: type || 'application/json'});
+  if(mode==='share' || (IOS && mode!=='dl')){
+    try{ if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title}); return 'share'; } }
+    catch(e){ if(e && e.name==='AbortError') return ''; }
+  }
+  const a = document.createElement('a'), u = URL.createObjectURL(f); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000);
+  return 'dl';
+}
+async function exportFile(mode){
   const prev = S.lastExport; S.lastExport = isoToday();
-  const txt = JSON.stringify(S), name = 'menu-semaine-sauvegarde.json', msg = $('#bk_msg');
-  const done = () => { S.lastExport = isoToday(); save(); S.bkDirty = false; bkBar = false; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} render(); const m = $('#bk_msg'); if(m) m.textContent = 'Copie créée. Avec le raccourci « Sauvegarde Menu », elle remplace la précédente.'; };
-  try{
-    const f = new File([txt], name, {type:'application/json'});
-    if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title:'Sauvegarde Menu de la semaine'}); done(); return; }
-  }catch(e){ if(e && e.name==='AbortError'){ S.lastExport = prev; return; } }
-  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'application/json'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); done(); }
-  catch(e){ copier(txt, '#bk_msg'); }
+  const txt = JSON.stringify(S), name = 'menu-semaine-sauvegarde.json';
+  let how = '';
+  try{ how = await saveFile(txt, name, 'Sauvegarde Menu de la semaine', mode); }catch(e){ S.lastExport = prev; copier(txt, '#bk_msg'); return; }
+  if(!how){ S.lastExport = prev; return; }
+  S.lastExport = isoToday(); save(); S.bkDirty = false; bkBar = false; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} render();
+  const m = $('#bk_msg'); if(m) m.textContent = how==='dl' ? `Copie enregistrée dans ${FICH} : ${name}.` : IOS ? 'Copie créée. Avec le raccourci « Sauvegarde Menu », elle remplace la précédente.' : 'Copie envoyée.';
 }
 /* passage des données d'une version précédente à la 2.0 (au chargement et à chaque restauration) */
 function migrer(){
@@ -3171,7 +3368,7 @@ function migrer(){
 function restoreFrom(raw, label){
   const o = JSON.parse(raw); if(!isObj(o) || !isObj(o.menu) || !isObj(o.stock)) throw new Error('invalide');
   const m = mergeState(o);   /* vérifie et complète AVANT de toucher aux données actuelles */
-  if(!loadFailed && !snapshot('Avant la restauration', JSON.stringify(S))){ const e = $('#bk_msg'); if(e) e.textContent = "Espace plein : enregistre d'abord une sauvegarde dans Fichiers, puis réessaie."; throw Object.assign(new Error('espace'), {shown:true}); }
+  if(!loadFailed && !snapshot('Avant la restauration', JSON.stringify(S))){ const e = $('#bk_msg'); if(e) e.textContent = "Espace plein : enregistre d'abord une sauvegarde dans " + FICH + ", puis réessaie."; throw Object.assign(new Error('espace'), {shown:true}); }
   const prev = S; S = m; S.appv = APPV; migrer();
   try{ render(); }catch(e){ S = prev; try{ save(); render(); }catch(_){} throw e; }   /* copie qui ne s'affiche pas : on revient aux données d'avant */
   loadFailed = false; save(); render();
@@ -3240,6 +3437,35 @@ function testCard(){
 }
 /* le profil seul (sans le menu ni l'historique), à garder ou à donner à un proche */
 const PROFIL_KEYS = ['profil','cp','stores','storesx','ess','snacks','maison','bx','pmaj','art'];
+/* Profil → Épiceries : le code de la famille, pour les spéciaux et les prix du robot */
+function codeCard(){
+  const c = familleCode();
+  return `<div class="card" id="code_card"><h3>Code de la famille</h3>
+    <p class="small">Les spéciaux de la semaine et les prix relevés par le robot sont réservés à la famille et aux amis. Ils sont chiffrés : seul un téléphone qui a le code peut les lire. Le code reste sur ce téléphone; il n'est pas dans les sauvegardes.</p>
+    ${c ? `<p class="note">Ce téléphone a le code.${S.auto && S.auto.robot ? ` Spéciaux du robot lus le ${esc(fmtDate(S.auto.maj))}.` : ''}</p>
+      <div class="acts"><button class="btn s" data-a="fc_test">Vérifier</button><button class="btn s d" data-a="fc_forget" data-armed="0">Oublier le code</button></div>`
+    : `<div class="grid2" style="grid-template-columns:1fr auto;align-items:end"><label class="f">Code<input type="password" id="fc_in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Le code reçu de la famille"></label><button class="btn s p" data-a="fc_save">Valider</button></div>`}
+    <div class="small" id="fc_msg" hidden></div></div>`;
+}
+/* vérifie un code avec les fichiers du robot. 'ok' (avec la date), 'absent' (robot pas encore lancé) ou 'cle' */
+async function codeTest(code){
+  let d = null;
+  try{ d = await lireChiffre(SP_ENC, code); }catch(e){ if(e.code === 'cle') return {r:'cle'}; throw e; }
+  if(d) return {r:'ok', maj:d.maj};
+  try{ d = await lireChiffre(PE_ENC, code); }catch(e){ if(e.code === 'cle') return {r:'cle'}; throw e; }
+  return d ? {r:'ok', maj:d.maj} : {r:'absent'};
+}
+async function codeSave(test){
+  const inp = $('#fc_in'), code = test ? familleCode() : (inp ? inp.value.trim() : ''), m = () => $('#fc_msg');
+  if(!code){ say(m(), 'Entre le code reçu de la famille.'); return; }
+  say(m(), 'Vérification du code…');
+  let t; try{ t = await codeTest(code); }catch(e){ say(m(), e.code === 'vieux' ? 'Ce navigateur est trop ancien pour lire les fichiers chiffrés.' : 'Vérification impossible pour l\'instant (hors ligne ?). Réessaie plus tard.'); return; }
+  if(t.r === 'cle'){ say(m(), test ? 'Le code de ce téléphone ne fonctionne plus : le code de la famille a changé. Oublie-le et entre le nouveau.' : 'Ce code ne fonctionne pas. Vérifie les mots (les majuscules et les accents ne comptent pas).'); return; }
+  if(!test){ try{ localStorage.setItem(CODE_KEY, code); }catch(e){ say(m(), 'Impossible de garder le code sur ce téléphone.'); return; } _SPR = null; }
+  const msg = t.r === 'ok' ? `Code accepté. Spéciaux et prix du robot du ${fmtDate(String(t.maj||'').slice(0,10))}.` : 'Code gardé. Le robot n\'a pas encore produit ses fichiers : ils seront lus dès qu\'ils seront prêts.';
+  try{ await peFetch(true); }catch(e){}
+  resetCaches(); save(); render(); say(m(), msg);
+}
 function profilFichierCard(){
   return `<div class="card"><h3>Mon profil</h3><p class="small">Famille, horaire, épiceries, achats réguliers et prix corrigés, sans le menu ni l'historique. Pratique pour réinstaller l'application ou la préparer pour un proche.</p>
     <div class="acts"><button class="btn s" id="pf_export">Enregistrer mon profil</button><label class="btn s" style="display:inline-flex;align-items:center">Charger un profil<input type="file" id="pf_file" accept=".json,application/json" hidden></label></div>
@@ -3250,9 +3476,7 @@ async function exportProfil(){
   o.p.reglages = Object.assign({}, S.p);
   const txt = JSON.stringify(o), name = 'profil-famille.json', msg = $('#pf_msg');
   const say = t => { if(msg){ msg.textContent = t; msg.hidden = false; } };
-  try{ const f = new File([txt], name, {type:'application/json'}); if(navigator.canShare && navigator.canShare({files:[f]})){ await navigator.share({files:[f], title:'Profil Menu de la semaine'}); say('Profil enregistré.'); return; } }
-  catch(e){ if(e && e.name==='AbortError') return; }
-  try{ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type:'application/json'})); a.download = name; document.body.appendChild(a); a.click(); a.remove(); say('Profil enregistré.'); }
+  try{ const how = await saveFile(txt, name, 'Profil Menu de la semaine'); if(how) say(how==='dl' ? `Profil enregistré dans ${FICH} : ${name}.` : 'Profil enregistré.'); }
   catch(e){ copier(txt, '#pf_msg'); }
 }
 function importProfil(txt){
@@ -3327,7 +3551,7 @@ function renderReglages(){
 <!--@reset-->    <div class="card"><h3>Tout remettre à zéro</h3><p class="small">Efface le menu, le stock et l'historique.</p><button class="btn s d" id="reset" data-armed="0">Réinitialiser</button></div>`;
   /* la page Profil est découpée en sous-menus : chaque carte va dans sa section */
   const P = {}; h.split(/<!--@([a-z]+)-->/).forEach((x, i, a) => { if(i % 2) P[x] = a[i+1]; });
-  const V = {famille:[familleCard(), P.menu], horaire:[horaireCard(), P.organisation], epiceries:[P.epiceries, rayonsCard(), P.ess, P.collations, P.toujours],
+  const V = {famille:[familleCard(), P.menu], horaire:[horaireCard(), P.organisation], epiceries:[codeCard(), P.epiceries, rayonsCard(), P.ess, P.collations, P.toujours],
     budget:[P.budget, P.prix], _:0, sauvegarde:[testCard(), P.sauvegarde, profilFichierCard(), P.version, P.reset], apparence:[P.apparence], historique:[P.historique]};
   const el = tab==='historique' ? $('#tab-historique') : $('#tab-profil');
   el.innerHTML = (V[tab] || V.famille).filter(Boolean).join('');
@@ -3463,6 +3687,7 @@ function renderSemaine(){
   let h = `<p class="note" id="flash" ${S.flash ? '' : 'hidden'}>${esc(S.flash||'')}</p>`; S.flash = '';
   if(S.profil && S.profil.verifier) h += `<div class="card call"><h3>Nouveau : le profil de la famille</h3><p class="small">Les portions et les lunchs se calculent maintenant d'après la famille (adultes, enfants, appétit). Vérifie qu'il te ressemble : ${esc(famLine())}, ramassage le ${esc(DOW[profil().jours.ram])}, cuisine dès le ${esc(DOW[profil().jours.cuis])}.</p><div class="acts"><button class="btn s p" data-a="view" data-v="famille">Vérifier le profil</button><button class="btn s" data-a="pf_ok">C'est bon</button></div></div>`;
   const st = etape();
+  if(instEvt && !isInstalled() && !S.instHide) h += `<div class="card call"><h3>Installer l'application</h3><p class="small">Une icône sur l'écran d'accueil : l'application s'ouvre sans la barre de ${esc(NAVI)}, comme une vraie app, et fonctionne sans Internet. Tes données restent les mêmes.</p><div class="acts">${instBtn()}<button class="btn s" data-a="inst_hide">Plus tard</button></div></div>`;
   h += renderToday();
   if(st==='preparer') h += prepareCard();
   else if(st==='commander') h += commanderCard();
@@ -3503,13 +3728,12 @@ async function menuFrigo(){
   const blob = await new Promise(r => c.toBlob(r, 'image/png')); if(!blob) return;
   frigoFile = new File([blob], 'menu-semaine.png', {type:'image/png'});
   /* l'image s'affiche : appui long pour l'enregistrer dans Photos, ou « Partager » (un nouveau toucher, exigé par l'iPhone) */
-  const box = $('#frigo_box'); if(box){ box.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Menu de la semaine" style="width:100%;border-radius:12px;margin-top:10px"><p class="small">Appuie longuement sur l'image pour l'enregistrer dans Photos, ou :</p><div class="acts"><button class="btn s p" id="frigo_share">Partager l'image</button></div>`; }
+  const box = $('#frigo_box'); if(box){ box.innerHTML = `<img src="${URL.createObjectURL(blob)}" alt="Menu de la semaine" style="width:100%;border-radius:12px;margin-top:10px"><p class="small">${IOS ? "Appuie longuement sur l'image pour l'enregistrer dans Photos, ou :" : "Appuie longuement sur l'image, puis « Télécharger l'image », ou :"}</p><div class="acts"><button class="btn s p" id="frigo_share">Partager l'image</button></div>`; }
 }
 let frigoFile = null;
 async function partagerFrigo(){
   if(!frigoFile) return;
-  try{ if(navigator.canShare && navigator.canShare({files:[frigoFile]})){ await navigator.share({files:[frigoFile], title:'Menu de la semaine'}); return; } }catch(e){ if(e && e.name==='AbortError') return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(frigoFile); a.download = 'menu-semaine.png'; document.body.appendChild(a); a.click(); a.remove();
+  try{ await saveFile(frigoFile, 'menu-semaine.png', 'Menu de la semaine', 'share', 'image/png'); }catch(e){}
 }
 /* « Préparer ma semaine » : spéciaux → menu → budget, en une fois */
 let prepBusy = false;
@@ -3529,7 +3753,7 @@ async function preparerSemaine0(){
   if(S.stores.length > 1){ const one = gp==='main' ? S.p.main : S.stores.includes(gp) ? gp : '';
     S.skip = one ? S.stores.filter(s => s !== one) : []; S.goSome = false; S.goAuto = gp==='auto'; }
   save(); render();
-  if(S.stores.length && S.cp && !(S.auto && S.auto.shop === S.dates.shop && S.auto.maj === isoToday())){ say('Recherche des spéciaux…'); try{ await chercherSpeciaux(false); }catch(e){} }
+  if(familleCode() && S.stores.length && !(S.auto && S.auto.shop === S.dates.shop && S.auto.maj === isoToday())){ say('Recherche des spéciaux…'); try{ await chercherSpeciaux(false); }catch(e){} }
   const sp = (S.auto && S.auto.shop === S.dates.shop) ? autoItems().length : 0;
   genMenu();
   S.menu.prev = prev.filter(x => x.d < S.menu.start);
@@ -3540,7 +3764,7 @@ async function preparerSemaine0(){
     ouTxt = ` Le moins cher cette semaine : ${b.stores[0]}.` + (m ? ` En allant aussi chez ${m.stores.filter(s => s !== b.stores[0]).join(' et ')} : ≈ ${money((b.total - m.total)*calF())} de moins (voir Épicerie).` : ''); }
   const rows = buyList().rows, t = listTotals(rows), aub = aubaines().length;
   S.flash = `Menu prêt : ${mlist('items').length} soupers du ${dayLbl(S.menu.start).toLowerCase()} au ${dayLbl(addDays(S.menu.start, 6)).toLowerCase()}, ≈ ${money(t.cost)}${S.p.budget ? ' (budget ' + money(S.p.budget) + ')' : ''}${t.save >= 1 ? ', ≈ ' + money(t.save) + ' économisés en spéciaux' : ''}.`
-    + (sp ? '' : ' Les circulaires de cette semaine ne sont pas encore lues : relance « Chercher les spéciaux » jeudi pour un menu qui en profite.')
+    + (sp ? '' : !familleCode() ? ' Sans le code de la famille (Profil → Épiceries), le menu est fait sans les spéciaux.' : ' Les circulaires de cette semaine ne sont pas encore lues : relance « Chercher les spéciaux » jeudi pour un menu qui en profite.')
     + (aub ? ` ${aub} vraie${aub>1?'s':''} aubaine${aub>1?'s':''} à considérer pour faire des réserves.` : '') + ouTxt;
   tab = 'semaine'; prepBusy = false; save(); render(); window.scrollTo(0, 0);
 }
@@ -3592,6 +3816,7 @@ function render(){
   const n = S.menu.date ? buyList().rows.filter(r => !S.menu.chk[r.k]).length : 0;
   const bg = $('#bgl'); bg.hidden = !n; bg.textContent = n;
   if(cook) renderCook();
+  navSync();
 }
 $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const g = b.dataset.t; tab = groupOf(tab)===g ? GROUPS[g][0] : (lastView[g] || GROUPS[g][0]); render(); window.scrollTo(0,0); });
 
@@ -3647,6 +3872,10 @@ document.addEventListener('click', e => {
   if(id==='cook' && !a) return;   /* un toucher dans le mode Cuisiner, hors bouton */
   if(a==='cook'){ e.preventDefault(); if(t.dataset.r) openCook({r:t.dataset.r, pt:+t.dataset.pt||0, ms:t.dataset.ms==='1', cm:t.dataset.cm||''}); else openCook({l:t.dataset.ml||'items', i:+t.dataset.i}); return; }
   if(a==='ck_close'){ closeCook(); return; }
+  if(a==='inst_go'){ installApp(); return; }
+  if(a==='fc_save' || a==='fc_test'){ codeSave(a==='fc_test'); return; }
+  if(a==='fc_forget'){ arm(t, 'Confirmer : oublier le code', () => { try{ localStorage.removeItem(CODE_KEY); }catch(e){} _SPR = null; _CLES.clear(); render(); }); return; }
+  if(a==='inst_hide'){ S.instHide = true; save(); render(); return; }
   if(a==='ck_cm'){ if(cook){ const k = t.dataset.k || 'b';
       if(cook.l){ const it = mlist(cook.l)[cook.i]; if(it){ it.cm = k; save(); render(); } } else cook.cm = k==='b' ? '' : k;
       renderCook(); const el = $('#cook'); if(el) el.scrollTop = 0; } return; }
@@ -3670,7 +3899,7 @@ document.addEventListener('click', e => {
   if(id==='spadd'){ ajouterSpeciaux(); return; }
   if(id==='spclr'){ S.spec = []; save(); render(); return; }
   if(id==='hclr'){ arm(t,'Confirmer', () => { S.hist = []; save(); render(); }); return; }
-  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans Fichiers (Profil)."); return; } S = DEFAULT(); S.appv = APPV; loadFailed = false; rescued = false; save(); render(); }); return; }
+  if(id==='reset'){ arm(t,'Confirmer : tout effacer', () => { if(!snapshot('Avant la remise à zéro', JSON.stringify(S))){ setSync("Espace plein : enregistre d'abord une sauvegarde dans " + FICH + " (Profil)."); return; } S = DEFAULT(); S.appv = APPV; loadFailed = false; rescued = false; save(); render(); }); return; }
   if(id==='help_btn'||id==='help_open'){ tab='aide'; S.help=true; save(); render(); window.scrollTo(0,0); return; }
   if(id==='help_hide'){ S.help=true; save(); render(); return; }
   if(id==='help_back'){ tab='semaine'; render(); window.scrollTo(0,0); return; }
@@ -3699,6 +3928,7 @@ document.addEventListener('click', e => {
   if(id==='go_liste'){ tab='epicerie'; render(); window.scrollTo(0,0); return; }
   if(id==='bk_copy'){ copier(JSON.stringify(S), '#bk_msg').then(ok => { if(ok){ S.lastExport = isoToday(); save(); } }); return; }
   if(id==='bk_file'){ exportFile(); return; }
+  if(id==='bk_send'){ exportFile('share'); return; }
   if(id==='bk_imp'){ arm(t,'Confirmer : remplacer mes données', () => {
       try{ restoreFrom($('#bk_txt').value, 'Copie restaurée. Tes données d\'avant sont gardées dans les copies automatiques.'); }
       catch(e){ const m = $('#bk_msg'); if(m && !e.shown) m.textContent = "Cette copie n'est pas valide. Rien n'a été changé."; t.dataset.armed='0'; t.textContent='Restaurer cette copie'; } }); return; }
@@ -3981,10 +4211,17 @@ function renderAide(){
   const D = (t, body, open) => `<details class="card help" ${open?'open':''}><summary>${t}</summary>${body}</details>`;
   $('#tab-profil').innerHTML = `<button class="btn" id="help_back">← Retour à Ma semaine</button>
   <div class="card"><h3>À quoi sert cette application</h3><p>Elle planifie les déjeuners, les dîners, les soupers, les entrées, les soupes et les desserts de la semaine, tient compte des spéciaux de tes épiceries et de ce qu'il y a déjà à la maison, et produit <b>une seule liste d'épicerie complète</b>. Tes données restent sur ton téléphone.</p></div>`
-  + D("1. Installer l'application sur l'iPhone", `<ol><li>Ouvre l'adresse de l'application dans <b>Safari</b> (pas dans Messenger ni une autre application).</li>
+  + D("1. Installer l'application", (() => {
+    const ios = `<p><b>Sur iPhone</b></p><ol><li>Ouvre l'adresse de l'application dans <b>Safari</b> (pas dans Messenger ni une autre application).</li>
     <li>Touche <b>Partager</b> (le carré avec une flèche vers le haut), fais défiler la liste d'actions jusqu'à <b>Sur l'écran d'accueil</b>, puis touche <b>Ajouter</b>.</li>
     <li>Ouvre toujours l'application par <b>son icône</b>.</li></ol>
-    <div class="warn"><b>Installe avant d'entrer quoi que ce soit.</b> Safari et l'icône de l'écran d'accueil ne partagent pas leurs données.</div>
+    <div class="warn"><b>Sur iPhone, installe avant d'entrer quoi que ce soit.</b> Safari et l'icône de l'écran d'accueil ne partagent pas leurs données.</div>`;
+    const and = `<p><b>Sur Android</b></p><ol><li>Ouvre l'adresse de l'application dans <b>Chrome</b> (pas dans Messenger ni une autre application).</li>
+    <li>Touche le menu <b>⋮</b> en haut à droite, puis <b>Installer l'application</b> (ou <b>Ajouter à l'écran d'accueil</b>, puis <b>Installer</b>).</li>
+    <li>Ouvre ensuite l'application par <b>son icône</b>. Ce que tu as déjà entré dans Chrome s'y retrouve.</li></ol>
+    <p class="small">Avec un autre navigateur (Samsung Internet, Firefox), cherche « Ajouter à l'écran d'accueil » dans son menu, et ouvre toujours l'application par le même chemin : chaque navigateur garde ses propres données.</p>`;
+    const now = isInstalled() ? '<p class="note">L\'application est installée sur ce téléphone.</p>' : instBtn() ? `<div class="acts">${instBtn()}</div>` : '';
+    return now + (ANDROID ? and + ios : ios + and); })() + `
     <div class="tip">Chaque personne installe l'application sur son téléphone. Les données ne sont pas partagées entre téléphones (voir la section 11).</div>`, true)
   + D('2. Première configuration', `<p>Au premier lancement, un assistant en 5 étapes décrit ta famille :</p>
     <ul><li><b>La famille</b> : adultes et enfants (avec leur âge), l'appétit de chacun et qui apporte un lunch. Les portions et les restes pour les lunchs en découlent.</li>
@@ -3992,7 +4229,7 @@ function renderAide(){
     <li><b>Les épiceries</b> : ton code postal, celles où tu vas et ta principale. Avant chaque semaine, tu choisis où faire l'épicerie : à la principale, dans une autre, ou « où ce sera le moins cher » (l'application choisit).</li>
     <li><b>Les repas</b> à planifier et, si tu veux, une liste de départ pour les déjeuners, lunchs, collations et boissons.</li>
     <li><b>Le budget</b> de la semaine.</li></ul>
-    <p>Tout se change ensuite dans l'onglet <b>Profil</b>. Le profil peut être enregistré dans Fichiers (Profil → Sauvegarde) pour le réinstaller ou le donner à un proche.</p>`)
+    <p>Tout se change ensuite dans l'onglet <b>Profil</b>. Le profil peut être enregistré dans ${FICH} (Profil → Sauvegarde) pour le réinstaller ou le donner à un proche.</p>`)
   + D('Ta semaine en 4 étapes', `<ol><li><b>Planifier</b> (mercredi soir ou jeudi) : dans Ma semaine, touche <b>Préparer ma semaine</b>. L'application lit les circulaires pour la date du ramassage, fait un menu varié du dimanche au samedi qui en profite, respecte le budget et prépare la liste.</li>
     <li><b>Commander</b> : Épicerie → <b>Commande en ligne</b>. Chaque article a un lien vers le site de l'épicerie et le format à commander. Ouvre-le, ajoute au panier, reviens et coche.</li>
     <li><b>Ramasser</b> : touche « Épicerie terminée », puis inscris le total de la facture. Après quelques semaines, l'estimation du coût se corrige d'elle-même.</li>
@@ -4047,7 +4284,7 @@ function renderAide(){
   + D('11. Copier, envoyer et importer', `<ul><li>Rien n'est partagé automatiquement. La carte <b>Copier pour envoyer</b> copie la liste d'épicerie, le menu de la semaine ou le menu détaillé. Colle le texte dans un message ou dans Notes.</li>
     <li>Chaque recette a son bouton <b>Copier cette recette</b>. Le message se termine par un code qui contient toute la recette, versions comprises.</li>
     <li>Pour la recevoir sur un autre téléphone : onglet Recettes, <b>Importer une recette copiée</b>, colle le message, touche <b>Importer</b>. Plusieurs recettes peuvent être collées d'un coup.</li>
-    <li><b>Recette d'un site Internet</b> (Ricardo, 5-15, Pratico-pratiques…) : dans Safari, sélectionne le titre, les ingrédients et la préparation, touche Copier, puis colle dans « Importer une recette copiée ». L'application comprend les mesures (c. à soupe, tasse, lb, boîte de 796 ml), les fractions et les mots de préparation (haché, en dés, au goût), relie chaque ingrédient à un aliment connu et ajuste la recette à 6 portions. Le formulaire « Nouvelle recette » se remplit : vérifie, puis enregistre. Astuce : le bouton Partager → Copier ne copie que le lien; la version « Imprimer » du site rend la sélection plus facile.</li></ul>`)
+    <li><b>Recette d'un site Internet</b> (Ricardo, 5-15, Pratico-pratiques…) : dans ${esc(NAVI)}, sélectionne le titre, les ingrédients et la préparation, touche Copier, puis colle dans « Importer une recette copiée ». L'application comprend les mesures (c. à soupe, tasse, lb, boîte de 796 ml), les fractions et les mots de préparation (haché, en dés, au goût), relie chaque ingrédient à un aliment connu et ajuste la recette à 6 portions. Le formulaire « Nouvelle recette » se remplit : vérifie, puis enregistre. Astuce : le bouton Partager → Copier ne copie que le lien; la version « Imprimer » du site rend la sélection plus facile.</li></ul>`)
   + D('12. La banque de recettes', `<ul><li>L'onglet <b>Recettes</b> regroupe les plats par <b>protéine</b>, par <b>style</b> ou par <b>genre</b> (soupers, entrées, desserts). Les filtres combinent recherche, genre, protéine, style, « 30 min ou moins » et favoris.</li>
     <li><b>Je n'aime pas</b> met une recette de côté : elle n'est plus jamais proposée. Coche « Mis de côté » pour les revoir et <b>Remettre dans la banque</b>.</li>
     <li><b>Accompagnements</b> : chaque souper montre son féculent et son légume. « Varié » laisse l'application choisir chaque semaine parmi ceux qui vont avec le plat; choisis-en un pour l'avoir à tout coup, ou « Aucun ». La section <b>Accompagnements</b> (en bas de l'onglet, ou Genre : Accompagnements) montre tous les féculents et légumes avec leurs ingrédients; « Ne plus le proposer » le retire des choix automatiques.</li>
@@ -4057,24 +4294,29 @@ function renderAide(){
     <li><b>Ajouter une version</b> ou <b>Modifier cette version</b> : coche les ingrédients à retirer, ajoute ceux qui changent, choisis l'accompagnement et écris la préparation propre à cette version. « Retirer cette version » la cache, « Rétablir les variantes d'origine » annule tes changements.</li>
     <li>Ce que tu tapes dans un formulaire reste là même si tu changes d'onglet. Un message sous le formulaire indique ce qui manque (un nom, une quantité…).</li>
     <li>Les soupers sont écrits pour 6 portions et ajustés à tes portions; les entrées et desserts donnent environ 6 à 8 portions.</li></ul>`)
-  + D('13. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Vérifie tes épiceries et ton code postal dans Profil.</li>
+  + D('13. Si la recherche des spéciaux ne fonctionne pas', `<ul><li>Les spéciaux sont réservés à la famille et aux amis : il faut le <b>code de la famille</b> (Profil → Épiceries). Le robot lit les circulaires le mercredi soir et le jeudi matin; le téléphone les reçoit chiffrées, sans interroger Flipp.</li>
+    <li>« Le code ne fonctionne plus » : le code de la famille a changé. Oublie l'ancien et entre le nouveau.</li>
+    <li>Vérifie tes épiceries et ton code postal dans Profil.</li>
     <li>Si le navigateur bloque la requête, copie le texte d'une circulaire (<a href="https://flipp.com/fr-ca" target="_blank" rel="noopener">Flipp</a>) et colle-le dans « Si la recherche ne fonctionne pas ».</li>
     <li>Sans spéciaux, tout fonctionne : le menu est simplement choisi sans les rabais.</li></ul>`)
   + D('14. Sauvegarder', `<ul><li>Les données sont enregistrées sur ce téléphone à chaque action. <b>Une mise à jour de l'application ne les touche pas</b> : elle remplace seulement le code, et chaque nouvelle version lit les données de l'ancienne.</li>
     <li>Par sécurité, l'application garde une <b>copie automatique</b> avant chaque mise à jour et une fois par jour (les 5 dernières, dans Profil → Sauvegarde). Si une version n'arrive pas à lire tes données, elle les met de côté au lieu de les effacer.</li>
-    <li>Ce qui peut effacer les données : supprimer l'icône de l'écran d'accueil, effacer les données des sites dans les réglages de l'iPhone, ou ouvrir l'application à une autre adresse. Garde la même adresse et ne supprime pas l'icône.</li>
-    <li>Pour être protégé même dans ces cas : Profil → <b>Enregistrer une copie dans Fichiers</b>, puis « Enregistrer dans Fichiers ». Fais-le après avoir rempli ton garde-manger, puis une fois par mois. Pour revenir en arrière : « Restaurer une copie » et choisis le fichier.</li></ul>`)
+    <li>Ce qui peut effacer les données : ${IOS ? "supprimer l'icône de l'écran d'accueil, effacer les données des sites dans les réglages de l'iPhone" : "désinstaller l'application, effacer les données de Chrome (ou du site) dans les réglages d'Android"}, ou ouvrir l'application à une autre adresse. Garde la même adresse et ne supprime pas l'application.</li>
+    <li>Pour être protégé même dans ces cas : Profil → Sauvegarde → <b>Sauvegarder une copie</b>${IOS ? ', puis « Enregistrer dans Fichiers »' : ' : le fichier va dans Téléchargements'}. Fais-le après avoir rempli ton garde-manger, puis une fois par mois. Pour revenir en arrière : « Restaurer une copie » et choisis le fichier.</li></ul>`)
   + D("15. Articles : corriger un spécial, convertir une mesure", `<ul><li>L'onglet <b>Articles</b> montre le spécial associé à chaque article de ta liste (« Ma liste »), de tous les articles connus (« Tous ») ou de ceux que tu as modifiés.</li>
     <li>Un spécial n'est pas le bon ? Touche « Pas le bon ? » sous l'étiquette jaune dans la liste, ou ouvre l'article. Choisis un autre spécial, « Aucun spécial cette semaine », ou cherche le bon dans les circulaires : « Cette semaine » l'associe jusqu'à la fin de la semaine, « Toujours » retient ce produit pour les prochaines semaines.</li>
     <li>Tu peux aussi changer les <b>mots recherchés</b> (une virgule sépare deux façons de le nommer), ajouter des <b>mots à exclure</b> (pané, assaisonné…), choisir le <b>rayon</b>, le <b>format du paquet</b> et le <b>prix habituel</b>.</li>
     <li>À chaque recherche des spéciaux, le prix trouvé est noté. Quand un article n'est pas en spécial, la liste dit à quel prix il l'est souvent.</li>
     <li>Le <b>convertisseur</b> passe des g aux lb, des ml aux tasses et cuillères (avec la densité de la farine, du sucre, du beurre…), et des prix à la livre aux prix au kilo.</li></ul>`)
-  + D("Partager l'application", `<p>Pour l'installer sur un autre téléphone, ouvre ce lien dans Safari ou montre ce code à scanner avec l'appareil photo :</p>
+  + D("Partager l'application", `<p>Pour l'installer sur un autre téléphone, ouvre ce lien dans Safari (iPhone) ou Chrome (Android), ou montre ce code à scanner avec l'appareil photo :</p>
     <p><a href="https://mdulac86.github.io/Menu/">mdulac86.github.io/Menu</a></p><p><img src="qr-menu.png" width="160" height="160" alt="Code QR vers l'application"></p>
     <p class="small">Chaque personne a ses propres données : rien n'est partagé entre les téléphones.</p>`)
   + D('Vie privée', `<ul><li>Tes données (famille, menus, liste, prix) restent <b>sur ton téléphone</b>. Aucun compte, aucune collecte.</li>
-    <li>La seule information envoyée est ton <b>code postal</b>, à Flipp, pour trouver les circulaires de ta région.</li>
-    <li>Les liens vers les sites des épiceries ouvrent leur page de recherche dans Safari.</li></ul>`)
+    <li>Avec le code de la famille, les spéciaux et les prix viennent du robot : le téléphone n'envoie rien à Flipp. Ton <b>code postal</b> est envoyé à Flipp seulement si le fichier du robot manque, ou pour trouver les épiceries près de chez toi sans le code.</li>
+    <li>Le code de la famille reste sur ton téléphone. Il n'est ni dans les sauvegardes ni dans le code de l'application.</li>
+    <li>Les liens vers les sites des épiceries ouvrent leur page de recherche dans ${esc(NAVI)}.</li></ul>`)
+  + D("Droits d'auteur", `<p>© 2026 mdulac86. Tous droits réservés.</p>
+    <p>Tu peux utiliser l'application et partager son lien. Le code, les recettes, les prix et les textes ne peuvent pas être copiés, modifiés ou publiés ailleurs sans permission. Les recettes envoyées avec « Copier cette recette » peuvent être échangées entre utilisateurs, pour un usage personnel.</p>`)
   + (self.APP_CONTACT ? D('Signaler un problème ou une idée', `<p><a class="btn s p" href="mailto:${esc(self.APP_CONTACT)}?subject=${encodeURIComponent('Menu de la semaine ' + APPV)}&body=${encodeURIComponent('Appareil : ' + navigator.userAgent + '\n\n')}">Écrire un courriel</a></p><p class="small">La version de l'application et le modèle du téléphone sont ajoutés; aucune de tes données.</p>`) : '')
   + D('16. Questions fréquentes', `<p><b>Le menu ne change pas quand je le refais.</b> Les plats « Gardé » restent; une fois l'épicerie terminée, le menu est verrouillé jusqu'à « Terminer la semaine ».</p>
     <p><b>Un article est en double.</b> Deux recettes le nomment différemment; additionne-les en magasin.</p>

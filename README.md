@@ -23,9 +23,13 @@ Site : <https://mdulac86.github.io/Menu/>. C'est une application web installable
 | `js/profil.js` | Profil de la famille, assistant de départ, réglages, accueil Ma semaine |
 | `js/app.js` | Navigation, actions, aide et démarrage (chargé en dernier) |
 | `sw.js` | Le service worker : réseau d'abord, copie gardée hors ligne |
-| `prix-epiceries.json` | Le dernier relevé des prix de Maxi et d'IGA, écrit par le robot (ne pas modifier à la main) |
-| `robot/` | Le robot des prix : `releve.mjs`, les magasins (`magasins.json`) et les mots cherchés (`termes.json`) |
-| `.github/workflows/robot-prix.yml` | Lance le robot chaque jeudi matin |
+| `manifest.webmanifest`, icônes | L'installation sur l'écran d'accueil. `icon-maskable-512.png` est l'icône d'Android (le panier au centre, pour que le cercle ou le carré arrondi ne le coupe pas) |
+| `LICENSE` | Droits d'auteur : tous droits réservés |
+| `prix-epiceries.enc.json` | Le dernier relevé des prix de Maxi et d'IGA, chiffré avec le code de la famille, écrit par le robot (ne pas modifier à la main). Sans le secret `MENU_CLE`, le robot écrit plutôt `prix-epiceries.json` en clair |
+| `speciaux.enc.json` | Les spéciaux des circulaires, chiffrés avec le code de la famille, écrits par le robot des spéciaux |
+| `robot/` | Les robots : `releve.mjs` (prix), `speciaux.mjs` (circulaires), `chiffre.mjs` (chiffrement), les magasins (`magasins.json`) et les mots cherchés (`termes.json`) |
+| `.github/workflows/robot-prix.yml` | Lance le robot des prix chaque jeudi matin |
+| `.github/workflows/robot-speciaux.yml` | Lance le robot des spéciaux le mercredi soir et le jeudi matin |
 | `outils/construire-test.sh` | Construit la version de test dans `dist/test/` |
 | `tests/`, `.github/workflows/tests.yml` | Tests automatiques (pour le développement) |
 
@@ -40,7 +44,7 @@ Il garde ses données à part (clés `menu_test_*`, cache `menu-test-*`), s'inst
 
 Cinq onglets : Ma semaine (accueil selon le jour), Menu (Semaine, Historique), Épicerie (Liste, Articles, Prix, Maison), Recettes, Profil (Famille, Horaire, Épiceries, Budget et prix, Sauvegarde, Apparence, Aide).
 
-## Ce soir, on mange quoi ? (2.2)
+## Ce soir, on mange quoi ?
 
 Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le nombre de personnes :
 
@@ -48,7 +52,7 @@ Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le n
 - **Avec ce qu'on a à la maison** : `fitStock()` compare une recette, pour le nombre de personnes, à Maison (75 % de la quantité suffit). Les condiments et le garde-manger rarement notés (`COND_RE` : sauces, bouillon, épices, farine…) ne bloquent pas un plat : ils sont « à vérifier ». Liste « Tout est à la maison », puis « Il manque un article ». Les accompagnements viennent aussi de la maison (`maisonSides`).
 - **Menu de la semaine avec ce qu'on a** : `genMenuMaison()` crée le menu en partageant le stock entre les plats (`STK`, consommé à chaque choix). Le menu porte `maison: true` : aucun dîner acheté n'est ajouté.
 
-## Façons de cuire : air fryer, mijoteuse, four (2.3)
+## Façons de cuire : air fryer, mijoteuse, four
 
 77 recettes ont d'autres façons de cuire, avec les mêmes ingrédients : 34 à l'air fryer, 21 à la mijoteuse, 29 au four (pour les recettes BBQ, plancha, poêle ou fumoir). Chaque façon a ses propres temps et ses propres étapes (champ `cm`, voir plus bas).
 
@@ -59,9 +63,43 @@ Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le n
 - **Recherche** : les autres noms d'un plat comptent (champ `al`, ex. « parmigiana » → Poulet au parmesan), et les lettres doublées sont ignorées (« popers » trouve « poppers »).
 - **Recettes** : filtre « Air fryer », le filtre « Mijoteuse » inclut les recettes qui ont une version mijoteuse, et la fiche montre « Autres façons de le cuire ».
 
+## iPhone et Android
+
+`IOS` et `ANDROID` (dans `app.js`, d'après le navigateur) adaptent l'application au téléphone :
+
+- **Installer** : l'aide montre d'abord les étapes du téléphone utilisé (Safari et « Sur l'écran d'accueil », ou Chrome et « Installer l'application »). Sur Android, Chrome propose l'installation (`beforeinstallprompt`) : une carte « Installer l'application » apparaît dans Ma semaine, avec « Plus tard » (`S.instHide`).
+- **Bouton Retour d'Android** : il ferme Cuisiner, quitte le mode magasin, revient à Ma semaine, et seulement ensuite quitte l'application (`navSync`, une seule entrée d'historique, l'adresse ne change pas). Le glissement retour de Safari fait la même chose.
+- **Sauvegarde** : sur iPhone, le partage (« Enregistrer dans Fichiers », raccourci « Sauvegarde Menu »). Sur Android, le fichier va dans Téléchargements, et « Envoyer une copie » l'envoie à Google Drive ou par courriel (`saveFile`). Le profil et l'image du frigo suivent la même règle.
+- **Données** : sur Android, l'application installée et Chrome partagent les mêmes données. Sur iPhone, Safari et l'icône ne les partagent pas : il faut installer avant d'entrer quoi que ce soit.
+
+## Code de la famille et robot des spéciaux
+
+Les spéciaux et les prix relevés sont réservés à la famille et aux amis. Un robot GitHub lit les circulaires (Flipp) une fois par semaine pour les codes postaux de la famille. Le robot des prix fait de même pour Maxi et IGA. Les deux chiffrent leur résultat avec le **code de la famille** : `speciaux.enc.json` et `prix-epiceries.enc.json` ne sont lisibles qu'avec ce code. Le téléphone ne questionne plus Flipp; il lit ces fichiers.
+
+**Mise en place (une fois)** — dans GitHub : Settings → Secrets and variables → Actions → New repository secret :
+
+- `MENU_CLE` : le code de la famille (une phrase facile à dire, difficile à deviner). C'est le même code que chaque personne entre dans l'application. Les majuscules, les accents et les espaces en trop ne comptent pas (`codeNorm`).
+- `MENU_CP` : le ou les codes postaux de la famille, séparés par des virgules (ex. `A1A1A1, B2B2B2`). Un code par région suffit : les circulaires sont les mêmes dans une région.
+
+Puis : Actions → Robot des spéciaux → Run workflow, et Actions → Robot des prix → Run workflow. Le robot des prix retire alors `prix-epiceries.json` (en clair) du dépôt.
+
+**Dans l'application** : Profil → Épiceries → Code de la famille. Le code reste sur le téléphone (clé `menu_epicerie_code`, hors des sauvegardes). Sans code : pas de recherche des spéciaux, et le menu se fait sans eux; les prix restent estimés. Avec le code : les spéciaux viennent du fichier du robot; Flipp n'est questionné qu'en secours, si le fichier manque ou ne couvre pas le jour de l'épicerie.
+
+**Changer le code** : modifier le secret `MENU_CLE`, relancer les deux robots, puis donner le nouveau code. Les téléphones qui ont l'ancien voient « le code de la famille a changé ».
+
+**Chiffrement** (`robot/chiffre.mjs`, `dechiffrer` dans `app.js`) : contenu compressé (gzip), puis AES-GCM 256, clé tirée du code par PBKDF2-SHA256 (210 000 tours), sel et vecteur nouveaux à chaque écriture. En clair : seulement la date et le type. Les vieux téléphones sans `DecompressionStream` (iOS 15) utilisent `inflateGzip`.
+
+**Prix réguliers des circulaires** : quand une circulaire indique le prix régulier (« rég. 5,99 $ », « économisez 2 $ », un rabais en %), il est gardé (`o`). Pour une épicerie sans relevé (Metro, Super C, Walmart…), ce prix et le spécial remplacent l'estimation (`src: 'circ'`), et l'écart de l'épicerie avec Maxi en tient compte (`ecartCirc`).
+
+**Journal public** : le journal des robots (onglet Actions) ne montre ni code postal ni spécial, seulement « Zone 1 : 12 circulaires ».
+
+## Droits d'auteur
+
+© 2026 mdulac86. Tous droits réservés (voir `LICENSE`). Le dépôt est public seulement pour héberger l'application : aucune permission de copier, modifier ou publier ailleurs le code, les recettes, les prix ou les textes. L'avis est aussi au début de `index.html`, `app.js`, `recettes.js`, `style.css` et `sw.js`, et dans l'Aide (« Droits d'auteur »). Garder ces avis à chaque mise à jour.
+
 ## Mettre une nouvelle version en ligne
 
-1. Changer la date dans `version.js`, par exemple `'2026-11-02a'`.
+1. Changer la version dans `version.js` en montant seulement le 3ᵉ chiffre : `2.3.0` → `2.3.1` → `2.3.2`…
 2. Téléverser **tous les fichiers modifiés dans le même envoi** (un seul « commit »). Sinon, un téléphone pourrait recevoir un `index.html` neuf avec un vieil `app.js`.
 3. À la prochaine ouverture, l'application garde une copie des données (« Avant la mise à jour »), installe la nouvelle version, puis se recharge une fois.
 
@@ -90,7 +128,7 @@ Trois autres choses corrigent aussi ces prix :
 
 ## Prix par épicerie et « Où faire l'épicerie »
 
-Chaque jeudi à 6 h 17 (heure du Québec), GitHub lance le robot (`robot/releve.mjs`). Pour chaque article du barème, il cherche le produit chez Maxi (l'API PC Express, la même que maxi.ca) et chez IGA (le catalogue Algolia d'iga.ca), pour les magasins de `robot/magasins.json`. Il garde le meilleur prix régulier et la promotion en cours pour chaque format du barème et, à part (`m`, ou `mk` au kilo), le meilleur prix d'une marque connue (pas Sans Nom, le Choix du Président, Compliments…; `1` = le moins cher est déjà une marque connue). Il écrit le tout dans `prix-epiceries.json`. Si un site refuse, les prix précédents de ce magasin sont gardés et l'erreur est notée. Walmart bloque les robots : il n'est pas relevé.
+Chaque jeudi à 6 h 17 (heure du Québec), GitHub lance le robot (`robot/releve.mjs`). Pour chaque article du barème, il cherche le produit chez Maxi (l'API PC Express, la même que maxi.ca) et chez IGA (le catalogue Algolia d'iga.ca), pour les magasins de `robot/magasins.json`. Il garde le meilleur prix régulier et la promotion en cours pour chaque format du barème et, à part (`m`, ou `mk` au kilo), le meilleur prix d'une marque connue (pas Sans Nom, le Choix du Président, Compliments…; `1` = le moins cher est déjà une marque connue). Il écrit le tout dans `prix-epiceries.enc.json`, chiffré avec le code de la famille (voir plus haut). Si un site refuse, les prix précédents de ce magasin sont gardés et l'erreur est notée. Walmart bloque les robots : il n'est pas relevé.
 
 Le choix du produit suit les mêmes expressions que le barème : le nom (sans la marque ni le format) doit commencer par l'article, et ne pas annoncer une autre forme (nourriture pour chien, soupe, pané, cuit…). Un prix relevé à plus de 2,2 fois ou moins de 0,4 fois la référence Maxi est ignoré par l'application.
 
