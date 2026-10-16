@@ -65,7 +65,7 @@ const COMPOUNDS = ['pomme de terre','beurre d\'arachide','creme glacee','creme s
 const PRIX_MAJ_TXT = () => { try{ return 'mis à jour le ' + new Date(prixDate()+'T12:00:00').toLocaleDateString('fr-CA', {day:'numeric', month:'long', year:'numeric'}); }catch(e){ return PRIX_MAJ; } };
 const prixVieux = () => { try{ return gapDays(prixDate(), isoToday()) > 120; }catch(e){ return false; } };
 /* rappel mensuel de mise à jour des prix (désactivable, « dans une semaine » possible) */
-const prixRappel = () => { try{ const p = pmaj(); return S.setup && p.rappel !== false && gapDays(prixDate(), isoToday()) >= 30 && !(p.snooze && p.snooze > isoToday()); }catch(e){ return false; } };
+const prixRappel = () => { try{ const p = pmaj(); return S.setup && !peFrais() && p.rappel !== false && gapDays(prixDate(), isoToday()) >= 30 && !(p.snooze && p.snooze > isoToday()); }catch(e){ return false; } };
 const _BMC = new Map();
 function baremeRaw(name){
   const n = norm(name); if(_BMC.has(n)) return _BMC.get(n);
@@ -203,13 +203,13 @@ function costEst(r){ const L = (S.prices||{})[r.k], mine = L && !L.sp;
   if(!mine){ if(r.plan) return r.plan.cost; const bc = baremeCost(r); if(bc != null) return bc; }
   let q = r.buy; if(r.u==='un' && !mine){ const n = norm(r.name), A = art(r.name); if(!PKG_RE.test(n)){ const d = A.pk && A.pk.u==='un' && A.pk.q > 0 ? [0, A.pk.q] : PACK_UN.find(([re]) => re.test(n)); if(d) q = Math.max(1, Math.ceil(r.buy/d[1] - 0.05)) * d[1]; } }   /* vendu au paquet */
   return (mine ? L.pu : prixBase(r.name, r.u, r.rayon)) * q; }
+/* coût d'une ligne à l'épicerie où elle va (voir epiceries.js : tes prix, le relevé, l'estimation, les spéciaux) */
 function rowEco(r){
   if(_ECO.has(r.k)) return _ECO.get(r.k);
-  const L = (S.prices||{})[r.k], d = dealFor(r.name), est = costEst(r);
-  let cost = est, reg = est;
-  /* un « spécial » sans rabais connu qui coûte nettement plus que le prix habituel est ignoré (mauvais format ou mauvais produit) */
-  if(d){ const dc = dealCost(d, r); if(dc != null && (d.d > 0 || dc <= est*1.15 || (L && !L.sp))){ cost = dc; reg = d.d > 0 && d.d < 95 ? dc/(1 - d.d/100) : Math.max(est, dc); } }
-  const o = {cost, reg, save:Math.max(0, reg-cost), mine: !!(L && !L.sp), deal: d};
+  const s = storeOf(r), c = costAt(r, s);
+  /* rabais annoncé par la circulaire : le prix régulier qu'elle indique, s'il est plus haut */
+  const reg = c.deal && c.deal.d > 0 && c.deal.d < 95 ? Math.max(c.reg, c.cost/(1 - c.deal.d/100)) : c.reg;
+  const o = {cost:c.cost, reg, save:Math.max(0, reg - c.cost), mine: c.src==='mine', deal:c.deal, rsp:c.rsp, src:c.src, store:s};
   _ECO.set(r.k, o); return o;
 }
 function listTotals(rows){ let cost = 0, save = 0; rows.forEach(r => { const e = rowEco(r); cost += e.cost; save += e.save; }); return {cost: cost * calF(), save, raw: cost}; }
@@ -348,16 +348,13 @@ function dealCands0(name, P){
 }
 const matchesFor = (name, list) => dealCands(name, prep(list));
 /* moins cher dans une autre de tes épiceries ? */
+/* nettement moins cher dans une autre de tes épiceries ? (seulement d'après un vrai prix : spécial, relevé ou ton prix) */
 function cheaper(r){
   if(_CMP.has(r.k)) return _CMP.get(r.k);
   let out = null;
-  const A = storeOf(r), list = matchesFor(r.name, allSpec()).filter(s => isFinite(priceOf(s)));
-  if(list.length){
-    const atA = list.filter(s => s.s===A).map(s => dealCost(s, r)).filter(x => x != null);
-    const costA = atA.length ? Math.min(...atA) : costEst(r);
-    let best = null; list.filter(s => s.s!==A).forEach(s => { const c = dealCost(s, r); if(c != null && (!best || c < best.c)) best = {s, c}; });
-    if(best && best.c < costA*0.9 && costA - best.c >= 0.5) out = {store:best.s.s, cost:best.c, costA, A, aDeal: atA.length>0, save: costA - best.c};
-  }
+  const A = storeOf(r), cA = costAt(r, A); let best = null;
+  S.stores.filter(s => s !== A).forEach(s => { const c = costAt(r, s); if(c.src === 'est' && !c.deal && !c.rsp) return; if(!best || c.cost < best.c.cost) best = {s, c}; });
+  if(best && best.c.cost < cA.cost*0.9 && cA.cost - best.c.cost >= 0.5) out = {store:best.s, cost:best.c.cost, costA:cA.cost, A, aDeal: !!(cA.deal || cA.rsp), save: cA.cost - best.c.cost, sp: !!(best.c.deal || best.c.rsp)};
   _CMP.set(r.k, out); return out;
 }
 /* vraies aubaines : rabais d'au moins 35 % sur un produit qui se garde ou se congèle */

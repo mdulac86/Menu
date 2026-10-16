@@ -81,7 +81,7 @@ function mergeState(o){ if(!isObj(o)) throw new Error('données invalides'); con
   /* chaque champ doit avoir le bon type, sinon on reprend la valeur par défaut (sauvegarde ancienne ou abîmée) */
   const D = DEFAULT(); Object.keys(D).forEach(k => { const v = D[k]; if(Array.isArray(v) && !Array.isArray(m[k])) m[k] = v; else if(isObj(v) && !isObj(m[k])) m[k] = v; });
   ['storesx','skip','report'].forEach(k => { if(m[k] != null && !Array.isArray(m[k])) delete m[k]; });
-  ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx','bx','pmaj'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
+  ['prices','tmx','tpx','fav','dis','rate','art','ph','redit','vared','vardel','varx','bx','pmaj','pe'].forEach(k => { if(!isObj(m[k])) m[k] = {}; });
   m.menu = Object.assign(DEFAULT().menu, isObj(o.menu) ? o.menu : {});
   ['items','dej','din','ent','sou','des','sn'].forEach(k => { if(m.menu[k] != null && !Array.isArray(m.menu[k])) m.menu[k] = []; if(Array.isArray(m.menu[k])) m.menu[k] = m.menu[k].filter(x => isObj(x) && typeof x.r==='string' || (k==='sn' && isObj(x))); });
   ['chk','extra','useup','dinCook','dinNo','dsel'].forEach(k => { if(!isObj(m.menu[k])) m.menu[k] = {}; });
@@ -120,7 +120,7 @@ function loadLocal(){
 }
 /* nombre saisi : « 1 200 », « 150 $ », « 2,5 » ; jamais négatif ni NaN */
 const numIn = v => Math.max(0, parseFloat(String(v ?? '').replace(/[\s\u00a0$]/g,'').replace(',','.')) || 0);
-function resetCaches(){ _DO = new WeakMap(); _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); }
+function resetCaches(){ _DO = new WeakMap(); _AR = _ND = _BL = _CAT = _PN = null; _DF = new Map(); _AS = null; _ASA = null; _ECO = new Map(); _CMP = new Map(); if(typeof peReset === 'function') peReset(); }
 function save(){
   resetCaches(); S.maj = Date.now(); S.bkDirty = true;
   if(loadFailed && !rescued){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Profil)"); return; }

@@ -301,13 +301,25 @@ function prepareCard(){
   return `<div class="card call"><h3>Préparer ma semaine</h3>
     <p class="small">Ramassage ${esc(fmtDate(np))}, menu du ${esc(dayLbl(start).toLowerCase())} au ${esc(dayLbl(addDays(start, 6)).toLowerCase())}. Un seul bouton : les spéciaux de tes épiceries, le menu varié, le budget et la liste.</p>
     ${busy ? `<p class="small">Les soupers qui restent cette semaine sont gardés jusqu'au ${esc(dayLbl(start).toLowerCase())}; la semaine en cours passe dans l'historique.</p>` : ''}
+    ${goPlanSel()}
     <div class="acts"><button class="btn p" id="prep_week" data-armed="0" ${prepBusy ? 'disabled' : ''}>${prepBusy ? 'Préparation en cours…' : 'Préparer ma semaine'}</button></div>
     <p class="small" id="sp_status" aria-live="polite"></p></div>`;
 }
+/* où faire l'épicerie : la question posée avant de bâtir le menu (le menu suit les spéciaux de ces épiceries) */
+const goPlan = () => { const v = S.p.goPlan || ''; if(v==='auto' || v==='*' || v==='main' || S.stores.includes(v)) return v; return profil().princOnly !== false && S.p.main ? 'main' : '*'; };
+function goPlanSel(){
+  if(S.stores.length < 2) return '';
+  const v = goPlan(), main = S.p.main;
+  const o = (val, txt) => `<option value="${esc(val)}" ${v===val ? 'selected' : ''}>${esc(txt)}</option>`;
+  return `<label class="f">Cette semaine, l'épicerie se fait…<select data-a="goplan">${main ? o('main', `À mon épicerie principale (${main})`) : ''}${o('auto', "Où ce sera le moins cher (l'app choisit)")}${S.stores.filter(s => s !== main).map(s => o(s, `Chez ${s}`)).join('')}${o('*', 'Dans toutes mes épiceries')}</select></label>
+    <p class="small">Le menu se bâtit avec les spéciaux de ${v==='auto' || v==='*' ? 'toutes tes épiceries' : `${esc(v==='main' ? main : v)} seulement`}.${v==='auto' ? " Ensuite, l'app compare le coût de la liste dans chaque épicerie et choisit la moins chère; tu verras aussi l'économie possible en allant à deux endroits ou plus." : ''}</p>`;
+}
+function commanderCardOu(){ try{ return ouAllerLigne(buyList().rows); }catch(e){ return ''; } }
 function commanderCard(){
-  const rows = buyList().rows, left = rows.filter(r => !S.menu.chk[r.k]).length, t = listTotals(rows), main = S.p.main || S.stores[0] || '';
+  const rows = buyList().rows, left = rows.filter(r => !S.menu.chk[r.k]).length, t = listTotals(rows), main = (goStores().length ? goStores() : [S.p.main || S.stores[0] || '']).filter(Boolean).join(' et ');
   return `<div class="card call"><h3>Commander l'épicerie</h3>
     <p class="small"><b>${left}</b> article${left>1?'s':''} à mettre au panier${main ? ' chez ' + esc(main) : ''}, ≈ <b>${money(t.cost)}</b>${S.p.budget ? ` pour un budget de ${money(S.p.budget)}` : ''}. Ramassage ${esc(fmtDate(S.menu.shop || shopISO()))}.</p>
+    ${commanderCardOu()}
     <div class="acts"><button class="btn s p" data-a="view" data-v="epicerie">Ouvrir la liste de commande</button></div></div>`;
 }
 function payerCard(){
@@ -417,16 +429,22 @@ async function preparerSemaine0(){
   if(S.menu.date && S.menu.start <= today){ prev = mlist('items').filter(x => x.d && x.d >= today).map(x => Object.assign({}, x, {lock:true})); terminerSemaine(); }
   tab = 'semaine';
   if(!(S.dates.man && S.dates.shop && S.dates.shop >= today)){ S.dates.shop = nextPickup(); S.dates.man = false; }
-  const P = profil();
-  if(P.princOnly !== false && S.p.main && S.stores.length > 1){ S.skip = S.stores.filter(s => s !== S.p.main); S.goSome = false; }
+  const gp = goPlan();
+  if(S.stores.length > 1){ const one = gp==='main' ? S.p.main : S.stores.includes(gp) ? gp : '';
+    S.skip = one ? S.stores.filter(s => s !== one) : []; S.goSome = false; S.goAuto = gp==='auto'; }
   save(); render();
   if(S.stores.length && S.cp && !(S.auto && S.auto.shop === S.dates.shop && S.auto.maj === isoToday())){ say('Recherche des spéciaux…'); try{ await chercherSpeciaux(false); }catch(e){} }
   const sp = (S.auto && S.auto.shop === S.dates.shop) ? autoItems().length : 0;
   genMenu();
   S.menu.prev = prev.filter(x => x.d < S.menu.start);
+  /* « l'app choisit » : la liste va à l'épicerie la moins chère; les combinaisons restent proposées dans Épicerie */
+  let ouTxt = '';
+  if(S.goAuto && S.stores.length > 1){ resetCaches(); const C = comparer(buyList().rows), b = C.best, m = C.multi[0];
+    choisirEpiceries(b.stores); S.p.grp = 'rayon'; resetCaches();
+    ouTxt = ` Le moins cher cette semaine : ${b.stores[0]}.` + (m ? ` En allant aussi chez ${m.stores.filter(s => s !== b.stores[0]).join(' et ')} : ≈ ${money((b.total - m.total)*calF())} de moins (voir Épicerie).` : ''); }
   const rows = buyList().rows, t = listTotals(rows), aub = aubaines().length;
   S.flash = `Menu prêt : ${mlist('items').length} soupers du ${dayLbl(S.menu.start).toLowerCase()} au ${dayLbl(addDays(S.menu.start, 6)).toLowerCase()}, ≈ ${money(t.cost)}${S.p.budget ? ' (budget ' + money(S.p.budget) + ')' : ''}${t.save >= 1 ? ', ≈ ' + money(t.save) + ' économisés en spéciaux' : ''}.`
     + (sp ? '' : ' Les circulaires de cette semaine ne sont pas encore lues : relance « Chercher les spéciaux » jeudi pour un menu qui en profite.')
-    + (aub ? ` ${aub} vraie${aub>1?'s':''} aubaine${aub>1?'s':''} à considérer pour faire des réserves.` : '');
+    + (aub ? ` ${aub} vraie${aub>1?'s':''} aubaine${aub>1?'s':''} à considérer pour faire des réserves.` : '') + ouTxt;
   tab = 'semaine'; prepBusy = false; save(); render(); window.scrollTo(0, 0);
 }

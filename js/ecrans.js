@@ -411,7 +411,8 @@ async function lockScreen(on){
 }
 document.addEventListener('visibilitychange', () => { if(storeMode && document.visibilityState==='visible') lockScreen(true); });
 const mainStore = () => { const go = goStores(); return (S.p.main && go.includes(S.p.main) ? S.p.main : go[0]) || S.p.main || S.stores[0] || 'Mon épicerie'; };
-const storeOf = r => { const d = dealFor(r.name); return d ? d.s : mainStore(); };
+/* l'épicerie d'un article : la principale de la semaine, sauf si une autre épicerie de la semaine est nettement moins chère */
+const storeOf = r => assign(r, goStores(), mainStore());
 function specTotal(rows){ let t = 0, n = 0; rows.forEach(r => { const d = dealFor(r.name), c = d ? dealCost(d, r) : null; if(c != null){ t += c; n++; } }); return {t, n}; }
 /* ordre des rayons : celui choisi dans Profil → Épiceries (le parcours du magasin ou de l'appli), sinon l'ordre de base */
 const rayOrder = () => { const o = (isObj(S.profil) && Array.isArray(S.profil.rayons)) ? S.profil.rayons.filter(r => RAYONS.includes(r)) : []; return o.concat(RAYONS.filter(r => !o.includes(r))); };
@@ -428,17 +429,17 @@ function groupsOf(rows){
   return byRay(rows).map(g => ({title:cap(g.ray), sub:[{ray:'', rows:g.rows}]}));
 }
 function rowHtml(r, m){
-  const d = dealFor(r.name), pk = packInfo(r), hl = !d && !storeMode ? histLine(r.name) : '';
+  const e = rowEco(r), d = e.deal, pk = packInfo(r), hl = !d && !storeMode ? histLine(r.name) : '';
   return `<label class="item ${m.chk[r.k]?'done':''}"><input type="checkbox" data-a="chk" data-k="${esc(r.k)}" ${m.chk[r.k]?'checked':''}>
-    <span class="t"><b>${esc(cap(r.name))}</b>${S.p.cmd && !storeMode ? shopLink(r, S.p.grp==='magasin' ? storeOf(r) : mainStore()) : ''}${d?`<span class="tags">${tagHtml(d)}${storeMode ? '' : `<a href="#" class="fixl" data-a="ar_go" data-b="${esc(artB(r.name))}">Pas le bon ?</a>`}</span>`:''}${pk?`<small>${esc(pk)}</small>`:''}${hl?`<small class="hist">${esc(hl)}</small>`:''}${!storeMode && r.st>0?`<small>Il en faut ${fq(r.q,r.u)}, il y en a déjà ${fq(r.st,r.u)} à la maison</small>`:''}${!storeMode && r.src.length?`<small>${esc(r.src.slice(0,3).join(', '))}${r.src.length>3?'…':''}</small>`:''}${cmpLine(r)}</span>
+    <span class="t"><b>${esc(cap(r.name))}</b>${S.p.cmd && !storeMode ? shopLink(r, S.p.grp==='magasin' ? storeOf(r) : mainStore()) : ''}${d?`<span class="tags">${tagHtml(d)}${storeMode ? '' : `<a href="#" class="fixl" data-a="ar_go" data-b="${esc(artB(r.name))}">Pas le bon ?</a>`}</span>`: e.rsp ? `<span class="tags"><span class="flag">Promo ${esc(e.store)}${e.rsp.fin ? ' jusqu\'au ' + esc(dShort(e.rsp.fin)) : ''}</span></span><small>${esc(e.rsp.nom)}</small>` : ''}${pk?`<small>${esc(pk)}</small>`:''}${hl?`<small class="hist">${esc(hl)}</small>`:''}${!storeMode && r.st>0?`<small>Il en faut ${fq(r.q,r.u)}, il y en a déjà ${fq(r.st,r.u)} à la maison</small>`:''}${!storeMode && r.src.length?`<small>${esc(r.src.slice(0,3).join(', '))}${r.src.length>3?'…':''}</small>`:''}${cmpLine(r)}</span>
     <span class="qcol"><span class="q">${fq(r.buy,r.u)}</span>${priceBtn(r)}</span></label>`;
 }
 function cmpLine(r){ const c = cheaper(r); if(!c) return '';
-  return `<small class="cmp">${c.aDeal ? `Moins cher chez ${esc(c.store)} : ${money(c.cost)} (${esc(c.A)} : ${money(c.costA)})` : `En spécial chez ${esc(c.store)} : ${money(c.cost)} (≈ ${money(c.costA)} au prix habituel)`}</small>`; }
+  return `<small class="cmp">${c.sp ? 'En spécial' : 'Moins cher'} chez ${esc(c.store)} : ${money(c.cost)} (${esc(c.A)} : ${c.aDeal ? '' : '≈ '}${money(c.costA)})</small>`; }
 function priceBtn(r){
   const e = rowEco(r);
   if(prEdit===r.k) return `<input type="text" inputmode="decimal" class="num prin" data-a="pr_in" data-k="${esc(r.k)}" placeholder="Prix payé" aria-label="Prix payé pour ${esc(r.name)}" autofocus>`;
-  return `<button type="button" class="prix${e.mine?' mine':''}" data-a="pr_edit" data-k="${esc(r.k)}" aria-label="Corriger le prix">${e.deal || e.mine ? '' : '≈ '}${money(e.cost)}</button>`;
+  return `<button type="button" class="prix${e.mine?' mine':''}" data-a="pr_edit" data-k="${esc(r.k)}" aria-label="Corriger le prix">${e.deal || e.mine || e.rsp || e.src==='robot' ? '' : '≈ '}${money(e.cost)}</button>`;
 }
 const groupHtml = (gs, m) => gs.map(g => `<h2 class="sec">${esc(g.title)}<span>${g.sub.reduce((a,s) => a+s.rows.length, 0)}</span></h2><div class="card list">` + g.sub.map(s => (s.ray ? `<p class="aisle">${esc(cap(s.ray))}</p>` : '') + s.rows.map(r => rowHtml(r,m)).join('')).join('') + `</div>`).join('');
 const paidField = m => `<label class="f">Total payé à la caisse ($)<input type="text" inputmode="decimal" class="num" id="paid" value="${m.paid||''}" placeholder="0,00"></label>`;
@@ -448,36 +449,7 @@ function budgetHtml(rows){
   const fit = b && rest < 0 && S.menu.date && !S.menu.achete ? `<div class="acts"><button class="btn s" id="bfit">Remplacer des soupers par des plats moins chers</button></div>` : '';
   return `<div class="budget"><p><span class="small">Total estimé</span> <b>≈ ${money(t.cost)}</b>${t.save >= 1 ? `<span class="small"> · ≈ ${money(t.save)} économisés en spéciaux</span>` : ''}</p>
     ${b ? `<div class="bar ${rest<0?'over':''}"><i style="width:${Math.min(100, t.cost/b*100)}%"></i></div><p class="small">Budget ${money(b)} : ${rest >= 0 ? `il reste ≈ <b>${money(rest)}</b>` : `<b class="over">dépasse de ≈ ${money(-rest)}</b>`}</p>` : ''}
-    ${calTxt}${fit}${prixVieux() ? `<p class="small over">Les prix de référence datent de plus de 4 mois (${esc(PRIX_MAJ_TXT())}) : le total est probablement sous-estimé. <a href="#" data-a="pm_go">Les mettre à jour</a></p>` : ''}<p class="small">Prix réguliers du barème Maxi (${esc(PRIX_MAJ_TXT())}) pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger.</p></div>`;
-}
-/* Épiceries laissées de côté cette semaine : combien on y sauverait (rien n'est changé dans la liste). */
-function ailleurs(rows){
-  const go = goStores(), sk = S.stores.filter(s => !go.includes(s)); if(!sk.length || !go.length) return [];
-  const pool = allSpecAll().filter(s => sk.includes(s.s)), by = new Map();
-  rows.filter(r => !S.menu.chk[r.k]).forEach(r => {
-    const cur = rowEco(r).cost; let best = null;
-    matchesFor(r.name, pool).forEach(s => { if(!isFinite(priceOf(s))) return; const c = dealCost(s, r); if(c != null && (!best || c < best.c)) best = {s, c}; });
-    if(best && best.c < cur*0.9 && cur - best.c >= 0.5){ const o = by.get(best.s.s) || {n:0, save:0, names:[]}; o.n++; o.save += cur - best.c; o.names.push(r.name); by.set(best.s.s, o); }
-  });
-  return [...by.entries()].filter(x => x[1].save >= 5).sort((a,b) => b[1].save - a[1].save);
-}
-function cmpCard(rows){
-  const C = rows.filter(r => !S.menu.chk[r.k]).map(r => ({r, c:cheaper(r)})).filter(x => x.c), A = ailleurs(rows);
-  if(!C.length && !A.length) return '';
-  let h = '';
-  if(C.length){
-    const by = new Map(); C.forEach(x => { const o = by.get(x.c.store) || {n:0, save:0}; o.n++; o.save += x.c.save; by.set(x.c.store, o); });
-    const tot = C.reduce((a,x) => a + x.c.save, 0);
-    h += `<h3>Moins cher ailleurs</h3><p class="small">Parmi les épiceries où tu vas cette semaine.</p>
-    <ul class="todo">${[...by.entries()].sort((a,b) => b[1].save - a[1].save).map(([s,o]) => `<li><b>${esc(s)}</b> : ${o.n} article${o.n>1?'s':''}, ≈ ${money(o.save)} de moins</li>`).join('')}</ul>
-    <p class="small">${tot >= 10 ? `≈ ${money(tot)} en tout : ça vaut peut-être le détour.` : `≈ ${money(tot)} en tout : probablement pas assez pour un détour.`} Le détail est sous chaque article.</p>`;
-  }
-  if(A.length){
-    const go = goStores();
-    h += `${C.length ? '<p class="small"><b>Dans tes autres épiceries</b></p>' : '<h3>Dans tes autres épiceries</h3>'}<p class="small">Cette semaine, tu fais l'épicerie seulement chez ${esc(go.join(', '))}. Pour info : ${A.map(([s,o]) => `chez ${esc(s)}, ≈ ${money(o.save)} de moins sur ${o.n} article${o.n>1?'s':''} (${esc(o.names.slice(0,3).join(', '))}${o.n>3?'…':''})`).join('; ')}. Ta liste ne change pas.</p>
-    <div class="acts">${A.slice(0,2).map(([s]) => `<button class="btn s" data-a="goadd" data-s="${esc(s)}">Ajouter ${esc(s)} cette semaine</button>`).join('')}</div>`;
-  }
-  return `<div class="card cmpc">${h}</div>`;
+    ${calTxt}${fit}${prixVieux() ? `<p class="small over">Les prix de référence datent de plus de 4 mois (${esc(PRIX_MAJ_TXT())}) : le total est probablement sous-estimé. <a href="#" data-a="pm_go">Les mettre à jour</a></p>` : ''}<p class="small">${peDate() ? `Prix réguliers relevés le ${esc(dShort(peDate()))} pour Maxi et IGA` : `Prix réguliers du barème Maxi (${esc(PRIX_MAJ_TXT())})`} pour les formats à acheter (le reste du format va dans Maison), remplacés par les spéciaux et par tes prix : touche un prix pour le corriger. Un prix sans « ≈ » est un vrai prix.</p></div>`;
 }
 function renderEpicerie(){
   const el = $('#tab-epicerie'); const m = S.menu;
@@ -510,8 +482,8 @@ function renderEpicerie(){
     ${budgetHtml(rows)}
     <div class="seg" role="group" aria-label="Façon de faire l'épicerie"><button class="${S.p.cmd?'on':''}" data-a="cmdmode" data-v="1">Commande en ligne</button><button class="${!S.p.cmd?'on':''}" data-a="cmdmode" data-v="0">En magasin</button></div>
     ${S.p.cmd ? `<p class="small">Chaque article a un lien vers le site de l'épicerie : ouvre-le, ajoute au panier, reviens et coche. Le format à commander est indiqué sous le nom.</p>` : `<button class="btn p" id="store_on">Mode magasin</button>`}</div>`;
-  if(S.p.grp==='magasin') h += `<p class="small">Chaque article va au magasin où il est le moins cher en spécial; le reste va à ${esc(mainStore())}. Les prix des circulaires ne sont pas toujours pour le même format.</p>`;
-  h += cmpCard(rows);
+  if(S.p.grp==='magasin') h += `<p class="small">${goStores().length > 1 ? `Chaque article va à l'épicerie de la semaine où il coûte nettement moins; le reste va à ${esc(mainStore())}.` : `Tout va à ${esc(mainStore())} cette semaine.`} Les prix des circulaires ne sont pas toujours pour le même format.</p>`;
+  h += ouAllerCard(rows);
   h += renderAubaines();
   h += groupHtml(groupsOf(rows), m);
   if(verify.length){
@@ -1005,14 +977,14 @@ function prixRow(o){
   const H = ((S.ph||{})[artB(o.n)] || []).filter(e => e.r).slice(0, 2);
   const vu = H.length ? `<small>Prix régulier vu dans les circulaires : ${H.map(e => `${esc(money(e.r))} chez ${esc(e.s)} (${esc(e.t)}, ${esc(dShort(e.d))})`).join(' · ')}</small>` : '';
   const quand = ov.d ? `<small class="ok">Mis à jour le ${esc(dShort(ov.d))}</small>` : '';
-  return `<div class="item" style="display:block"><span class="t"><b>${esc(cap(o.n))}</b>${quand}${vu}</span>
+  return `<div class="item" style="display:block"><span class="t"><b>${esc(cap(o.n))}</b>${quand}${peTxt(o.b)}${vu}</span>
     <div class="grid2" style="margin-top:6px">${fields}</div>
     <p class="small"><a href="https://www.maxi.ca/fr/search?search-bar=${encodeURIComponent(o.n)}" target="_blank" rel="noopener">Voir le prix sur maxi.ca ↗</a>${Object.keys(ov).some(x => x!=='d') ? ` · <a href="#" data-a="pm_reset" data-k="${k}">Revenir au prix du fichier</a>` : ''}</p></div>`;
 }
 function prixView(){
   const L = prixArts(), p = pmaj();
-  return `<div class="card"><h3>Mise à jour des prix</h3>
-    <p class="small">Prix réguliers (pas les spéciaux) des articles qui comptent le plus dans ton épicerie, ${esc(PRIX_MAJ_TXT())}. Touche « Voir le prix sur maxi.ca », puis inscris le prix du même format. Un champ vide garde le prix actuel (en gris).</p>
+  return peCard() + `<div class="card"><h3>Prix de référence Maxi (à la main)</h3>
+    <p class="small">${peFrais() ? 'Le relevé automatique remplace ces prix pour les articles qu\'il trouve. Ceux-ci servent pour le reste, et pour estimer les épiceries sans relevé. ' : ''}Prix réguliers (pas les spéciaux) des articles qui comptent le plus dans ton épicerie, ${esc(PRIX_MAJ_TXT())}. Touche « Voir le prix sur maxi.ca », puis inscris le prix du même format. Un champ vide garde le prix actuel (en gris).</p>
     <label class="f">Ajuster tous les autres prix de (%)<input type="text" inputmode="decimal" class="num" id="pm_pct" value="${p.pct ? String(p.pct).replace('.', ',') : ''}" placeholder="0 (ex. 3 pour +3 %)"></label>
     <p class="small">Pratique pour suivre l'inflation sur tout ce que tu ne vérifies pas un par un.</p>
     <div class="acts"><button class="btn s p" data-a="pm_done">J'ai terminé la mise à jour</button></div>

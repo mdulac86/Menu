@@ -222,6 +222,10 @@ document.addEventListener('click', e => {
   if(a==='pf_rm'){ const P = profil(); if(P.membres.length > 1) P.membres.splice(+t.dataset.i, 1); appliquerProfil(); ajuster(); save(); render(); return; }
   if(a==='wiz'){ wiz = Math.max(0, Math.min(4, wiz + (+t.dataset.v||0))); if(wiz===3) appliquerProfil(); save(); render(); window.scrollTo(0,0); return; }
   if(a==='ar_f'){ artF.f = t.dataset.v; render(); return; }
+  if(a==='ou_pick'){ e.preventDefault(); choisirEpiceries(String(t.dataset.v||'').split('|')); save(); render(); return; }
+  if(a==='pe_maj'){ e.preventDefault(); t.disabled = true; const msg = $('#pe_msg'); if(msg){ msg.hidden = false; msg.textContent = 'Recherche du dernier relevé…'; }
+    peFetch(true).then(() => { S.flash = ''; save(); render(); const m2 = $('#pe_msg'); if(m2){ m2.hidden = false; m2.textContent = peDate() ? `Prix à jour : relevé du ${fmtDate(peDate())}.` : 'Relevé reçu.'; } })
+      .catch(() => { t.disabled = false; if(msg) msg.textContent = 'Le relevé n\'a pas pu être lu (connexion ?). Les prix déjà sur le téléphone restent.'; }); return; }
   if(a==='pm_go'){ e.preventDefault(); tab = 'prix'; artF.q = ''; render(); window.scrollTo(0,0); return; }
   if(a==='pm_snooze'){ pmaj().snooze = addDays(isoToday(), 7); save(); render(); return; }
   if(a==='pm_done'){ const p = pmaj(); p.d = isoToday(); delete p.snooze; save(); render(); const mm = $('#pm_msg'); if(mm){ mm.textContent = 'Prix à jour. Prochain rappel dans un mois.'; mm.hidden = false; } return; }
@@ -283,6 +287,8 @@ document.addEventListener('click', e => {
   else if(a==='ldel'){ arm(t, 'Confirmer', () => { S[t.dataset.l].splice(i,1); save(); renderReglages(); }); }
 });
 document.addEventListener('change', e => {
+  if(e.target && e.target.dataset && e.target.dataset.a==='goplan'){ S.p.goPlan = e.target.value; save(); render(); return; }
+  if(e.target && e.target.dataset && e.target.dataset.a==='pe_mag'){ const t = e.target; S.pe = Object.assign(peSel(), {[t.dataset.ch]: t.value}); resetCaches(); save(); render(); return; }
   { const t0 = e.target; if(t0 && t0.dataset && t0.dataset.ib !== undefined && t0.dataset.j !== undefined){ const d0 = drafts[t0.dataset.ib], x0 = d0 && d0.rows && d0.rows[+t0.dataset.j]; if(x0 && x0.doute){ x0.doute = ''; const w0 = t0.closest('.ibw'); if(w0){ w0.classList.remove('doute'); const s0 = w0.querySelector('.dt'); if(s0) s0.remove(); } } } }
   const t = e.target;
   if(t.dataset.ck && cook){ const o = ckRead(), x = o[cook.key] = o[cook.key] || {c:{}}; x.ts = Date.now(); x.c = x.c || {};
@@ -421,7 +427,7 @@ function renderAide(){
   + D('2. Première configuration', `<p>Au premier lancement, un assistant en 5 étapes décrit ta famille :</p>
     <ul><li><b>La famille</b> : adultes et enfants (avec leur âge), l'appétit de chacun et qui apporte un lunch. Les portions et les restes pour les lunchs en découlent.</li>
     <li><b>L'horaire</b> : le jour où tu planifies, où tu commandes, où tu ramasses l'épicerie et où vous commencez à cuisiner.</li>
-    <li><b>Les épiceries</b> : ton code postal, celles où tu vas et ta principale. La liste se fait à la principale; l'application t'avertit quand une autre est nettement plus avantageuse.</li>
+    <li><b>Les épiceries</b> : ton code postal, celles où tu vas et ta principale. Avant chaque semaine, tu choisis où faire l'épicerie : à la principale, dans une autre, ou « où ce sera le moins cher » (l'application choisit).</li>
     <li><b>Les repas</b> à planifier et, si tu veux, une liste de départ pour les déjeuners, lunchs, collations et boissons.</li>
     <li><b>Le budget</b> de la semaine.</li></ul>
     <p>Tout se change ensuite dans l'onglet <b>Profil</b>. Le profil peut être enregistré dans Fichiers (Profil → Sauvegarde) pour le réinstaller ou le donner à un proche.</p>`)
@@ -432,7 +438,7 @@ function renderAide(){
     <div class="tip">Les poissons et la viande hachée sont placés en début de semaine, les plats du congélateur et du garde-manger à la fin.</div>`)
   + D('3. Faire le menu de la semaine', `<ol>
     <li>Règle les dates : <b>Je planifie le</b> et <b>J'achète le</b>. Les spéciaux retenus sont ceux valides le jour de l'épicerie.</li>
-    <li>Tu ne vas qu'à une de tes épiceries cette semaine, ou tu commandes en ligne ? Sur la carte de la semaine, choisis <b>Cette semaine, je fais l'épicerie : Seulement chez Maxi</b> (par exemple). Le menu suit les spéciaux de Maxi, et la liste, les prix, « Moins cher ailleurs » et les aubaines ne parlent que de Maxi. Une petite note dit seulement combien tu sauverais ailleurs, sans rien changer. « Dans quelques-unes… » permet d'en cocher plusieurs. La liste complète de tes épiceries se change dans Profil.</li>
+    <li><b>Où faire l'épicerie</b> : sur la carte « Préparer ma semaine », choisis <b>Cette semaine, l'épicerie se fait…</b> avant de toucher le bouton. Le menu se bâtit avec les spéciaux de cette épicerie seulement. Avec <b>Où ce sera le moins cher</b>, le menu profite des spéciaux de toutes tes épiceries, puis l'application compare le coût de la liste partout et choisit la moins chère. Sur la carte de la semaine (Menu), <b>Cette semaine, je fais l'épicerie</b> change ce choix après coup. La liste complète de tes épiceries se change dans Profil.</li>
     <li>Une envie précise ? <b>Ajouter un plat de mon choix</b> (Menu) : cherche un plat, une version ou un ingrédient (burger Nashville, saumon, potage), puis choisis le jour. Le plat reste au menu quand tu le refais. Tu peux le faire avant de créer le menu : l'application complète le reste. Dans Recettes, le bouton <b>Ajouter au menu de la semaine</b> fait la même chose.</li>
     <li><b>Reporter un souper</b> : resto ou changement de plan ? Ouvre le plat, touche <b>Reporter</b> : « À demain » fait glisser les soupers suivants d'un jour jusqu'au prochain soir libre; « À la semaine prochaine » le met de côté, il sera déjà au menu de la semaine suivante et ses ingrédients restent dans Maison. La carte Aujourd'hui a aussi « On mange au resto : reporter à demain ».</li>
     <li><b>Portions</b> : ouvre un plat et choisis le nombre de portions (2 pour un souper à deux, 12 quand on reçoit). La liste d'épicerie s'ajuste.</li>
@@ -465,12 +471,14 @@ function renderAide(){
     <li>Un aliment que l'application ne connaît pas est accepté : vérifie alors son rayon et sa catégorie. « Féculent » ou « Légume ou salade » en fait un accompagnement possible (un sac de rouleaux de printemps, par exemple).</li>
     <li>Une quantité très petite en grammes (3 g, par exemple) demande une confirmation : c'était peut-être 3 kg ou 3 paquets.</li>
     <li>Tape une quantité exacte ou utilise − et +. À 0, l'article disparaît. « À utiliser cette semaine » (Menu) propose d'utiliser ce qui dort à la maison.</li></ul>`)
-  + D("9. Faire l'épicerie une seule fois", `<ol><li>L'onglet <b>Épicerie</b> classe tout <b>par rayon</b> ou <b>par magasin</b>. Par magasin, chaque article va à l'épicerie où il est le moins cher en spécial; le reste va à ton épicerie principale (Profil).</li>
+  + D("9. Faire l'épicerie une seule fois", `<ol><li>L'onglet <b>Épicerie</b> classe tout <b>par rayon</b> ou <b>par magasin</b>. Par magasin, chaque article va à l'épicerie de la semaine où il coûte nettement moins; le reste va à ton épicerie principale.</li>
+    <li><b>Où faire l'épicerie cette semaine</b> : en haut de la liste, le coût de toute la liste dans chacune de tes épiceries, spéciaux et prix réguliers compris, puis l'économie possible en allant à 2, 3 ou 4 endroits. L'application ne compte pas l'essence ni le temps : c'est à toi de voir si l'économie vaut le déplacement. Touche <b>Choisir</b> : la liste se sépare par épicerie.</li>
     <li><b>Mode magasin</b> : gros texte, écran qui reste allumé quand le téléphone le permet, et les articles cochés descendent dans « Dans le panier ». Touche <b>Quitter</b> pour revenir.</li>
     <li>« Vérifier avant de partir » rappelle les articles toujours à la maison : touche <b>Il manque</b> au besoin.</li>
     <li>Avec un <b>budget</b> (Profil), l'onglet montre ton budget et le coût estimé des articles en spécial. Au retour, inscris le <b>total payé</b> à la caisse : la moyenne payée s'affiche dans Profil, carte Historique.</li>
-    <li><b>Prix et budget</b> : chaque article montre un prix. « ≈ » veut dire un prix habituel estimé (moyennes du Québec de Statistique Canada quand elles existent). Un spécial donne le prix de la circulaire; quand la circulaire indique le rabais en %, l'application en déduit le prix régulier. Touche un prix pour noter ce que tu as payé : l'application le retient pour les semaines suivantes. Le total estimé se compare à ton budget.</li>
-    <li><b>Moins cher ailleurs</b> : l'application lit les circulaires de toutes tes épiceries, même celles décochées pour la semaine. Si un article est nettement moins cher ailleurs, c'est écrit sous l'article, et une carte résume l'économie possible par épicerie.</li>
+    <li><b>Prix et budget</b> : chaque article montre le prix de l'épicerie où il va. Un prix sans « ≈ » est un vrai prix : un spécial de la circulaire, une promotion ou un prix relevé sur le site de l'épicerie, ou le prix que tu as payé. « ≈ » veut dire un prix estimé. Touche un prix pour noter ce que tu as payé : l'application le retient pour cette épicerie. Le total estimé se compare à ton budget.</li>
+    <li><b>Prix des épiceries</b> (Épicerie → Prix) : chaque jeudi matin, un robot relève sur les sites de Maxi et d'IGA les prix réguliers et les promotions de près de 150 articles de base, pour les magasins de Saint-Georges. L'application va chercher ce relevé toute seule une fois par jour; « Mettre à jour les prix maintenant » le fait tout de suite. Walmart, Marché Ami, Inter-Marché et les autres n'ont pas de prix en ligne lisibles : leurs prix sont estimés d'après leur écart habituel avec Maxi et corrigés par leurs circulaires et par les prix que tu inscris.</li>
+    <li><b>Moins cher ailleurs</b> : sous un article, l'application indique s'il coûte nettement moins dans une autre de tes épiceries (d'après un vrai prix seulement).</li>
     <li><b>Vraies aubaines</b> : un rabais d'au moins 35 % sur un produit qui se garde (viande et poisson à congeler, surgelés, garde-manger, beurre, fromage) apparaît dans « Vraies aubaines : fais des réserves », avec un conseil de conservation et « En ajouter ».</li>
     <li>Coche les articles dans le panier, puis touche <b>Épicerie terminée</b> au retour : ils entrent dans Maison.</li></ol>`)
   + D('10. Terminer la semaine', `<p><b>Terminer la semaine</b> (Menu) retire de Maison ce qui a été utilisé, garde les restes et range les plats dans l'historique. Exemple : 12 oeufs achetés, 8 utilisés, il en reste 4 pour la semaine suivante.</p>`)
@@ -526,6 +534,9 @@ const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeo
   } }catch(e){}
   loadLocal();
   migrer();
+  peLoad(); peSel();
+  /* le dernier relevé des prix, une fois par jour : l'application fonctionne sans, avec l'estimation */
+  setTimeout(() => { peFetch(false).then(ch => { if(ch){ save(); const ae = document.activeElement; if(!draftsDirty() && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) render(); } }).catch(() => {}); }, 400);
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(e){}
   try{ render(); }

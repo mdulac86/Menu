@@ -5,12 +5,15 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env: { TZ: America/Toronto }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm install --no-save playwright-core@1.48.2 playwright@1.48.2 && npx playwright install --with-deps chromium
+      - run: node tests/robot.js
       - run: node tests/unit.js
       - run: node tests/scenario.js
       - run: node tests/horsligne.js
+      - run: node tests/epiceries.js
       - run: node tests/smoke.js 300 1

@@ -6,7 +6,7 @@ set -e
 cd "$(dirname "$0")/.."
 rm -rf dist/site && mkdir -p dist/site
 cp style.css version.js recettes.js prix-maxi.js manifest.webmanifest icon-192.png icon-512.png apple-touch-icon.png qr-menu.png dist/site/
-for f in base plats semaine liste-prix generation ecrans profil app; do cat js/$f.js; echo; done > dist/site/app.js
+for f in base plats semaine liste-prix generation epiceries ecrans profil app; do cat js/$f.js; echo; done > dist/site/app.js
 python3 - <<'PY'
 import re
 s = open('index.html', encoding='utf8').read()

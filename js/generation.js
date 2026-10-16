@@ -205,7 +205,8 @@ async function jget(u, ms){
 const flyersOf = fl => { const a = Array.isArray(fl) ? fl : fl && Array.isArray(fl.flyers) ? fl.flyers : null; if(!a) throw new Error('format des circulaires inattendu'); return a; };
 const itemsOf = d => { const a = Array.isArray(d) ? d : d && Array.isArray(d.items) ? d.items : null; if(!a) throw new Error('format'); return a; };
 /* jour local (Québec) d'une date de circulaire : « 2026-10-21T23:59:59-04:00 » → 2026-10-21 */
-const dayOf = v => { if(!v) return ''; const s = String(v); if(/^\d{4}-\d\d-\d\d$/.test(s)) return s; const d = new Date(s); return isNaN(d) ? s.slice(0,10) : d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+/* la date d'une circulaire est celle écrite dans le texte (heure du magasin), peu importe le fuseau du téléphone */
+const dayOf = v => { if(!v) return ''; const s = String(v); if(/^\d{4}-\d\d-\d\d/.test(s)) return s.slice(0, 10); const d = new Date(s); return isNaN(d) ? s.slice(0,10) : d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const covers = (f, day) => (!f.valid_from || dayOf(f.valid_from) <= day) && (!f.valid_to || dayOf(f.valid_to) >= day);
 const cpOk = cp => /^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(cp);
 let spBusy = false;
