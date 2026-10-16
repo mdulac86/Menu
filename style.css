@@ -359,3 +359,12 @@ body.test header h1 em::after{content:" TEST";font-style:normal;font-size:.5em;c
 @media (max-width:380px){.calday{grid-template-columns:78px 1fr auto}}
 
 .calday.prev{background:var(--chip);opacity:.85}
+/* avec ce qu'on a */
+.avm{color:var(--warn)!important;font-weight:600}
+.item.avr{flex-wrap:wrap;row-gap:8px}
+.item.avr .t{flex:1 1 100%}
+.item.avr .acts{flex:1 1 100%;margin:0;justify-content:flex-start}
+/* façons de cuire (2.3) */
+.seg button small{font-weight:500;opacity:.72;margin-left:2px}
+.segl{margin:12px 0 6px!important}
+.ck-cm{margin:10px 0 4px}

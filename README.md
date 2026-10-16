@@ -40,6 +40,25 @@ Il garde ses données à part (clés `menu_test_*`, cache `menu-test-*`), s'inst
 
 Cinq onglets : Ma semaine (accueil selon le jour), Menu (Semaine, Historique), Épicerie (Liste, Articles, Prix, Maison), Recettes, Profil (Famille, Horaire, Épiceries, Budget et prix, Sauvegarde, Apparence, Aide).
 
+## Ce soir, on mange quoi ? (2.2)
+
+Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le nombre de personnes :
+
+- **J'ai le goût de…** : on cherche un plat (ex. jalapeños poppers). `pairWith()` propose un plat principal (ou une entrée, si le plat choisi est un souper) et un dessert. Le score tient compte de l'ambiance (`THEMES` : pub, mexicaine, italienne, asiatique, grecque, raffinée, québécoise), du même appareil (même fumoir, BBQ déjà chaud), évite les mêmes ingrédients principaux et les plats trop longs pour un soir, et favorise ce qui est à la maison. « Ce soir, ensemble » met les deux au menu.
+- **Avec ce qu'on a à la maison** : `fitStock()` compare une recette, pour le nombre de personnes, à Maison (75 % de la quantité suffit). Les condiments et le garde-manger rarement notés (`COND_RE` : sauces, bouillon, épices, farine…) ne bloquent pas un plat : ils sont « à vérifier ». Liste « Tout est à la maison », puis « Il manque un article ». Les accompagnements viennent aussi de la maison (`maisonSides`).
+- **Menu de la semaine avec ce qu'on a** : `genMenuMaison()` crée le menu en partageant le stock entre les plats (`STK`, consommé à chaque choix). Le menu porte `maison: true` : aucun dîner acheté n'est ajouté.
+
+## Façons de cuire : air fryer, mijoteuse, four (2.3)
+
+77 recettes ont d'autres façons de cuire, avec les mêmes ingrédients : 34 à l'air fryer, 21 à la mijoteuse, 29 au four (pour les recettes BBQ, plancha, poêle ou fumoir). Chaque façon a ses propres temps et ses propres étapes (champ `cm`, voir plus bas).
+
+- **Menu** : chaque plat a un choix « Cuisson ». Le choix est gardé dans le plat (`it.cm`; `b` = la recette de base) et change le temps affiché, les étapes, le mode Cuisiner, la carte Aujourd'hui et les textes copiés.
+- **Soir de semaine** : sans choix, un plat trop long pour un soir de semaine prend tout seul la façon qui le rend possible (ex. côtes levées fumées → mijoteuse), et le plat le dit (`cmEff`). Les jours de congé, c'est la recette de base.
+- **Mode Cuisiner** : on peut changer de façon au moment de cuisiner. Pour un plat du menu, le choix est gardé.
+- **J'ai le goût de…** : « Comment le faire » montre chaque façon avec son temps et indique la plus rapide. « Recette » et « Ce soir, ensemble » gardent la façon choisie.
+- **Recherche** : les autres noms d'un plat comptent (champ `al`, ex. « parmigiana » → Poulet au parmesan), et les lettres doublées sont ignorées (« popers » trouve « poppers »).
+- **Recettes** : filtre « Air fryer », le filtre « Mijoteuse » inclut les recettes qui ont une version mijoteuse, et la fiche montre « Autres façons de le cuire ».
+
 ## Mettre une nouvelle version en ligne
 
 1. Changer la date dans `version.js`, par exemple `'2026-11-02a'`.
@@ -113,6 +132,8 @@ Dans l'onglet Articles, le bouton « Pas ce produit » écarte pour toujours un 
 | `nw` | Marquée « Nouveau » |
 | `rs` | Plat qui laisse des restes : `{lbl, w:[mots], x:[ingrédients en plus]}` |
 | `ur` | Plat qui utilise des restes (mots qui doivent correspondre à `rs.w`) |
+| `cm` | Autres façons de cuire : `{b: "Four", af: {tp, tm, s}, mj: {…}, four: {…}}`. `b` nomme la façon de la recette de base; `af` = air fryer, `mj` = mijoteuse, `four` = four. Chaque façon a ses temps (`tp`, `tm`) et ses étapes (`s`), avec les mêmes ingrédients |
+| `al` | Autres noms pour la recherche (ex. `["parmigiana", "chicken parm"]`) |
 
 ### Accompagnement (`SIDES`)
 
