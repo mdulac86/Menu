@@ -27,9 +27,10 @@ const serveur = require('./serveur');
   /* configuration initiale : l'assistant en 5 étapes */
   for(let k = 0; k < 6; k++){
     const cp = page.locator('[data-cp]:visible'); if(await cp.count()){ await cp.first().fill('G1V 4M7'); await cp.first().dispatchEvent('change');
-      for(const s of ['IGA', 'Maxi']){ const c = page.locator(`[data-store="${s}"]:visible`).first(); if(await c.count()) await c.check({force: true}); }
+      /* coché par le code (un clic forcé peut tomber sur la barre d'onglets selon les polices de la machine) */
+      for(const s of ['IGA', 'Maxi']){ const c = page.locator(`[data-store="${s}"]:visible`).first(); if(await c.count()) await c.evaluate(el => { if(!el.checked){ el.checked = true; el.dispatchEvent(new Event('change', {bubbles:true})); } }); }
       const pr = page.locator('[data-pf="princ"]:visible'); if(await pr.count()) await pr.selectOption('Maxi').catch(() => {}); }
-    const ess = page.locator('#su_ess:visible'); if(await ess.count() && await ess.isEnabled()) await ess.check({force: true});
+    const ess = page.locator('#su_ess:visible'); if(await ess.count() && await ess.isEnabled()) await ess.evaluate(el => { if(!el.checked){ el.checked = true; el.dispatchEvent(new Event('change', {bubbles:true})); } });
     const done = page.locator('#setup_done:visible'); if(await done.count()){ await done.click(); break; }
     const nx = page.locator('[data-a="wiz"][data-v="1"]:visible'); if(await nx.count()) await nx.click(); else break;
   }
