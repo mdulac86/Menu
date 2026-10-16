@@ -8,15 +8,37 @@ Site : <https://mdulac86.github.io/Menu/>. C'est une application web installable
 
 | Fichier | Contenu |
 |---|---|
-| `index.html` | La page : en-tête, onglets, chargement des scripts |
+| `index.html` | La page : en-tête, sections, barre d'onglets, chargement des scripts |
 | `style.css` | L'apparence, en mode clair et sombre |
-| `version.js` | **La version de l'application**, à changer à chaque mise en ligne |
+| `version.js` | **La version de l'application**, le canal (test si le dossier s'appelle `test`) et l'adresse de contact |
 | `recettes.js` | Les données des recettes (`RECIPES`) et des accompagnements (`SIDES`) |
 | `prix-maxi.js` | Les prix de référence : barème Maxi (`BAREME`), prix moyens (`PRIX`, `PRIX_DEF`) et date du relevé (`PRIX_MAJ`) |
-| `app.js` | Toute la logique de l'application |
-| `sw.js` | Le service worker : il va d'abord au réseau, puis à la copie gardée si on est hors ligne |
-| `manifest.webmanifest`, icônes | L'installation sur l'écran d'accueil |
-| `tests/` | Tests automatiques (pour le développement, pas utilisés par le site) |
+| `js/base.js` | Utilitaires, état des données, sauvegarde et protection |
+| `js/plats.js` | Recettes : variantes, accompagnements, portions, mode Cuisiner, importation |
+| `js/semaine.js` | Variété, jours de la semaine, dîners et restes |
+| `js/liste-prix.js` | Liste d'épicerie, prix, barème et association des spéciaux |
+| `js/generation.js` | Génération du menu, budget, recherche des circulaires (Flipp) |
+| `js/epiceries.js` | Prix par épicerie (relevé du robot, écart avec Maxi) et comparateur « Où faire l'épicerie » |
+| `js/ecrans.js` | Écrans : menu, épicerie, maison, recettes, articles, prix |
+| `js/profil.js` | Profil de la famille, assistant de départ, réglages, accueil Ma semaine |
+| `js/app.js` | Navigation, actions, aide et démarrage (chargé en dernier) |
+| `sw.js` | Le service worker : réseau d'abord, copie gardée hors ligne |
+| `prix-epiceries.json` | Le dernier relevé des prix de Maxi et d'IGA, écrit par le robot (ne pas modifier à la main) |
+| `robot/` | Le robot des prix : `releve.mjs`, les magasins (`magasins.json`) et les mots cherchés (`termes.json`) |
+| `.github/workflows/robot-prix.yml` | Lance le robot chaque jeudi matin |
+| `outils/construire-test.sh` | Construit la version de test dans `dist/test/` |
+| `tests/`, `.github/workflows/tests.yml` | Tests automatiques (pour le développement) |
+
+Les fichiers de `js/` sont des scripts ordinaires qui partagent leurs variables : l'ordre de chargement dans `index.html` compte.
+
+## Version de test
+
+`sh outils/construire-test.sh` produit `dist/test/`. Ce dossier se téléverse dans le dépôt sous `test/` : il est servi à `…/Menu/test/`.
+Il garde ses données à part (clés `menu_test_*`, cache `menu-test-*`), s'installe comme une app distincte (« Menu TEST », icône orange) et affiche un bandeau. Profil → Sauvegarde → « Copier mes vraies données » le remplit à partir de la version familiale du même téléphone, sans la modifier.
+
+## Navigation (2.0)
+
+Cinq onglets : Ma semaine (accueil selon le jour), Menu (Semaine, Historique), Épicerie (Liste, Articles, Prix, Maison), Recettes, Profil (Famille, Horaire, Épiceries, Budget et prix, Sauvegarde, Apparence, Aide).
 
 ## Mettre une nouvelle version en ligne
 
@@ -46,6 +68,16 @@ Trois autres choses corrigent aussi ces prix :
 - le prix payé, inscrit dans la liste d'épicerie ;
 - le prix habituel, inscrit dans l'onglet Articles ;
 - le prix habituel déduit des circulaires qui indiquent leur rabais.
+
+## Prix par épicerie et « Où faire l'épicerie »
+
+Chaque jeudi à 6 h 17 (heure du Québec), GitHub lance le robot (`robot/releve.mjs`). Pour chaque article du barème, il cherche le produit chez Maxi (l'API PC Express, la même que maxi.ca) et chez IGA (le catalogue Algolia d'iga.ca), pour les magasins de `robot/magasins.json`. Il garde le meilleur prix régulier et la promotion en cours pour chaque format du barème, et écrit le tout dans `prix-epiceries.json`. Si un site refuse, les prix précédents de ce magasin sont gardés et l'erreur est notée. Walmart bloque les robots : il n'est pas relevé.
+
+Le choix du produit suit les mêmes expressions que le barème : le nom (sans la marque ni le format) doit commencer par l'article, et ne pas annoncer une autre forme (nourriture pour chien, soupe, pané, cuit…). Un prix relevé à plus de 2,2 fois ou moins de 0,4 fois la référence Maxi est ignoré par l'application.
+
+Dans l'application (`js/epiceries.js`), le prix d'un article dans une épicerie vient de ton prix payé chez elle, sinon du relevé, sinon de la référence Maxi × l'écart de l'épicerie (médiane calculée sur le relevé pour IGA; valeur de départ `ECART0` pour les autres). Un spécial de la circulaire ou une promotion du relevé, valide le jour de l'épicerie, le remplace s'il coûte moins. Le comparateur additionne la liste dans chaque épicerie, puis essaie toutes les combinaisons de 2 à 4 épiceries : un article quitte l'épicerie principale seulement s'il y coûte au moins 3 % et 0,25 $ de moins.
+
+Pour ajouter un magasin : trouver son numéro (Maxi : `api.pcexpress.ca/pcx-bff/api/v1/pickup-locations?bannerIds=maxi`; IGA : l'index `dxp_stores_fr`), l'ajouter dans `robot/magasins.json`, puis lancer le robot à la main (Actions → Robot des prix → Run workflow). Tests du robot sans réseau : `node tests/robot.js`.
 
 ## Association spéciaux ↔ articles
 
@@ -109,10 +141,13 @@ Protections :
 Il faut Node.js et `playwright-core` avec un Chromium. Chaque test démarre son propre petit serveur.
 
 ```
+node tests/scenario.js      # une semaine complète sur écran d'iPhone, avec de vraies circulaires simulées
 node tests/unit.js          # association, prix, analyse de recettes, budget, sauvegardes
 node tests/smoke.js 400 1   # 400 clics au hasard : aucune erreur JavaScript permise
 node tests/horsligne.js     # installation et ouverture sans connexion
 node tests/matching.js sortie.txt   # associations sur 3 236 vrais produits de circulaires (15 oct. 2026)
 node tests/perf.js          # temps des calculs lourds, processeur ralenti ×4
+node tests/epiceries.js     # prix par épicerie et comparateur, sur écran d'iPhone
+node tests/robot.js         # choix des produits par le robot (sans réseau)
 RACINE_VIEUX=/chemin/ancienne/version node tests/migration.js   # données gardées après une mise à jour
 ```

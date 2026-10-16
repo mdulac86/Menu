@@ -1,0 +1,10 @@
+{
+ "maxi": [
+  {"id": "8705", "nom": "Maxi Saint-Georges (boul. Lacroix)"}
+ ],
+ "iga": [
+  {"id": "8175", "nom": "IGA extra Saint-Georges (boul. Lacroix)"},
+  {"id": "0575", "nom": "IGA Rodrigue et Filles (boul. Dionne)"},
+  {"id": "8558", "nom": "IGA Famille Groleau (150e Rue)"}
+ ]
+}

@@ -1,0 +1,28 @@
+# Robot des prix : chaque jeudi matin (les nouvelles circulaires sont en vigueur), relève les prix de Maxi et d'IGA
+# pour les magasins de robot/magasins.json et met à jour prix-epiceries.json, que l'application lit.
+# On peut aussi le lancer à la main : onglet Actions → Robot des prix → Run workflow.
+name: Robot des prix
+on:
+  schedule:
+    - cron: '17 10 * * 4'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: robot-prix, cancel-in-progress: false }
+jobs:
+  releve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node robot/releve.mjs
+      - name: Enregistrer le relevé
+        run: |
+          git config user.name "robot-prix"
+          git config user.email "robot-prix@users.noreply.github.com"
+          git add prix-epiceries.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Relevé des prix du $(date +%Y-%m-%d)"
+          git pull --rebase -q && git push
