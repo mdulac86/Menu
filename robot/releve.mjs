@@ -58,10 +58,26 @@ export const entreeDe = (nom, marque) => {
 
 /* ---------- choix du produit pour une entrée du barème ----------
    produits : [{nom, marque, t:{q,u}|null, cur, reg, deb, fin, kg:{cur,reg}|null}] */
+/* marques maison (Maxi, IGA et quelques autres) : tout le reste avec une marque est une « marque connue » */
+const MAISON_RE = /^(sans nom|no name|le choix du president|choix du president|pc|pc biologique|pc menu bleu|menu bleu|compliments|compliments organic|compliments biologique|sensations par compliments|valeur plus|prix club|irresistibles|selection|great value|our finest|equality|mastro)\b/;
+export const marqueConnue = p => { const b = norm(p.marque || '').trim(); return !!b && !MAISON_RE.test(b); };
+/* le produit le moins cher (souvent une marque maison), et à part le moins cher des marques connues :
+   les autres épiceries n'ont pas Sans Nom ni Compliments, mais les marques connues coûtent à peu près pareil partout */
 export function choisir(i, produits){
-  const o = BAREME[i][1];
   const P = produits.filter(p => entreeDe(p.nom, p.marque) === i);
   if(!P.length) return null;
+  const tout = choisir0(i, P); if(!tout) return null;
+  const M = P.filter(marqueConnue), mc = M.length ? choisir0(i, M) : null;
+  if(mc){
+    const u = x => x.kg ? x.kg[0] ?? x.kg[1] : Math.min(...x.f.map(f => (f[1] ?? f[2]) / f[0]));
+    /* m (ou mk au kilo) : la marque connue; 1 = le moins cher est déjà une marque connue */
+    if(Math.abs(u(mc) - u(tout)) > u(tout) * 0.01){ if(mc.kg) tout.mk = mc.kg; else tout.m = mc.f; }
+    else if(tout.kg) tout.mk = 1; else tout.m = 1;
+  }
+  return tout;
+}
+function choisir0(i, P){
+  const o = BAREME[i][1];
   if(o.kg){   /* au kilo : produits vendus au poids, ou formats fixes ramenés au kilo */
     const K = P.map(p => {
       if(p.kg) return { reg: p.kg.reg, cur: p.kg.cur, deb: p.deb, fin: p.fin, nom: p.nom };

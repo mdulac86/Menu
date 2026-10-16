@@ -1735,10 +1735,12 @@ function peValide(c, deb, fin){
   return fin ? fin >= d : !!deb && addDays(deb, 6) >= d;
 }
 /* le relevé pour une ligne dans une épicerie : {reg, cur, sp, nom, fin} ou null */
-function peLine(r, store){
+function peLine(r, store, marque){
   const D = peData(store); if(!D) return null;
   const b = baremeRaw(r.name); if(!b) return null;
-  const e = D[bxKey(b)]; if(!e) return null;
+  let e = D[bxKey(b)]; if(!e) return null;
+  /* marque : le prix de la marque connue (m, mk), 1 = la même chose que le moins cher */
+  if(marque){ const mk = e.kg ? e.mk : e.m; if(!mk) return null; if(mk !== 1) e = e.kg ? {kg:mk} : {f:mk}; }
   /* garde-fou : un prix très loin de la référence Maxi est probablement un autre produit */
   const ref = (() => { const M = peData('Maxi'), m = M && M[bxKey(b)]; const u = peUnit(m); if(u) return u; const o = b[1]; return o.kg || Math.min(...o.f.map(x => x[1]/x[0])); })();
   const u = peUnit(e); if(u != null && ref && (u > ref*2.2 || u < ref*0.4)) return null;
@@ -1752,6 +1754,12 @@ function peLine(r, store){
   if(R == null && C == null) return null;
   const spx = e.f.find(x => peValide(x[2], x[3], x[4]));
   return {reg:R, cur:C == null ? R : C, sp: !!spx && C != null && (R == null || C < R - 0.01), nom: (spx || e.f[0])[5], fin: spx ? spx[4] : ''};
+}
+/* prix régulier d'une marque connue (Québon, Heinz, Kraft…), relevé chez Maxi et IGA : à peu près le même partout,
+   il sert pour les épiceries sans relevé, qui n'ont ni Sans Nom ni Compliments */
+function natReg(r){
+  const L = Object.keys(CHAINES).map(s => peLine(r, s, true)).filter(l => l && l.reg != null).map(l => l.reg);
+  return L.length ? L.reduce((a, b) => a + b, 0) / L.length : null;
 }
 /* écart de prix d'une épicerie avec Maxi : médiane sur les articles relevés aux deux endroits */
 function ecart(store){
@@ -1778,6 +1786,7 @@ function costAt(r, store){
   let reg, src, line = null;
   if(mine){ reg = costEst(r); src = 'mine'; }
   else if((line = peLine(r, store)) && line.reg != null){ reg = line.reg; src = 'robot'; }
+  else if(!CHAINES[store] && S.stores.includes(store) && (reg = natReg(r)) != null){ src = 'marque'; }
   else { const lm = store !== 'Maxi' ? peLine(r, 'Maxi') : null; reg = (lm && lm.reg != null ? lm.reg : estBase(r)) * ecart(store); src = store === 'Maxi' || !S.stores.includes(store) ? 'ref' : 'est'; if(line && line.cur != null && line.cur > reg) reg = line.cur; }
   let cost = reg, deal = null, rsp = null;
   if(line && line.sp && line.cur < cost - 0.005){ cost = line.cur; rsp = line; }
@@ -1836,7 +1845,7 @@ function ouAllerCard(rows){
     h += opt(o, `<small class="ok"><b>${money((b.total - o.total) * calF())} de moins</b> que ${esc(b.stores[0])} seulement</small><small>Le reste chez ${esc(o.main)}; ${esc(det)}.</small>`); });
   if(!C.multi.length) h += `<p class="small">Aller à plus d'une épicerie ferait économiser moins de 2 $ cette semaine.</p>`;
   const pd = peDate();
-  h += `</div><p class="small">À toi de voir si l'économie vaut le déplacement. ${pd ? `Prix réguliers relevés le ${esc(dShort(pd))} chez ${esc(PE.magasins.filter(m => m.ok || m.n).map(m => m.ch === 'maxi' ? 'Maxi' : 'IGA').filter((x, i, a) => a.indexOf(x) === i).join(' et '))}` : 'Pas encore de relevé des prix'}; ailleurs, prix estimés d'après l'écart habituel avec Maxi, corrigés par les prix que tu inscris.</p></div>`;
+  h += `</div><p class="small">À toi de voir si l'économie vaut le déplacement. ${pd ? `Prix réguliers relevés le ${esc(dShort(pd))} chez ${esc(PE.magasins.filter(m => m.ok || m.n).map(m => m.ch === 'maxi' ? 'Maxi' : 'IGA').filter((x, i, a) => a.indexOf(x) === i).join(' et '))}` : 'Pas encore de relevé des prix'}. Ailleurs, chaque article est compté au prix d'une marque connue (Québon, Heinz, Kraft…), à peu près le même partout, sinon estimé d'après l'écart habituel avec Maxi; tes prix payés les corrigent.</p></div>`;
   return h;
 }
 /* ligne « Où aller » dans Ma semaine */
@@ -1856,7 +1865,7 @@ function peCard(){
   const lig = mags.map(m => `<li>${esc(m.nom)} : ${m.ok ? `${m.n} articles` : `<span class="over">échec du dernier relevé</span>${m.n ? ` (prix du ${esc(dShort(m.d || pd))} gardés)` : ''}`}</li>`).join('');
   const igas = mags.filter(m => m.ch === 'iga');
   return `<div class="card"><h3>Prix des épiceries</h3>
-    <p class="small">${pd ? `Un robot relève chaque semaine les prix réguliers et les promotions de Maxi et d'IGA. Dernier relevé : <b>${esc(fmtDate(pd))}</b>.` : "Le relevé automatique des prix n'est pas encore disponible."} Les autres épiceries sont estimées d'après leur écart habituel avec Maxi; tes prix payés les corrigent.</p>
+    <p class="small">${pd ? `Un robot relève chaque semaine les prix réguliers et les promotions de Maxi et d'IGA. Dernier relevé : <b>${esc(fmtDate(pd))}</b>.` : "Le relevé automatique des prix n'est pas encore disponible."} Pour chaque article, il note le moins cher (souvent Sans Nom ou Compliments) et, à part, le moins cher des marques connues. Les autres épiceries n'ont pas ces marques maison : on y compte le prix de la marque connue, à peu près le même partout, sinon une estimation d'après leur écart habituel avec Maxi. Tes prix payés corrigent le tout.</p>
     ${lig ? `<ul class="todo">${lig}</ul>` : ''}
     ${igas.length > 1 ? `<label class="f">Ton IGA<select data-a="pe_mag" data-ch="iga">${igas.map(m => `<option value="${esc(m.id)}" ${sel.iga === m.id ? 'selected' : ''}>${esc(m.nom)}</option>`).join('')}</select></label>` : ''}
     ${S.stores.filter(s => s !== 'Maxi').length ? `<p class="small">Écart avec Maxi : ${S.stores.filter(s => s !== 'Maxi').map(s => `${esc(s)} ${ecart(s) >= 1 ? '+' : '−'}${Math.round(Math.abs(ecart(s) - 1)*100)} %${peData(s) ? '' : ' (estimé)'}`).join(' · ')}</p>` : ''}
@@ -1866,8 +1875,9 @@ function peCard(){
 function peTxt(b){
   if(!PE) return '';
   const k = bxKey(b), L = Object.keys(CHAINES).map(s => { const D = peData(s), e = D && D[k]; if(!e) return '';
-    if(e.kg) return `${s} ${e.kg[0] != null ? money(e.kg[0]) + '/kg' : ''}${e.kg[1] > 0 ? ` (promo ${money(e.kg[1])}/kg)` : ''}`;
-    return `${s} ${e.f.map(x => `${fq(x[0], b[1].u)} ${x[1] != null ? money(x[1]) : ''}${x[2] > 0 ? ` (promo ${money(x[2])})` : ''}`).join(', ')}`; }).filter(Boolean);
+    const mq = (nom, prix, kg) => prix != null ? ` · marque connue (${String(nom||'').slice(0, 28)}) ${money(prix)}${kg ? '/kg' : ''}` : '';
+    if(e.kg) return `${s} ${e.kg[0] != null ? money(e.kg[0]) + '/kg' : ''}${e.kg[1] > 0 ? ` (promo ${money(e.kg[1])}/kg)` : ''}${Array.isArray(e.mk) ? mq(e.mk[4], e.mk[0], true) : ''}`;
+    return `${s} ${e.f.map(x => `${fq(x[0], b[1].u)} ${x[1] != null ? money(x[1]) : ''}${x[2] > 0 ? ` (promo ${money(x[2])})` : ''}`).join(', ')}${Array.isArray(e.m) && e.m[0] ? mq(e.m[0][5], e.m[0][1]) : ''}`; }).filter(Boolean);
   return L.length ? `<small>Relevé : ${esc(L.join(' · '))}</small>` : '';
 }
 
@@ -3808,7 +3818,7 @@ function renderAide(){
     <li>« Vérifier avant de partir » rappelle les articles toujours à la maison : touche <b>Il manque</b> au besoin.</li>
     <li>Avec un <b>budget</b> (Profil), l'onglet montre ton budget et le coût estimé des articles en spécial. Au retour, inscris le <b>total payé</b> à la caisse : la moyenne payée s'affiche dans Profil, carte Historique.</li>
     <li><b>Prix et budget</b> : chaque article montre le prix de l'épicerie où il va. Un prix sans « ≈ » est un vrai prix : un spécial de la circulaire, une promotion ou un prix relevé sur le site de l'épicerie, ou le prix que tu as payé. « ≈ » veut dire un prix estimé. Touche un prix pour noter ce que tu as payé : l'application le retient pour cette épicerie. Le total estimé se compare à ton budget.</li>
-    <li><b>Prix des épiceries</b> (Épicerie → Prix) : chaque jeudi matin, un robot relève sur les sites de Maxi et d'IGA les prix réguliers et les promotions de près de 150 articles de base, pour les magasins de Saint-Georges. L'application va chercher ce relevé toute seule une fois par jour; « Mettre à jour les prix maintenant » le fait tout de suite. Walmart, Marché Ami, Inter-Marché et les autres n'ont pas de prix en ligne lisibles : leurs prix sont estimés d'après leur écart habituel avec Maxi et corrigés par leurs circulaires et par les prix que tu inscris.</li>
+    <li><b>Prix des épiceries</b> (Épicerie → Prix) : chaque jeudi matin, un robot relève sur les sites de Maxi et d'IGA les prix réguliers et les promotions de près de 150 articles de base, pour les magasins de Saint-Georges. L'application va chercher ce relevé toute seule une fois par jour; « Mettre à jour les prix maintenant » le fait tout de suite. Walmart, Marché Ami, Inter-Marché et les autres n'ont pas de prix en ligne lisibles : le robot note aussi, à part, le prix des marques connues (Québon, Heinz, Kraft…) chez Maxi et IGA, qui est à peu près le même partout : c'est ce prix qui compte pour ces épiceries, sinon une estimation d'après leur écart habituel avec Maxi. Leurs circulaires et les prix que tu inscris passent en premier.</li>
     <li><b>Moins cher ailleurs</b> : sous un article, l'application indique s'il coûte nettement moins dans une autre de tes épiceries (d'après un vrai prix seulement).</li>
     <li><b>Vraies aubaines</b> : un rabais d'au moins 35 % sur un produit qui se garde (viande et poisson à congeler, surgelés, garde-manger, beurre, fromage) apparaît dans « Vraies aubaines : fais des réserves », avec un conseil de conservation et « En ajouter ».</li>
     <li>Coche les articles dans le panier, puis touche <b>Épicerie terminée</b> au retour : ils entrent dans Maison.</li></ol>`)
