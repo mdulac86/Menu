@@ -48,5 +48,12 @@ const assert = require('assert');
   const k = R.choisir(poit, [m3, i2]);
   ok(k.kg[0] === 15.41, 'au kilo : le moins cher');
   ok(R.choisir(oeufs, [R.maxiProduit({ name: 'Boisson punch', brand: 'Fruité', packageSize: '2 l', prices: { price: { value: 2.79, type: 'REGULAR' } }, pricingUnits: {} })]) === null, 'rien de valable : null');
+  /* marque connue gardée à part quand la marque maison est moins chère */
+  const mq = (marque, prix) => R.maxiProduit({ name: 'Lait 2 %', brand: marque, packageSize: '4 l', prices: { price: { value: prix, type: 'REGULAR' } }, pricingUnits: {} });
+  const cm = R.choisir(lait, [mq('Sans Nom', 7.9), mq('QUÉBON', 8.16), mq('Natrel', 8.49)]);
+  ok(cm.f[0][1] === 7.9 && cm.m && cm.m[0][1] === 8.16 && /Lait/.test(cm.m[0][5]), 'marque connue : ' + JSON.stringify(cm));
+  ok(R.choisir(lait, [mq('QUÉBON', 8.16)]).m === 1, 'le moins cher est déjà une marque connue : 1');
+  ok(!R.choisir(lait, [mq('Sans Nom', 7.9)]).m, 'aucune marque connue trouvée');
+  ok(!R.marqueConnue({ marque: 'Compliments' }) && !R.marqueConnue({ marque: '' }) && R.marqueConnue({ marque: 'Heinz' }), 'marques maison');
   console.log(`robot : ${n} vérifications réussies`);
 })().catch(e => { console.error(e); process.exit(1); });

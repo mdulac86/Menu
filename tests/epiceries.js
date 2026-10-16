@@ -44,7 +44,8 @@ const iso = d => d.toISOString().slice(0, 10), today = new Date();
   await page.click('#prep_week'); await page.waitForFunction(() => S.menu.date, null, {timeout:30000}); await page.waitForTimeout(500);
   const a = await page.evaluate(() => { const rows = buyList().rows, C = comparer(rows);
     const src = {}; ['Maxi','IGA'].forEach(s => { src[s] = {}; rows.forEach(r => { const c = costAt(r, s); src[s][c.src] = (src[s][c.src]||0) + 1; }); });
-    return {go:goStores(), best:C.best.stores, singles:C.singles.map(x => [x.stores[0], Math.round(x.total)]), multi:C.multi.map(x => [x.stores.join('+'), Math.round(x.total)]), flash:(document.querySelector('#flash')||{}).textContent, src, ecIGA:ecart('IGA'), ecW:ecart('Walmart'), pe:!!PE, rows:rows.length,
+    const srcW = {}; rows.forEach(r => { const c = costAt(r, 'Walmart'); srcW[c.src] = (srcW[c.src]||0) + 1; });
+    return {srcW, go:goStores(), best:C.best.stores, singles:C.singles.map(x => [x.stores[0], Math.round(x.total)]), multi:C.multi.map(x => [x.stores.join('+'), Math.round(x.total)]), flash:(document.querySelector('#flash')||{}).textContent, src, ecIGA:ecart('IGA'), ecW:ecart('Walmart'), pe:!!PE, rows:rows.length,
       tot:listTotals(rows).cost}; });
   console.log(JSON.stringify(a));
   if(process.env.DETAIL) console.log(await page.evaluate((process_env_store) => buyList().rows.map(r => { const m = costAt(r,'Maxi'), i = costAt(r, process_env_store), w = i; return (i.cost < m.cost*0.97 ? '>> ' : '   ') + r.name.padEnd(34) + ' ' + fq(r.buy, r.u).padEnd(9) + ' M ' + m.cost.toFixed(2) + ' ' + m.src + (m.deal ? ' [' + m.deal.t.slice(0,30) + ' ' + m.deal.p + ']' : '') + (m.rsp ? ' {promo}' : '') + ' | I ' + i.cost.toFixed(2) + ' ' + i.src + (i.deal ? ' [' + i.deal.t.slice(0,40) + ' ' + i.deal.p + ']' : '') + (i.rsp ? ' {promo ' + i.rsp.nom.slice(0,30) + '}' : ''); }).join('\n'), process.env.DETAIL));
@@ -54,6 +55,7 @@ const iso = d => d.toISOString().slice(0, 10), today = new Date();
   ok(/Le moins cher cette semaine/.test(a.flash||''), 'résumé sans le choix de l\'épicerie');
   ok((a.src.Maxi.robot||0) >= 8 && (a.src.IGA.robot||0) >= 5, 'peu de prix relevés : ' + JSON.stringify(a.src));
   ok(a.ecIGA > 0.9 && a.ecIGA < 1.45, 'écart IGA : ' + a.ecIGA);
+  ok((a.srcW.marque||0) >= 3, 'Walmart sans prix de marque connue : ' + JSON.stringify(a.srcW));
   ok(Math.abs(a.tot - a.singles[0][1]*1) < a.tot*0.2, 'total de la liste et comparateur très différents');
   await shot('20-ma-semaine-auto');
   /* Commander : la ligne « Où aller » */
