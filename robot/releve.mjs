@@ -1,14 +1,19 @@
+/* © 2026 mdulac86. Tous droits réservés. Reproduction, modification et publication interdites sans permission (voir LICENSE). */
 /* Robot des prix : relève chaque semaine les prix des articles du barème chez Maxi et IGA,
    pour les magasins de robot/magasins.json, et les écrit dans prix-epiceries.json (lu par l'application).
+   Avec le secret MENU_CLE (le code de la famille), le relevé est chiffré dans prix-epiceries.enc.json
+   et la version en clair est retirée du dépôt : seuls les téléphones qui ont le code peuvent le lire.
    Utilisation : node robot/releve.mjs [--essai N]   (--essai : seulement les N premiers articles)
    Rien n'est officiel : si un site refuse, les prix précédents de ce magasin sont gardés et l'erreur est notée. */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { BAREME, norm, cle, RACINE } from './charger.mjs';
+import { chiffrer, dechiffrer } from './chiffre.mjs';
 
 const MAGASINS = JSON.parse(readFileSync(path.join(RACINE, 'robot/magasins.json'), 'utf8'));
 const TERMES = JSON.parse(readFileSync(path.join(RACINE, 'robot/termes.json'), 'utf8'));
-const SORTIE = path.join(RACINE, 'prix-epiceries.json');
+const SORTIE = path.join(RACINE, 'prix-epiceries.json'), SORTIE_C = path.join(RACINE, 'prix-epiceries.enc.json');
+const CODE = (process.env.MENU_CLE || '').trim();
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36';
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const iso = d => { const x = new Date(d); return isNaN(x) ? '' : x.toISOString().slice(0, 10); };
@@ -201,7 +206,11 @@ async function igaChercher(store, terms){
 async function main(){
   const n = process.argv.includes('--essai') ? +process.argv[process.argv.indexOf('--essai') + 1] || 10 : BAREME.length;
   const items = BAREME.slice(0, n).map((b, i) => ({ i, k: cle(b), t: TERMES[cle(b)] })).filter(x => x.t);
-  const avant = existsSync(SORTIE) ? JSON.parse(readFileSync(SORTIE, 'utf8')) : { p: {} };
+  let avant = { p: {} };
+  try{
+    if(CODE && existsSync(SORTIE_C)) avant = dechiffrer(JSON.parse(readFileSync(SORTIE_C, 'utf8')), CODE);
+    else if(existsSync(SORTIE)) avant = JSON.parse(readFileSync(SORTIE, 'utf8'));
+  }catch(e){ console.log('Relevé précédent illisible (le code a changé ?) : on repart de zéro.'); }
   const res = { v: 1, maj: new Date().toISOString(), magasins: [], p: {} }, brut = {};
   for(const ch of Object.keys(MAGASINS)){
     for(const m of MAGASINS[ch]){
@@ -222,9 +231,10 @@ async function main(){
       console.log(`${m.nom} : ${err ? 'ÉCHEC, ' + err : Object.keys(P).length + ' articles'} (${Math.round((Date.now() - t0) / 1000)} s)`);
     }
   }
-  writeFileSync(SORTIE, JSON.stringify(res));
+  if(CODE){ writeFileSync(SORTIE_C, JSON.stringify(chiffrer(res, CODE, { type: 'prix', maj: res.maj.slice(0, 10) }))); if(existsSync(SORTIE)) unlinkSync(SORTIE); }
+  else { writeFileSync(SORTIE, JSON.stringify(res)); console.log('Secret MENU_CLE absent : relevé écrit en clair.'); }
   if(process.argv.includes('--brut')) writeFileSync(path.join(RACINE, 'robot/brut.json'), JSON.stringify(brut));
-  console.log(`Écrit : ${SORTIE} (${Math.round(JSON.stringify(res).length / 1024)} ko)`);
+  console.log(`Écrit : ${path.basename(CODE ? SORTIE_C : SORTIE)} (${Math.round(JSON.stringify(res).length / 1024)} ko avant compression)`);
   if(res.magasins.every(m => !m.ok)) process.exit(1);
 }
 if(import.meta.url === `file://${process.argv[1]}`) main();
