@@ -1,0 +1,34 @@
+# Robot des spéciaux : lit les circulaires d'épicerie (Flipp) pour les codes postaux de la famille et écrit
+# speciaux.enc.json, chiffré avec le code de la famille. L'application le lit sans interroger Flipp.
+# Mercredi soir (les nouvelles circulaires arrivent) et jeudi matin (elles sont en vigueur).
+# Secrets : MENU_CLE (le code de la famille) et MENU_CP (codes postaux, séparés par des virgules).
+# On peut aussi le lancer à la main : onglet Actions → Robot des spéciaux → Run workflow.
+name: Robot des spéciaux
+on:
+  schedule:
+    - cron: '7 22 * * 3'
+    - cron: '47 10 * * 4'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: robot-speciaux, cancel-in-progress: false }
+jobs:
+  speciaux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node robot/speciaux.mjs
+        env:
+          MENU_CLE: ${{ secrets.MENU_CLE }}
+          MENU_CP: ${{ secrets.MENU_CP }}
+      - name: Enregistrer les spéciaux
+        run: |
+          git config user.name "robot-speciaux"
+          git config user.email "robot-speciaux@users.noreply.github.com"
+          git add speciaux.enc.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Spéciaux du $(date +%Y-%m-%d)"
+          git pull --rebase -q && git push
