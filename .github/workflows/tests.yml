@@ -9,8 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm install --no-save playwright-core@1.48.2 playwright@1.48.2 && npx playwright install --with-deps chromium
+        with: { node-version: 22 }
+      - run: npm install --no-save playwright-core@1.56.1 playwright@1.56.1 && npx playwright install --with-deps chromium
       - run: node tests/robot.js
       - run: node tests/unit.js
       - run: node tests/scenario.js

@@ -3867,7 +3867,10 @@ const missingFiles = () => [typeof RECIPES==='undefined' && 'recettes.js', typeo
   migrer();
   peLoad(); peSel();
   /* le dernier relevé des prix, une fois par jour : l'application fonctionne sans, avec l'estimation */
-  setTimeout(() => { peFetch(false).then(ch => { if(ch){ save(); const ae = document.activeElement; if(!draftsDirty() && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) render(); } }).catch(() => {}); }, 400);
+  /* on redessine seulement si personne n'est en train de toucher l'écran (sinon, au prochain affichage) */
+  let lastTouch = 0; ['pointerdown','keydown','change','input'].forEach(ev => document.addEventListener(ev, () => { lastTouch = Date.now(); }, true));
+  setTimeout(() => { peFetch(false).then(ch => { if(!ch) return; save(); const ae = document.activeElement;
+    if(S.setup && Date.now() - lastTouch > 3000 && !draftsDirty() && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) render(); }).catch(() => {}); }, 400);
   try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
   try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); }catch(e){}
   try{ render(); }
