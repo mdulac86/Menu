@@ -89,7 +89,7 @@ Puis : Actions → Robot des spéciaux → Run workflow, et Actions → Robot de
 
 **Chiffrement** (`robot/chiffre.mjs`, `dechiffrer` dans `app.js`) : contenu compressé (gzip), puis AES-GCM 256, clé tirée du code par PBKDF2-SHA256 (210 000 tours), sel et vecteur nouveaux à chaque écriture. En clair : seulement la date et le type. Les vieux téléphones sans `DecompressionStream` (iOS 15) utilisent `inflateGzip`.
 
-**Prix réguliers des circulaires** : quand une circulaire indique le prix régulier (« rég. 5,99 $ », « économisez 2 $ », un rabais en %), il est gardé (`o`). Pour une épicerie sans relevé (Metro, Super C, Walmart…), ce prix et le spécial remplacent l'estimation (`src: 'circ'`), et l'écart de l'épicerie avec Maxi en tient compte (`ecartCirc`).
+**Prix réguliers des circulaires** : quand une circulaire indique le prix régulier (« rég. 5,99 $ », « économisez 2 $ », un rabais en %), il est gardé (`o`). Pour une épicerie sans relevé (Metro, Super C, Walmart…), ce prix et le spécial remplacent l'estimation (`src: 'circ'`), et, à partir de 8 articles comparables, l'écart de l'épicerie avec Maxi en tient compte (`ecartCirc` : prix régulier de la circulaire ÷ prix de la même sorte de marque chez Maxi et IGA). Dans les circulaires de Flipp, le prix régulier vient surtout du rabais en %.
 
 **Journal public** : le journal des robots (onglet Actions) ne montre ni code postal ni spécial, seulement « Zone 1 : 12 circulaires ».
 
