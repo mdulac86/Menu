@@ -1,0 +1,28 @@
+# Clé de la boîte : chiffre la clé du dépôt privé de la famille (secret MENU_BOITE) avec le code (MENU_CLE).
+# À lancer une fois après avoir créé le secret MENU_BOITE : onglet Actions → Clé de la boîte → Run workflow.
+# Le robot des spéciaux la refait aussi chaque semaine, si le code de la famille a changé.
+name: Clé de la boîte
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  cle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node robot/boite.mjs
+        env:
+          MENU_CLE: ${{ secrets.MENU_CLE }}
+          MENU_BOITE: ${{ secrets.MENU_BOITE }}
+      - name: Enregistrer la clé
+        run: |
+          git config user.name "robot-boite"
+          git config user.email "robot-boite@users.noreply.github.com"
+          if [ -f boite.enc.json ]; then git add boite.enc.json; fi
+          git diff --cached --quiet && exit 0
+          git commit -m "Clé de la boîte du robot"
+          git pull --rebase -q && git push
