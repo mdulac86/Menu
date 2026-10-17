@@ -1985,16 +1985,17 @@ function ecart(store){
   if(D && M){ const R = Object.keys(D).map(k => { const a = peUnit(D[k]), b = peUnit(M[k]); return a && b ? a/b : 0; }).filter(x => x > 0.4 && x < 2.5).sort((a,b) => a-b);
     if(R.length >= 15) v = Math.max(0.85, Math.min(1.4, R[Math.floor(R.length/2)])); }
   else if(!D){ const R = ecartCirc(store);   /* sans relevé : les prix réguliers de ses circulaires, mêlés à la valeur de départ */
-    if(R.length >= 4){ const med = R[Math.floor(R.length/2)]; v = Math.max(0.85, Math.min(1.4, (R.length * med + 6 * v) / (R.length + 6))); } }
+    if(R.length >= 8){ const med = R[Math.floor(R.length/2)]; v = Math.max(0.85, Math.min(1.4, (R.length * med + 10 * v) / (R.length + 10))); } }
   return (_PEX[store] = Math.round(v*1000)/1000);
 }
-/* prix régulier de la circulaire ÷ référence Maxi, pour les articles de la liste en spécial dans cette épicerie */
+/* prix régulier de la circulaire ÷ prix de la marque connue (Maxi et IGA), pour les articles de la liste en spécial dans cette épicerie */
 function ecartCirc(store){
   let rows = []; try{ rows = buyList().rows; }catch(e){ return []; }
   const R = [];
   rows.forEach(r => { const d = dealsAll(r.name).find(s => s.s === store && s.o); if(!d) return;
-    const rc = dealCost(Object.assign({}, d, {p:d.o}), r), lm = peLine(r, 'Maxi'), ref = lm && lm.reg != null ? lm.reg : estBase(r);
-    if(rc > 0 && ref > 0){ const x = rc / ref; if(x > 0.4 && x < 2.5) R.push(x); } });
+    /* une circulaire annonce surtout des marques connues : on compare au prix de la même sorte de marque chez Maxi et IGA */
+    const rc = dealCost(Object.assign({}, d, {p:d.o}), r), ref = natReg(r);
+    if(rc > 0 && ref > 0){ const x = rc / ref; if(x > 0.6 && x < 1.6) R.push(x); } });   /* au-delà : probablement un autre format */
   return R.sort((a,b) => a-b);
 }
 /* spéciaux des circulaires (toutes tes épiceries) qui correspondent à un article */
