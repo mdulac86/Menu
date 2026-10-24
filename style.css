@@ -369,3 +369,47 @@ body.test header h1 em::after{content:" TEST";font-style:normal;font-size:.5em;c
 .seg button small{font-weight:500;opacity:.72;margin-left:2px}
 .segl{margin:12px 0 6px!important}
 .ck-cm{margin:10px 0 4px}
+/* robot de la famille : inventaire par photos */
+.item.inv{align-items:center}
+.item.inv .qcol{display:flex;gap:6px;align-items:center}
+.item.inv input.num{width:4.6em;min-height:36px;padding:4px 8px}
+/* questionnaire de la semaine et ébauche du menu */
+.qz-h{margin:14px 0 6px;font:650 .95rem var(--f-disp)}
+.qz-h small{font:500 .78rem var(--f-body);color:var(--mute);margin-left:6px}
+.qz-seg button{flex:1 1 auto}
+button.lnk{background:none;border:0;padding:2px 0;font-weight:600;color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.eb-list{display:grid;gap:0;margin-top:10px;border-top:1px solid var(--line)}
+.eb-day{display:grid;grid-template-columns:5.6rem 1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.eb-day.off .eb-d{color:var(--accent)}
+.eb-d{font-size:.8rem;font-weight:700;color:var(--mute)}
+.eb-m{min-width:0;display:flex;flex-direction:column}
+.eb-m b{font-weight:650;overflow-wrap:anywhere}
+.eb-m small{color:var(--mute);font-size:.8rem}
+.eb-qs{grid-column:1/-1;display:grid;gap:6px;padding:8px 10px;margin-top:2px;border-radius:12px;background:var(--kraft-soft)}
+.eb-q{font-size:.86rem;color:var(--kraft);font-weight:600}
+.eb-qs label.f{margin:0;font-size:.8rem}
+.eb-x{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;font-size:.88rem}
+.eb-x span{min-width:0;overflow-wrap:anywhere}
+.eb-x select,.eb-sides select{max-width:100%;min-height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--card);padding:0 8px;font-size:.85rem}
+.eb-sides{display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:420px){.eb-day{grid-template-columns:1fr auto}.eb-d{grid-column:1/-1}}
+/* goûts de chaque membre */
+details.gouts{margin-top:8px}
+details.gouts summary small{display:block;color:var(--mute);font-weight:500;font-size:.78rem}
+.gt-h{margin:10px 0 4px;font-size:.8rem;font-weight:700;color:var(--mute)}
+.gt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 10px}
+.gt{display:flex;flex-direction:column;gap:2px;font-size:.84rem;min-width:0}
+.gt select{width:100%;font-size:.8rem;padding-left:8px}
+.eb-x small{display:block;color:var(--danger);font-size:.78rem}
+.gt select.n5{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.gt select.n4{background:var(--soft)}
+.gt select.n2{background:var(--warn-soft);color:var(--warn)}
+.gt select.n1{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+/* valeur nutritive */
+details.nut summary{font-size:.86rem}
+details.nut summary .flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.nutt{width:100%;border-collapse:collapse;font-size:.86rem;font-variant-numeric:tabular-nums;margin:6px 0}
+.nutt td{padding:4px 0;border-bottom:1px solid var(--line)}
+.nutt td:last-child{text-align:right;font-weight:600}
+.nutw{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--chip)}
+.nutw .qz-h{margin-top:0}
