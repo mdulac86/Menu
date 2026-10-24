@@ -93,6 +93,20 @@ Puis : Actions → Robot des spéciaux → Run workflow, et Actions → Robot de
 
 **Journal public** : le journal des robots (onglet Actions) ne montre ni code postal ni spécial, seulement « Zone 1 : 12 circulaires ».
 
+## Reels et photos du frigo (Gemini de chaque personne)
+
+Chaque personne colle sa propre clé Gemini gratuite (aistudio.google.com) dans Profil → Épiceries. Elle reste sur le téléphone (clé `menu_epicerie_gemini`, hors des sauvegardes). Le téléphone appelle directement `generativelanguage.googleapis.com` (Google accepte les appels venant du site), la clé dans l'en-tête `x-goog-api-key`, jamais dans l'adresse. L'app prend le modèle Gemini Flash le plus récent offert à la clé et passe au suivant s'il atteint sa limite (`gemLire`, `gemChoisir`).
+
+- une recette revient en texte dans le format que lit `parseWebRecipe`, puis ouvre le formulaire « Nouvelle recette » pour être vérifiée;
+- un inventaire devient une liste à cocher qui met à jour Maison;
+- les consignes (`RB_PROMPTS`) et le nettoyage des réponses (`rbNettoyer`) sont les mêmes que ceux du robot `robot/demandes.mjs` du dépôt privé (plus utilisé par l'app).
+
+## Banque commune de la famille
+
+Tout passe par un **dépôt GitHub privé** (`mdulac86/menu-famille`). **Banque commune** : `recettes-famille.json`. « Ajouter à la banque commune » (ou « Partager avec la famille ») l'y ajoute; chaque téléphone qui a le code de la famille la relit au plus toutes les 6 heures et l'ajoute aux recettes (étiquette « Famille », `fam: true`). « Retirer de la banque commune » l'enlève pour tout le monde.
+
+**La clé du dépôt privé** : un jeton GitHub à accès fin (Contents : lecture et écriture, sur `menu-famille` seulement), gardé dans le secret `MENU_BOITE` du dépôt public. Le workflow « Clé de la boîte » (`robot/boite.mjs`) le chiffre avec le code de la famille dans `boite.enc.json`; le robot des spéciaux le refait chaque semaine si le code a changé. Le jeton n'ouvre que le dépôt privé : même avec le code, personne ne peut modifier l'application.
+
 ## Droits d'auteur
 
 © 2026 mdulac86. Tous droits réservés (voir `LICENSE`). Le dépôt est public seulement pour héberger l'application : aucune permission de copier, modifier ou publier ailleurs le code, les recettes, les prix ou les textes. L'avis est aussi au début de `index.html`, `app.js`, `recettes.js`, `style.css` et `sw.js`, et dans l'Aide (« Droits d'auteur »). Garder ces avis à chaque mise à jour.
@@ -176,6 +190,14 @@ Dans l'onglet Articles, le bouton « Pas ce produit » écarte pour toujours un 
 ### Accompagnement (`SIDES`)
 
 `{id, n, sl, ty, i, s}`. `sl` vaut `f` (féculent) ou `v` (légume). `ty` donne les genres de plats compatibles (ou `all`). `i` et `s` ont le même format que pour une recette.
+
+### Goûts, questionnaire et ébauche
+
+- `profil.membres[i]` : `nom` (facultatif), `g` (note par goût : 5 J'adore, 4 J'aime, 3 Je tolère, 2 Je n'aime pas, 1 Refuse d'en manger; clés dans `GOUTS`), `rx` (autres aliments refusés, séparés par des virgules).
+- `famAvis(r)` : qui refuse quoi et la note moyenne. Un plat que tout le monde refuse est écarté (`famBad`); la note pèse dans `score` (`famBonus`); `fill` répartit les coups de cœur entre les membres.
+- 2e protéine (`p2Info`) : si seulement certains refusent la protéine principale (`mainProts`), leur part est retirée de cette protéine et remplacée (`P2`) dans la liste et l'écran Cuisiner. `it.p2` : choix manuel (`non` = aucune).
+- `menu.q` : réponses du questionnaire de la semaine (`temps` : vite, normale, temps; `mix` : p2, eviter, pareil; `env`, `pas`). `menu.eb` : le menu est une ébauche (étape « ebauche » de Ma semaine) jusqu'à « Bâtir le menu final ».
+- Soupes et entrées : `it.sr` = soupe-repas dans les soupers (`p.nSr`), accompagnements de type `soupe`; `it.ro` = rôle d'une soupe (`avec`, `lunch`) ou d'une entrée (`entree`, `avec`, `libre`), avec le jour `d` du souper (`assignExtras`).
 
 ### Données de l'utilisateur
 
