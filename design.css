@@ -34,3 +34,6 @@ section{gap:18px}.sec{font-style:normal;font-size:1.65rem;margin-top:24px}
 .recipe-grid>.row[open]>summary .recipe-cover{display:none}.recipe-grid>.row[open]>summary{padding-top:20px;min-height:0}
 @media(max-width:700px){.recipe-grid>.row:only-child{grid-column:1/-1}}
 .recipe-title,.dname,.ck-t{overflow-wrap:anywhere}
+
+/* Familles et accompagnements */
+.recipe-family{border:1px solid var(--line);border-radius:20px;background:var(--card);overflow:hidden;min-width:0;align-self:start}.recipe-family>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:10px;padding:0 0 16px}.recipe-family>summary>.recipe-title,.recipe-family>summary>.small{padding:0 16px}.family-body{padding:0 12px 12px}.family-body>.row{margin-bottom:12px}.family-body .recipe-cover{max-height:160px}.side-cover{width:84px;height:64px!important;object-fit:cover;border-radius:10px;flex-shrink:0}.cook-sides{display:flex;gap:14px;flex-wrap:wrap;margin:20px 0}.cook-sides figure{margin:0;max-width:160px}.cook-sides .side-cover{width:160px;height:110px!important}.cook-sides figcaption{font-size:.85rem;margin-top:6px}

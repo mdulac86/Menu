@@ -127,7 +127,7 @@ function save(){
   resetCaches(); S.maj = Date.now(); S.bkDirty = true;
   if(loadFailed){ setSync("Données illisibles : rien n'est enregistré pour ne rien écraser (voir Profil)"); return; }
   const raw = JSON.stringify(S);
-  const put = () => { localStorage.setItem(KEY, raw); setSync('Enregistré sur cet appareil'); };
+  const put = () => { localStorage.setItem(KEY, raw); setSync('Préférences enregistrées sur cet appareil uniquement'); };
   try{ put(); }
   catch(e){   /* stockage plein : garder seulement la copie la plus récente, puis réessayer */
     try{ localStorage.setItem(COPIES, JSON.stringify(readCopies().slice(0, 1))); put(); }
@@ -144,6 +144,29 @@ let _AR = null, _ND = null, _BL = null, _CAT = null, _DF = new Map();  /* caches
 /* recettes de base + banque commune de la famille (robot des reels), avec tes modifications, puis les tiennes */
 function allRecipes(){ if(!_AR){ if(FAMREC === null) famLoad(); const own = new Set(RECIPES.map(r => r.n).concat(S.custom.map(r => r.n)));
   _AR = RECIPES.concat(FAMREC.filter(r => !own.has(r.n))).map(r => S.redit && S.redit[r.n] ? Object.assign({}, r, S.redit[r.n]) : r).concat(S.custom); } return _AR; }
+/* Familles éditoriales : identités et variantes sauvegardées restent intactes. */
+const RECIPE_FAMILIES = [{"id": "fam-0", "title": "Riz frits et sautés", "names": ["Riz sauté au poulet et aux oeufs", "Riz frit aux légumes et aux oeufs", "Riz frit aux crevettes"]}, {"id": "fam-1", "title": "Fajitas", "names": ["Fajitas de boeuf", "Fajitas de poulet", "Fajitas au poulet à la plancha"]}, {"id": "fam-2", "title": "Croque-monsieur et croque-madame", "names": ["Croque-monsieur", "Croque-madame"]}, {"id": "fam-3", "title": "Poulet au beurre et tikka", "names": ["Poulet au beurre", "Poulet tikka masala express", "Poulet au beurre à la mijoteuse"]}, {"id": "fam-4", "title": "Poulet effiloché", "names": ["Poulet effiloché à la mijoteuse", "Poulet effiloché à la salsa (mijoteuse)"]}, {"id": "fam-5", "title": "Jambons à la mijoteuse", "names": ["Jambon mijoté à l'érable", "Épaule de jambon à la mijoteuse"]}, {"id": "fam-6", "title": "Poulet pané au parmesan", "names": ["Poulet au parmesan", "Poulet croustillant au parmesan sur plaque"]}, {"id": "fam-7", "title": "Poisson blanc croustillant", "names": ["Poisson pané (fish & chips)", "Poisson blanc croustillant au four", "Morue en croûte de panko et citron"]}, {"id": "fam-8", "title": "Poulet teriyaki", "names": ["Poulet teriyaki et riz", "Poulet teriyaki à la plancha"]}, {"id": "fam-9", "title": "Poulet rôti, BBQ et fumé", "names": ["Poulet BBQ tourne-broche", "Poulet entier rôti", "Cuisses de poulet BBQ au four", "Poulet entier fumé", "Cuisses de poulet fumées, sauce Alabama blanche", "Poulet en crapaudine sur le BBQ"]}, {"id": "fam-10", "title": "Côtes levées", "names": ["Côtes levées", "Côtes levées fumées 3-2-1"]}, {"id": "fam-11", "title": "Ailes de poulet", "names": ["Ailes de poulet", "Ailes de poulet fumées", "Ailes coréennes au gochujang"]}, {"id": "fam-12", "title": "Porc effiloché", "names": ["Porc effiloché à la mijoteuse", "Porc effiloché au fumoir"]}, {"id": "fam-13", "title": "Poutines", "names": ["Poutine au poulet", "Poutine au porc effiloché", "Poutine au canard confit, sauce au poivre", "Poutine classique, frites maison et sauce maison", "Poutine au smoked meat", "Poutine au brisket fumé et sauce BBQ", "Poutine italienne", "Poutine galvaude", "Poutine bacon, oignons caramélisés et cheddar fort", "Poutine au homard, sauce crémeuse au poivre", "Poutine tex-mex au chili", "Poutine au steak, champignons et sauce au poivre", "Poutine au poulet général Tao"]}, {"id": "fam-14", "title": "Macaronis au fromage", "names": ["Mac n cheese au bacon", "Macaroni au fromage classique", "Mac and cheese au brisket", "Mac and cheese gratiné au fromage fumé et bacon"]}, {"id": "fam-15", "title": "Lasagnes", "names": ["Lasagne à la viande", "Lasagne aux épinards et ricotta", "Lasagne en une casserole"]}, {"id": "fam-16", "title": "Pad thaï", "names": ["Pad thaï aux crevettes", "Pad thaï au tofu"]}, {"id": "fam-17", "title": "Burgers de viande", "names": ["Burgers de viande", "Smash burgers classiques", "Burger gastro au brie et oignons caramélisés"]}, {"id": "fam-18", "title": "Brochettes", "names": ["Brochettes de poulet", "Brochettes de boeuf et légumes"]}, {"id": "fam-19", "title": "Bavettes", "names": ["Bavette de boeuf", "Bavette au chimichurri", "Bavette frites et beurre aux échalotes"]}, {"id": "fam-20", "title": "Soupes aux pois", "names": ["Soupe aux pois à la mijoteuse", "Soupe aux pois et jambon"]}, {"id": "fam-21", "title": "Soupes poulet et riz ou nouilles", "names": ["Soupe-repas poulet et nouilles, sandwich fromage fondu", "Soupe poulet et riz"]}, {"id": "fam-22", "title": "Ramen", "names": ["Ramen, lanières de poulet", "Ramen maison au porc"]}, {"id": "fam-23", "title": "Pâtés chinois et hachis", "names": ["Pâté chinois", "Hachis de boeuf aux patates", "Cottage pie à la Guinness", "Pâté chinois aux lentilles"]}, {"id": "fam-24", "title": "Grilled cheese et soupe tomate", "names": ["Sandwichs grillés jambon-fromage et soupe tomate", "Grilled cheese gastronomique et soupe aux tomates"]}, {"id": "fam-25", "title": "Brownies", "names": ["Brownies", "Brownies au caramel salé"]}, {"id": "fam-26", "title": "Gâteaux au fromage", "names": ["Gâteau au fromage New York", "Gâteau au fromage Oreo sans cuisson"]}, {"id": "fam-27", "title": "Omelettes", "names": ["Omelette western", "Omelette jambon et fromage", "Omelette soufflée au fromage"]}, {"id": "fam-28", "title": "Pizzas maison", "names": ["Pizza maison pepperoni", "Pizzas naan", "Pizza sur le BBQ"]}, {"id": "fam-29", "title": "Quesadillas", "names": ["Quesadillas aux haricots noirs", "Quesadillas au porc effiloché", "Quesadillas au steak à la plancha", "Quesadillas au poulet rôti et poivrons"]}];
+const RECIPE_FAMILY_BY_NAME = new Map(RECIPE_FAMILIES.flatMap(f => f.names.map(n => [n, f])));
+function recipeFamilyEntries(list){
+  const out = [], seen = new Map();
+  for(const r of list){
+    const family = !r.c && !r.fam ? RECIPE_FAMILY_BY_NAME.get(r.n) : null;
+    if(!family){ out.push({members:[r]}); continue; }
+    if(!seen.has(family.id)){ const entry = {family, members:[]}; seen.set(family.id, entry); out.push(entry); }
+    seen.get(family.id).members.push(r);
+  }
+  return out;
+}
+function recipeCard(r, list){
+  const idx = list.indexOf(r), open = openRec.has(r.n);
+  return `<details class="row" data-rec="${esc(r.n)}" data-lazy="1" ${open?'open':''}><summary>${recipePhoto(r, 'recipe-cover')}<span class="recipe-title">${esc(r.n)}${S.fav[r.n]?' <span class="small">(favori)</span>':''}</span><span class="rm">${tmList(r)}</span></summary>${open ? `<div class="rbody">${recBody(r, idx)}</div>` : ''}</details>`;
+}
+function recipeFamilyCard(entry, list){
+  if(entry.members.length===1) return recipeCard(entry.members[0], list);
+  const open = entry.members.some(r => openRec.has(r.n)), lead = entry.members[0];
+  return `<details class="recipe-family" ${open?'open':''}><summary>${recipePhoto(lead, 'recipe-cover')}<span class="recipe-title">${esc(entry.family.title)}</span><span class="small">${entry.members.length} recettes · leurs variantes et cuissons</span></summary><div class="family-body"><p class="small">Choisis une recette : chacune garde ses ingrédients, ses portions, ses favoris et ses variantes.</p>${entry.members.map(r => recipeCard(r, list)).join('')}</div></details>`;
+}
+
 let FAMREC = null;
 const baseRecipe = n => RECIPES.find(x => x.n===n) || (FAMREC || []).find(x => x.n===n);
 /* Index rebuilt only when the recipe array changes; duplicate-name precedence is preserved. */
@@ -392,7 +415,7 @@ function varDetail(v){
   if(d.f!==undefined) L.push('Féculent : '+sn(d.f));
   if(d.v!==undefined) L.push('Légume ou salade : '+sn(d.v));
   const desc = vdesc(v[0]);
-  return `<div class="var">${desc?`<p style="margin:0">${esc(desc)}</p>`:''}${L.length?`<ul class="small" style="margin:4px 0 0;padding-left:18px">${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${v[2]?`<p class="small" style="margin:4px 0 0"><b>Préparation :</b> ${esc(v[2])}</p>`:''}${!desc && !L.length && !v[2] ? '<p class="small" style="margin:0">Aucun changement d\'ingrédient.</p>' : ''}</div>`;
+  return `<div class="var">${desc?`<p style="margin:0">${esc(desc)}</p>`:''}${L.length?`<ul class="small" style="margin:4px 0 0;padding-left:18px">${L.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}${v[2]?`<p class="small" style="margin:4px 0 0"><b>${v[3]==='replace' ? 'Préparation complète de cette variante' : 'Préparation'} :</b> ${esc(v[2])}</p>`:''}${!desc && !L.length && !v[2] ? '<p class="small" style="margin:0">Aucun changement d\'ingrédient.</p>' : ''}</div>`;
 }
 function resetV(n){ allItems().forEach(x => { if(x.r===n){ x.v = 0; x.ovr = {}; } }); }
 /* après un changement de versions : chaque plat garde la même version (retrouvée par son contenu), sinon revient à la base */
@@ -630,7 +653,8 @@ function cookItem(){
 function cookHtml(){
   const c = cookItem(); if(!c) return '';
   const {r, it, l} = c, kd = kindOf(r), vs = vars(r), cur = it.v>0 ? vs[it.v-1] : null;
-  const k = cmEff(it, r), M = methods(r); cook.ck = cook.key + (k ? '|'+k : '');
+  const fullVariant = !!(cur && cur[3]==='replace');
+  const k = fullVariant ? '' : cmEff(it, r), M = fullVariant ? [] : methods(r); cook.ck = cook.key + (k ? '|'+k : '');
   const f = kd==='souper' || it.sr ? portionsOf(it)/6 : kd==='dejeuner' ? (it.pt || pDej())/6 : (it.pt ? it.pt/6 : 1);
   const np = kd==='souper' || it.sr ? portionsOf(it) : kd==='dejeuner' ? (it.pt || pDej()) : (it.pt || 0);
   const qx = (q, u) => u==='un' ? String(Math.round(q*10)/10).replace('.', ',') : fq(q, u);
@@ -645,9 +669,9 @@ function cookHtml(){
   if(sr) groups.push({t:'Sauce : '+sr.n, rows:sr.i.map(([q,u,n]) => ({n, q:qx(scaleQ(q,u,f), u), note:''}))});
   const sides = [['sf','fm'],['sv','vm']].map(([k,m]) => ({s:sideById(it[k]), m:it[m]??1})).filter(x => x.s && x.m > 0);
   sides.forEach(({s, m}) => groups.push({t:'Avec : '+s.n, rows:s.i.map(([q,u,n]) => ({n, q:qx(scaleQ(q,u,f*m), u), note:''}))}));
-  splitSteps(stepsM(r, k)).forEach(t => steps.push({t}));
+  splitSteps(fullVariant ? cur[2] : stepsM(r, k)).forEach(t => steps.push({t}));
   /* une version « au four » ne va pas avec une autre façon de cuire */
-  if(cur && cur[2] && !(k && /four|frit|mijot|air|bbq|grill|plancha|fumoir|poele/.test(norm(cur[0])))) splitSteps(cur[2]).forEach(t => steps.push({t, g:'Pour la version '+vname(cur[0]).toLowerCase()}));
+  if(cur && cur[2] && !fullVariant && !(k && /four|frit|mijot|air|bbq|grill|plancha|fumoir|poele/.test(norm(cur[0])))) splitSteps(cur[2]).forEach(t => steps.push({t, g:'Pour la version '+vname(cur[0]).toLowerCase()}));
   if(p2) steps.push({t:P2[p2.alt].s, g:'2e protéine pour '+nomsDe(p2.qui)});
   if(sr && sr.s) splitSteps(sr.s).forEach(t => steps.push({t, g:'Sauce : '+sr.n}));
   sides.filter(x => x.s.s).forEach(({s}) => splitSteps(s.s).forEach(t => steps.push({t, g:'Avec : '+s.n})));
@@ -668,7 +692,7 @@ function cookHtml(){
     ${M.length ? `<div class="seg ck-cm" role="group" aria-label="Façon de cuire">${M.map(m => `<button class="${m.k===k?'on':''}" data-a="ck_cm" data-k="${m.k||'b'}">${esc(m.l)} <small>${esc(fmtMin(m.tm))}</small></button>`).join('')}</div>${cmAuto(it, r) ? `<p class="small">${esc(CM_L[k])} : choisi parce que c'est un soir de semaine.</p>` : ''}` : ''}
     ${mt ? `<p class="rest">${esc(mt)}</p>` : ''}${l==='items' && extrasDe(it.d).length ? `<p class="rest">Aussi ce soir : ${esc(extrasDe(it.d).join(' · '))}.</p>` : ''}${prim ? `<p class="rest">Avec les restes de ${esc(prim.r)}.</p>` : ''}${fo ? `<p class="rest">Garde le surplus pour ${esc(fo.r)}.</p>` : ''}
     ${navigator.wakeLock ? '<p class="small">L\'écran reste allumé pendant que tu cuisines.</p>' : ''}
-    <h3 class="ck-h">Ingrédients</h3>${ingH}
+    ${sides.length ? `<div class="cook-sides">${sides.map(({s}) => `<figure>${sidePhoto(s, 'side-cover')}<figcaption>${esc(s.n)}</figcaption></figure>`).join('')}</div>` : ''}<h3 class="ck-h">Ingrédients</h3>${ingH}
     <h3 class="ck-h">Étapes</h3><div class="ck-list">${stepH}</div>
     <div class="acts"><button class="btn s" data-a="ck_reset">Tout décocher</button><button class="btn s p" data-a="ck_close">Terminé</button></div></div>`;
 }
@@ -734,8 +758,9 @@ function texteRecette(it, i, withCode){
   if(x.ac) L.push('Accompagnements : '+x.ac);
   L.push('', 'INGRÉDIENTS');
   fullIngs(it).sort((a,b) => a.name.localeCompare(b.name,'fr')).forEach(g => L.push(`- ${g.name} : ${qt(g.q,g.u)}`));
-  if(stepsM(r, x.k)) L.push('', x.k ? 'PRÉPARATION ('+CM_L[x.k].toUpperCase()+')' : 'PRÉPARATION', stepsM(r, x.k));
-  if(cur && cur[2]) L.push('', 'POUR CETTE VERSION', cur[2]);
+  if(cur && cur[3]==='replace') L.push('', 'PRÉPARATION', cur[2]);
+  else if(stepsM(r, x.k)) L.push('', x.k ? 'PRÉPARATION ('+CM_L[x.k].toUpperCase()+')' : 'PRÉPARATION', stepsM(r, x.k));
+  if(cur && cur[2] && cur[3]!=='replace') L.push('', 'POUR CETTE VERSION', cur[2]);
   if(withCode) L.push('', "Pour l'ajouter à ta banque (Recettes, Importer une recette copiée), copie tout ce message :", recCode(r));
   return L.join('\n');
 }
@@ -974,7 +999,7 @@ function importRecipes(txt){
     if(!o.i.length) return;
     o.m = Array.isArray(o.m) ? o.m.filter(x => typeof x==='string') : [];
     o.s = typeof o.s==='string' ? o.s : ''; o.e = typeof o.e==='string' ? o.e : '';
-    o.v = Array.isArray(o.v) ? o.v.filter(v => Array.isArray(v) && typeof v[0]==='string').map(v => [v[0], typeof v[1]==='string' ? v[1] : '', typeof v[2]==='string' ? v[2] : undefined].filter(x => x !== undefined)) : [];
+    o.v = Array.isArray(o.v) ? o.v.filter(v => Array.isArray(v) && typeof v[0]==='string').map(v => [v[0], typeof v[1]==='string' ? v[1] : '', typeof v[2]==='string' ? v[2] : '', v[3]==='replace' ? 'replace' : undefined].filter(x => x !== undefined)) : [];
     ['tm','tp','mj'].forEach(k => { if(o[k] != null && !isFinite(+o[k])) delete o[k]; });
     { const c = {}; if(o.cm && typeof o.cm==='object'){ if(typeof o.cm.b==='string') c.b = o.cm.b.slice(0, 40);
         Object.keys(CM_L).forEach(k => { const x = o.cm[k]; if(x && typeof x.s==='string' && isFinite(+x.tp) && isFinite(+x.tm)) c[k] = {tp:+x.tp, tm:+x.tm, s:x.s}; }); }
@@ -2284,7 +2309,7 @@ const famSan = o => { if(!isObj(o) || typeof o.n !== 'string' || !o.n.trim() || 
   const str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
   return {n:o.n.trim().slice(0, 120), e:'', m:(Array.isArray(o.m) ? o.m : []).filter(x => typeof x==='string').slice(0, 12), k:KINDS[o.k] ? o.k : 'souper', pr:PRS[o.pr] ? o.pr : '', st:(Array.isArray(o.st) ? o.st : []).filter(x => STYS[x]),
     t:TYPES[o.t] ? o.t : 'viande', tm:isFinite(+o.tm) && +o.tm > 0 ? +o.tm : 30, tp:isFinite(+o.tp) && +o.tp > 0 ? +o.tp : undefined, mj:+o.mj ? 1 : 0, sf:str(o.sf, 40), sv:str(o.sv, 40),
-    i, s:str(o.s, 6000), v:[], src:str(o.src, 300), ajout:str(o.ajout, 10), oc:+o.oc ? 1 : 0, fam:true, nw: !!o.ajout && gapDays(o.ajout, isoToday()) <= 21}; };
+    i, s:str(o.s, 6000), v:(Array.isArray(o.v) ? o.v : []).filter(v => Array.isArray(v) && typeof v[0]==='string' && typeof v[1]==='string').slice(0,40).map(v => [str(v[0],300),str(v[1],4000),str(v[2],6000),v[3]==='replace'?'replace':'']), src:str(o.src, 300), ajout:str(o.ajout, 10), oc:+o.oc ? 1 : 0, fam:true, nw: !!o.ajout && gapDays(o.ajout, isoToday()) <= 21}; };
 function famLoad(){ try{ const o = JSON.parse(localStorage.getItem(FAM_KEY) || 'null'); FAMREC = o && Array.isArray(o.recettes) ? o.recettes.map(famSan).filter(Boolean) : []; }catch(e){ FAMREC = []; } }
 function famSet(L, t){ FAMREC = L.map(famSan).filter(Boolean); try{ localStorage.setItem(FAM_KEY, JSON.stringify({recettes:L, t:t || Date.now()})); }catch(e){} _AR = null; resetCaches(); }
 async function famFetch(force){
@@ -2304,7 +2329,7 @@ async function famModifier(fn, msg){
   }
   throw errC('La banque commune est occupée : réessaie dans un moment.', 'conflit');
 }
-const famObj = r => ({n:r.n, m:r.m || [], k:kindOf(r), pr:r.pr || '', st:r.st || [], t:r.t || 'viande', tm:tmOf(r), tp:tpOf(r), mj:mjOf(r) ? 1 : 0, sf:r.sf || '', sv:r.sv || '', i:r.i, s:r.s || '', src:r.src || '', oc:r.oc ? 1 : 0, ajout:isoToday()});
+const famObj = r => ({n:r.n, m:r.m || [], k:kindOf(r), pr:r.pr || '', st:r.st || [], t:r.t || 'viande', tm:tmOf(r), tp:tpOf(r), mj:mjOf(r) ? 1 : 0, sf:r.sf || '', sv:r.sv || '', i:r.i, s:r.s || '', v:vars(r), src:r.src || '', oc:r.oc ? 1 : 0, ajout:isoToday()});
 const famPublier = r => famModifier(L => L.filter(x => norm(x.n) !== norm(r.n)).concat([famObj(r)]), 'Recette ajoutée : ' + r.n);
 const famRetirer = n => famModifier(L => L.filter(x => norm(x.n) !== norm(n)), 'Recette retirée : ' + n);
 const famHas = n => (FAMREC || []).some(x => norm(x.n) === norm(n));
@@ -3563,7 +3588,7 @@ function recFiltered(){
   const q = norm(rf.q);
   return allRecipes().filter(r => {
     if(rf.k==='acc') return false;
-    if(q && !norm(r.n+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
+    if(q && !norm(r.n+' '+((RECIPE_FAMILY_BY_NAME.get(r.n)||{}).title||'')+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
     if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub') && !styOf(r).includes('poutine')) return false; }
     else if(rf.k==='tiktok'){ if(!estTiktok(r)) return false; }
     else if(rf.k && kindOf(r)!==rf.k) return false;
@@ -3585,7 +3610,7 @@ function varEditor(r, row){
   const d = draftFor(key, () => {
     const v = row ? row.v : ['', '', ''], dd = deltaItems(v[1]), t = v[0]||'', ix = t.indexOf(':');
     const rem = []; dd.rem.filter(x => !x.q).forEach(x => r.i.forEach(g => { if(norm(g[2]).includes(norm(x.name)) && !rem.includes(g[2])) rem.push(g[2]); }));
-    return {nm:ix>0 ? t.slice(0,ix).trim() : t, ds:ix>0 ? t.slice(ix+1).trim() : '', p:v[2]||'',
+    return {nm:ix>0 ? t.slice(0,ix).trim() : t, ds:ix>0 ? t.slice(ix+1).trim() : '', p:v[2]||'', replace:v[3]==='replace',
       f:dd.f===undefined ? 'def' : (dd.f==='aucun' ? '' : dd.f), v:dd.v===undefined ? 'def' : (dd.v==='aucun' ? '' : dd.v),
       rows:dd.add.length ? dd.add.map(a => { const [q,u] = niceUnit(a.q,a.u); return {n:cap(a.name), q:String(q), u, ray:a.ray}; }) : emptyRows(1),
       rem, keep:dd.rem.filter(x => x.q).map(x => `-${x.q} ${x.u} ${x.name}`)};
@@ -3599,7 +3624,7 @@ function varEditor(r, row){
     <p class="small"><b>Ingrédients à ajouter</b></p>
     ${ingBuilder(key, d.rows)}
     ${souper ? `<div class="grid2"><label class="f">Féculent<select ${F(key,'f')}>${sideOpts('f', d.f, false, true)}</select></label><label class="f">Légume ou salade<select ${F(key,'v')}>${sideOpts('v', d.v, false, true)}</select></label></div>` : ''}
-    <label class="f">Préparation de cette version<textarea ${F(key,'p')}>${esc(d.p)}</textarea></label>
+    <label class="f">Préparation de cette version<textarea ${F(key,'p')}>${esc(d.p)}</textarea></label><label class="check"><input type="checkbox" ${F(key,'replace')} ${d.replace?'checked':''}> Ces étapes remplacent entièrement la préparation de base</label>
     <div class="note ve_msg" hidden></div>
     <div class="acts">${row ? B('vsave','Enregistrer','p')+B('vrm','Retirer cette version','d') : B('vadd','Ajouter la version','p')}</div></div>`;
 }
@@ -3611,7 +3636,8 @@ function varFromDraft(key){
   if(d.f!=='def') toks.push('@f='+(d.f||'aucun'));
   if(d.v!=='def') toks.push('@v='+(d.v||'aucun'));
   const title = String(d.ds||'').trim() ? nm+' : '+String(d.ds).trim() : nm, p = String(d.p||'').trim();
-  return {val: p ? [title, toks.join(' ; '), p] : [title, toks.join(' ; ')]};
+  if(d.replace && !p) return {err:'Écris la préparation complète de cette version.'};
+  return {val: p ? [title, toks.join(' ; '), p, ...(d.replace ? ['replace'] : [])] : [title, toks.join(' ; ')]};
 }
 function recEditor(r){
   const key = 'edit|'+r.n;
@@ -3661,9 +3687,9 @@ function sidesSection(){
   const L = ALLS().filter(s => !s.id.startsWith('st:') && (!q || norm(s.n+' '+s.i.map(g => g[2]).join(' ')).includes(q)) && (!rf.dis || dis[s.id]));
   if(!L.length) return '';
   const row = s => { const k = 'side|'+s.id, open = openRec.has(k), mine = (S.sidesx||[]).some(x => x.id===s.id);
-    return `<details class="row" data-rec="${esc(k)}" ${open?'open':''}><summary><span>${esc(s.n)}${dis[s.id]?' <span class="small">(mis de côté)</span>':''}${mine?' <span class="small">(le tien)</span>':''}</span></summary>
-      <div class="rbody"><p class="small">Va avec : ${esc((s.ty||[]).map(t => t==='all' ? 'tous les plats' : (TYPES[t]||t).toLowerCase()).join(', ') || 'tous les plats')}. Quantités pour 6 portions.</p>
-      <ul class="ing">${s.i.map(g => `<li><span>${esc(g[2])}</span><span>${fq(g[0],g[1])}</span></li>`).join('')}</ul>
+    return `<details class="row" data-rec="${esc(k)}" ${open?'open':''}><summary>${sidePhoto(s, 'side-cover')}<span>${esc(s.n)}${dis[s.id]?' <span class="small">(mis de côté)</span>':''}${mine?' <span class="small">(le tien)</span>':''}</span></summary>
+      <div class="rbody">${sidePhoto(s, 'detail-photo')}<p class="small">Va avec : ${esc((s.ty||[]).map(t => t==='all' ? 'tous les plats' : (TYPES[t]||t).toLowerCase()).join(', ') || 'tous les plats')}. Quantités pour 6 portions.</p>
+      <p class="steps">${esc(s.s || '')}</p><ul class="ing">${s.i.map(g => `<li><span>${esc(g[2])}</span><span>${fq(g[0],g[1])}</span></li>`).join('')}</ul>
       <div class="acts"><button class="btn s ${dis[s.id]?'p':''}" data-a="sdis" data-id="${esc(s.id)}">${dis[s.id] ? 'Le proposer de nouveau' : 'Ne plus le proposer'}</button>${mine ? `<button class="btn s d" data-a="sdel2" data-id="${esc(s.id)}">Supprimer</button>` : ''}</div></div></details>`; };
   if(rf.k!=='acc' && !q) return `<h2 class="sec">Accompagnements<span>${L.length}</span></h2><div class="card list"><button type="button" class="lnk2 rf-more" data-a="rf_k" data-v="acc">Voir les ${L.length}</button></div>`;
   const f = L.filter(s => s.sl==='f'), v = L.filter(s => s.sl==='v');
@@ -3747,25 +3773,22 @@ function renderRecettes(){
   const chk = (key, label) => `<label class="chip"><input type="checkbox" data-rf="${key}" ${rf[key]?'checked':''}>${label}</label>`;
   const nf = ['pr','st','fast','mij','af','spec','aime','fav','dis'].filter(k => rf[k]).length + (rf.g!=='pr' ? 1 : 0);
   const CATR = [['','Tout'],['souper','Soupers'],['match','Repas plaisir'],['tiktok','TikTok'],['soupe','Soupes'],['dejeuner','Déjeuners'],['entree','Entrées'],['dessert','Desserts'],['sauce','Sauces'],['acc','Accompagnements']];
-  let h = `<div class="page-heading"><p class="eyebrow">À cuisiner, à partager</p><h2>La bibliothèque</h2><p>${allRecipes().length} idées pour se régaler au quotidien.</p>${photoDownloadControl()}</div>` + (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
+  let h = `<div class="page-heading"><p class="eyebrow">À cuisiner, à partager</p><h2>La bibliothèque</h2><p>${allRecipes().length} recettes, réunies par familles pour varier les repas.</p><p class="small">Tes goûts, favoris et modifications restent sur cet appareil. Seules les recettes que tu partages explicitement vont dans la banque familiale.</p>${photoDownloadControl()}</div>` + (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
     <div class="rf-cats" role="group" aria-label="Catégorie">${CATR.map(([v, t]) => `<button type="button" class="chip${rf.k===v?' on':''}" data-a="rf_k" data-v="${v}" aria-pressed="${rf.k===v}">${t}</button>`).join('')}</div>
     <details class="panel" data-pan="rf_plus" ${openPan.has('rf_plus')?'open':''}><summary>Filtres${nf ? ` <span class="rm">${nf} actif${nf>1?'s':''}</span>` : ''}</summary>
       <div class="grid2">${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
       <div class="chips">${chk('fast','Préparation 30 min ou moins')}${chk('mij','Mijoteuse')}${chk('af','Air fryer')}${chk('spec','En spécial cette semaine')}${chk('aime','Aimés de la famille')}${chk('fav','Favoris')}${chk('dis',"Mis de côté")}</div>
       ${nf ? `<button type="button" class="lnk2" data-a="rf_reset">Retirer les filtres</button>` : ''}</details>
-    <p class="small">${list.length} recette${list.length>1?'s':''} sur ${allRecipes().length}.</p></div>`;
+    <p class="small">${rf.k==='acc' ? 'Choisis un accompagnement ci-dessous.' : `${list.length} recette${list.length>1?'s':''} sur ${allRecipes().length} · ${recipeFamilyEntries(list).length} fiches regroupées.`}</p></div>`;
   const rg = rf.k==='match' && rf.g==='pr' ? 'st' : rf.g;   /* repas plaisir : regroupés par sorte (poutines, pub…) */
   const grp = r => rg==='pr' ? (kindOf(r)==='souper' ? PRS[prOf(r)] : KINDS[kindOf(r)]) : rg==='st' ? (STYS[styOf(r)[0]]||'Autres') : rg==='k' ? KINDS[kindOf(r)] : '';
   const order = rf.g==='pr' ? [...Object.values(PRS), ...Object.values(KINDS)] : rf.g==='st' ? [...Object.values(STYS),'Autres'] : Object.values(KINDS);
-  const groups = new Map(); list.forEach(r => { const g = grp(r); if(!groups.has(g)) groups.set(g, []); groups.get(g).push(r); });
+  const groups = new Map(); recipeFamilyEntries(list).forEach(entry => { const g = grp(entry.members[0]); if(!groups.has(g)) groups.set(g, []); groups.get(g).push(entry); });
   [...groups.keys()].sort((a,b) => order.indexOf(a)-order.indexOf(b)).forEach(g => {
     const all = groups.get(g), lim = g ? 6 : 40, cut = !rf.q && !grpAll.has(g) && all.length > lim + 2;
     if(g) h += `<h2 class="sec">${esc(g)}<span>${all.length}</span></h2>`;
     h += `<div class="recipe-grid">`;
-    (cut ? all.filter((r, j) => j < lim || openRec.has(r.n)) : all).forEach(r => {
-      const idx = list.indexOf(r), open = openRec.has(r.n);
-      h += `<details class="row" data-rec="${esc(r.n)}" data-lazy="1" ${open?'open':''}><summary>${recipePhoto(r, 'recipe-cover')}<span class="recipe-title">${esc(r.n)}${S.fav[r.n]?' <span class="small">(favori)</span>':''}</span><span class="rm">${tmList(r)}</span></summary>${open ? `<div class="rbody">${recBody(r, idx)}</div>` : ''}</details>`;
-    });
+    (cut ? all.filter((entry, j) => j < lim || entry.members.some(r => openRec.has(r.n))) : all).forEach(entry => { h += recipeFamilyCard(entry, list); });
     if(cut) h += `<button type="button" class="lnk2 rf-more" data-a="rf_more" data-g="${esc(g)}">Voir les ${all.length}</button>`;
     h += `</div>`;
   });

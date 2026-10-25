@@ -409,9 +409,55 @@ const RECIPE_PHOTOS = {
   "Tacos birria et consommé (mijoteuse)": "assets/recipes/recipe-405-5b09e3d130.webp",
   "Lasagne aux dumplings (porc, chou nappa et won ton)": "assets/recipes/recipe-406-e341a56344.webp"
 };
+const SIDE_PHOTOS = {
+  "frites_four": "assets/recipes/side-frites_four.webp",
+  "patates_pilees": "assets/recipes/side-patates_pilees.webp",
+  "wedges": "assets/recipes/side-wedges.webp",
+  "frites_maison": "assets/recipes/side-frites_maison.webp",
+  "patates_four": "assets/recipes/side-patates_four.webp",
+  "patates_douces": "assets/recipes/side-patates_douces.webp",
+  "grelots": "assets/recipes/side-grelots.webp",
+  "gratin": "assets/recipes/side-gratin.webp",
+  "pelures": "assets/recipes/side-pelures.webp",
+  "chips_maison": "assets/recipes/side-chips_maison.webp",
+  "chips": "assets/recipes/side-chips.webp",
+  "riz_blanc": "assets/recipes/side-riz_blanc.webp",
+  "pain_ail": "assets/recipes/side-pain_ail.webp",
+  "pain_croute": "assets/recipes/side-pain_croute.webp",
+  "riz_frit": "assets/recipes/side-riz_frit.webp",
+  "nouilles_oeufs": "assets/recipes/side-nouilles_oeufs.webp",
+  "gnocchi_poeles": "assets/recipes/side-gnocchi_poeles.webp",
+  "naan": "assets/recipes/side-naan.webp",
+  "egg_rolls": "assets/recipes/side-egg_rolls.webp",
+  "nachos": "assets/recipes/side-nachos.webp",
+  "salade_concombre": "assets/recipes/side-salade_concombre.webp",
+  "salade_verte": "assets/recipes/side-salade_verte.webp",
+  "crudites": "assets/recipes/side-crudites.webp",
+  "salade_chou": "assets/recipes/side-salade_chou.webp",
+  "brocoli": "assets/recipes/side-brocoli.webp",
+  "haricots_verts": "assets/recipes/side-haricots_verts.webp",
+  "salade_cesar": "assets/recipes/side-salade_cesar.webp",
+  "mais": "assets/recipes/side-mais.webp",
+  "pois": "assets/recipes/side-pois.webp",
+  "salade_mexicaine": "assets/recipes/side-salade_mexicaine.webp",
+  "salade_grecque": "assets/recipes/side-salade_grecque.webp",
+  "carottes": "assets/recipes/side-carottes.webp",
+  "legumes_sautes": "assets/recipes/side-legumes_sautes.webp",
+  "salade_fruits": "assets/recipes/side-salade_fruits.webp",
+  "pain_cheddar": "assets/recipes/side-pain_cheddar.webp",
+  "guacamole": "assets/recipes/side-guacamole.webp",
+  "grilled_cheese": "assets/recipes/side-grilled_cheese.webp",
+  "sandwichs_jambon": "assets/recipes/side-sandwichs_jambon.webp",
+  "biscuits_soda": "assets/recipes/side-biscuits_soda.webp"
+};
+function sidePhoto(side, cls = ''){
+  if(!side || !SIDE_PHOTOS[side.id]) return '';
+  return recipePhoto({n:side.n, photo:SIDE_PHOTOS[side.id]}, cls);
+}
 function recipePhoto(r, cls = '', priority = false){
-  if(!r || !RECIPE_PHOTOS[r.n]) return '';
-  const src = RECIPE_PHOTOS[r.n];
+  if(!r || !(r.photo || RECIPE_PHOTOS[r.n])) return '';
+  const src = r.photo && Object.values(SIDE_PHOTOS).includes(r.photo) ? r.photo : RECIPE_PHOTOS[r.n];
+  if(!src) return '';
   const safe = v => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   return `<img class="food-photo ${safe(cls)}" src="${safe(src)}" alt="${safe(r.n)} — illustration culinaire" width="960" height="640" loading="${priority ? 'eager' : 'lazy'}" decoding="async" ${priority ? 'fetchpriority="high"' : ''}>`;
 }
@@ -429,7 +475,7 @@ if(typeof document!=='undefined'){
   document.addEventListener('click',async e=>{
     if(!e.target.closest('[data-photo-download]') || photoDownloading)return;
     if(!('serviceWorker' in navigator)){updatePhotoStatus('Le téléchargement hors ligne demande HTTPS et un navigateur compatible.');return;}
-    const urls=Object.values(RECIPE_PHOTOS);
+    const urls=[...Object.values(RECIPE_PHOTOS),...Object.values(SIDE_PHOTOS)];
     if(!urls.length){updatePhotoStatus('Aucune photo disponible.');return;}
     photoDownloading=true;e.target.closest('[data-photo-download]').disabled=true;updatePhotoStatus('Préparation du téléchargement…');
     let readyTimer;try{const reg=await Promise.race([navigator.serviceWorker.ready,new Promise((_,reject)=>{readyTimer=setTimeout(()=>reject(Error('Service hors ligne indisponible')),12000);})]);clearTimeout(readyTimer);const worker=navigator.serviceWorker.controller||reg.active;if(!worker)throw Error('worker');worker.postMessage({type:'CACHE_RECIPE_PHOTOS',urls});}
