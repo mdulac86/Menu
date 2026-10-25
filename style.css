@@ -274,7 +274,7 @@ ul.ing a{margin-left:10px;text-decoration:none;font-weight:600}
 .bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
 
 /* champs */
-input[type=text],input[type=number],input[type=date],select,textarea{width:100%;min-height:46px;padding:9px 13px;border:1.5px solid var(--line2);border-radius:12px;background:var(--card);font-size:16px}
+input[type=text],input[type=search],input[type=number],input[type=date],select,textarea{width:100%;min-height:46px;padding:9px 13px;border:1.5px solid var(--line2);border-radius:12px;background:var(--card);font-size:16px}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
 select:not([multiple]){appearance:none;-webkit-appearance:none;padding-right:34px;background-image:linear-gradient(45deg,transparent 50%,var(--mute) 50%),linear-gradient(135deg,var(--mute) 50%,transparent 50%);background-position:calc(100% - 19px) 52%,calc(100% - 14px) 52%;background-size:5px 5px;background-repeat:no-repeat}
 select[multiple]{padding:6px 8px}
@@ -341,7 +341,7 @@ button.chip.on{background:var(--accent);color:var(--accent-ink)}
 .testbar{background:var(--warn-soft);color:var(--ink);border:1px dashed var(--warn);border-radius:12px;padding:8px 12px;font-size:.82rem;font-weight:600;margin:-6px 0 14px;text-align:center}
 .subnav{margin:0 -16px 14px;position:sticky;top:0;z-index:4;background:var(--bg);padding:8px 16px 6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .subnav::-webkit-scrollbar{display:none}
-.subnav button{flex:none}
+.subnav button{flex:none;padding:0 10px}
 .subnav button{min-height:40px}
 .cal{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}
 .calday{display:grid;grid-template-columns:96px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--soft)}
@@ -413,3 +413,28 @@ details.nut summary .flags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .nutt td:last-child{text-align:right;font-weight:600}
 .nutw{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--chip)}
 .nutw .qz-h{margin-top:0}
+
+/* bouton + : les ajouts au même endroit, par-dessus Menu et Recettes */
+.fab{position:fixed;right:max(16px, calc(50vw - 304px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:6;width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;box-shadow:0 6px 16px rgba(43,29,20,.3)}
+.fab svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+body.has-fab .app{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+.plusv{position:fixed;inset:0;z-index:15;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px calc(28px + env(safe-area-inset-bottom,0px))}
+html.plus-on,html.plus-on body{overflow:hidden}
+.pl-h{display:flex;align-items:center;gap:10px;min-width:0}
+.pl-t{font:650 1.3rem/1.15 var(--f-disp);letter-spacing:-.01em}
+.pl-b{display:flex;flex-direction:column;gap:12px}
+.pl-b>details>summary,.pl-b>.card>details>summary{display:none}
+.plus-l{display:flex;flex-direction:column;gap:8px}
+.plus-i{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:0;background:var(--card);border-radius:var(--r);padding:14px 16px;min-height:64px}
+.plus-i b{font:600 1.04rem var(--f-body);color:var(--ink)}
+.plus-i span{font-size:.86rem;color:var(--mute)}
+/* Recettes : les catégories sur une ligne qui défile */
+.rf-cats{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.rf-cats::-webkit-scrollbar{display:none}
+.rf-cats .chip{flex:none}
+.rf-more{margin:6px 0 4px}
+/* Épicerie : les rayons se replient */
+details.rayg>summary.sec{color:var(--ink);min-height:0;margin:20px 4px 10px}
+details.rayg>summary.sec span{margin-left:auto;margin-right:10px}
+details.mini>summary{min-height:32px;font-size:.84rem}
+.flag.sp{background:var(--tag);color:var(--tag-ink)}

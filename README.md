@@ -20,7 +20,7 @@ Site : <https://mdulac86.github.io/Menu/>. C'est une application web installable
 | `js/generation.js` | Génération du menu, budget, recherche des circulaires (Flipp) |
 | `js/epiceries.js` | Prix par épicerie (relevé du robot, écart avec Maxi) et comparateur « Où faire l'épicerie » |
 | `js/ecrans.js` | Écrans : menu, épicerie, maison, recettes, articles, prix |
-| `js/profil.js` | Profil de la famille, assistant de départ, réglages, accueil Ma semaine |
+| `js/profil.js` | Profil de la famille, assistant de départ, réglages, accueil Aujourd'hui |
 | `js/app.js` | Navigation, actions, aide et démarrage (chargé en dernier) |
 | `sw.js` | Le service worker : réseau d'abord, copie gardée hors ligne |
 | `manifest.webmanifest`, icônes | L'installation sur l'écran d'accueil. `icon-maskable-512.png` est l'icône d'Android (le panier au centre, pour que le cercle ou le carré arrondi ne le coupe pas) |
@@ -38,15 +38,22 @@ Les fichiers de `js/` sont des scripts ordinaires qui partagent leurs variables 
 ## Version de test
 
 `sh outils/construire-test.sh` produit `dist/test/`. Ce dossier se téléverse dans le dépôt sous `test/` : il est servi à `…/Menu/test/`.
-Il garde ses données à part (clés `menu_test_*`, cache `menu-test-*`), s'installe comme une app distincte (« Menu TEST », icône orange) et affiche un bandeau. Profil → Sauvegarde → « Copier mes vraies données » le remplit à partir de la version familiale du même téléphone, sans la modifier.
+Il garde ses données à part (clés `menu_test_*`, cache `menu-test-*`), s'installe comme une app distincte (« Menu TEST », icône orange) et affiche un bandeau. Profil → Compte → « Copier mes vraies données » le remplit à partir de la version familiale du même téléphone, sans la modifier.
 
-## Navigation (2.0)
+## Navigation
 
-Cinq onglets : Ma semaine (accueil selon le jour), Menu (Semaine, Historique), Épicerie (Liste, Articles, Prix, Maison), Recettes, Profil (Famille, Horaire, Épiceries, Budget et prix, Sauvegarde, Apparence, Aide).
+Une fonction, un endroit. Cinq onglets :
+- **Aujourd'hui** (`semaine`) : ce matin, ce midi, ce soir, demain, l'étape de la semaine (préparer, commander, ramasser), le questionnaire et l'ébauche, « Ce soir, on mange quoi ? ».
+- **Menu** (`menu`) : la carte de la semaine (articles et coût, nombres de plats, « Refaire le menu », « Partager », « Spéciaux et dates » repliés), puis les plats jour par jour; « Semaines passées » (`historique`) en bas.
+- **Épicerie** : Liste (`epicerie`, rayons repliables, « Où faire l'épicerie » replié, « Partager la liste ») et Maison (`maison`).
+- **Recettes** : recherche, catégories (`rf.k`, dont `match` et `tiktok`), « Filtres » repliés, 6 recettes par groupe (`grpAll` pour « Voir les … »).
+- **Profil** : Famille (membres, goûts, horaire, repas habituels, organisation), Épiceries (magasins, rayons, achats réguliers, toujours à la maison), Prix et budget (`prixbudget`, `pbSec` : budget et dépenses, articles, prix des épiceries), Compte (code de la famille, clé Gemini, sauvegarde, profil, apparence, remise à zéro).
+
+Le **bouton +** (Menu et Recettes) ouvre une feuille par-dessus l'écran (`plusK`, `renderPlus`) : ajouter un plat au menu, je reçois, importer un reel, coller une recette, nouvelle recette, nouvel accompagnement, photo du frigo; « Partager » ouvre la même feuille (`plusK = 'partager'`). L'Aide (bouton en haut) est numérotée dans l'ordre, cherchable (`aide_q`), avec un bouton vers chaque endroit. Les anciennes adresses (`horaire`, `budget`, `articles`, `prix`, `sauvegarde`, `apparence`) mènent à la nouvelle place (`OLDV`).
 
 ## Ce soir, on mange quoi ?
 
-Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le nombre de personnes :
+Un panneau dans Aujourd'hui (`renderAvec`, dans `app.js`), avec le nombre de personnes :
 
 - **J'ai le goût de…** : on cherche un plat (ex. jalapeños poppers). `pairWith()` propose un plat principal (ou une entrée, si le plat choisi est un souper) et un dessert. Le score tient compte de l'ambiance (`THEMES` : pub, mexicaine, italienne, asiatique, grecque, raffinée, québécoise), du même appareil (même fumoir, BBQ déjà chaud), évite les mêmes ingrédients principaux et les plats trop longs pour un soir, et favorise ce qui est à la maison. « Ce soir, ensemble » met les deux au menu.
 - **Avec ce qu'on a à la maison** : `fitStock()` compare une recette, pour le nombre de personnes, à Maison (75 % de la quantité suffit). Les condiments et le garde-manger rarement notés (`COND_RE` : sauces, bouillon, épices, farine…) ne bloquent pas un plat : ils sont « à vérifier ». Liste « Tout est à la maison », puis « Il manque un article ». Les accompagnements viennent aussi de la maison (`maisonSides`).
@@ -67,8 +74,8 @@ Un panneau dans Ma semaine et dans Menu (`renderAvec`, dans `app.js`), avec le n
 
 `IOS` et `ANDROID` (dans `app.js`, d'après le navigateur) adaptent l'application au téléphone :
 
-- **Installer** : l'aide montre d'abord les étapes du téléphone utilisé (Safari et « Sur l'écran d'accueil », ou Chrome et « Installer l'application »). Sur Android, Chrome propose l'installation (`beforeinstallprompt`) : une carte « Installer l'application » apparaît dans Ma semaine, avec « Plus tard » (`S.instHide`).
-- **Bouton Retour d'Android** : il ferme Cuisiner, quitte le mode magasin, revient à Ma semaine, et seulement ensuite quitte l'application (`navSync`, une seule entrée d'historique, l'adresse ne change pas). Le glissement retour de Safari fait la même chose.
+- **Installer** : l'aide montre d'abord les étapes du téléphone utilisé (Safari et « Sur l'écran d'accueil », ou Chrome et « Installer l'application »). Sur Android, Chrome propose l'installation (`beforeinstallprompt`) : une carte « Installer l'application » apparaît dans Aujourd'hui, avec « Plus tard » (`S.instHide`).
+- **Bouton Retour d'Android** : il ferme Cuisiner, quitte le mode magasin, ferme la feuille du bouton +, revient à Aujourd'hui, et seulement ensuite quitte l'application (`navSync`, une seule entrée d'historique, l'adresse ne change pas). Le glissement retour de Safari fait la même chose.
 - **Sauvegarde** : sur iPhone, le partage (« Enregistrer dans Fichiers », raccourci « Sauvegarde Menu »). Sur Android, le fichier va dans Téléchargements, et « Envoyer une copie » l'envoie à Google Drive ou par courriel (`saveFile`). Le profil et l'image du frigo suivent la même règle.
 - **Données** : sur Android, l'application installée et Chrome partagent les mêmes données. Sur iPhone, Safari et l'icône ne les partagent pas : il faut installer avant d'entrer quoi que ce soit.
 
@@ -83,7 +90,7 @@ Les spéciaux et les prix relevés sont réservés à la famille et aux amis. Un
 
 Puis : Actions → Robot des spéciaux → Run workflow, et Actions → Robot des prix → Run workflow. Le robot des prix retire alors `prix-epiceries.json` (en clair) du dépôt.
 
-**Dans l'application** : Profil → Épiceries → Code de la famille. Le code reste sur le téléphone (clé `menu_epicerie_code`, hors des sauvegardes). Sans code : pas de recherche des spéciaux, et le menu se fait sans eux; les prix restent estimés. Avec le code : les spéciaux viennent du fichier du robot; Flipp n'est questionné qu'en secours, si le fichier manque ou ne couvre pas le jour de l'épicerie.
+**Dans l'application** : Profil → Compte → Code de la famille. Le code reste sur le téléphone (clé `menu_epicerie_code`, hors des sauvegardes). Sans code : pas de recherche des spéciaux, et le menu se fait sans eux; les prix restent estimés. Avec le code : les spéciaux viennent du fichier du robot; Flipp n'est questionné qu'en secours, si le fichier manque ou ne couvre pas le jour de l'épicerie.
 
 **Changer le code** : modifier le secret `MENU_CLE`, relancer les deux robots, puis donner le nouveau code. Les téléphones qui ont l'ancien voient « le code de la famille a changé ».
 
@@ -95,7 +102,7 @@ Puis : Actions → Robot des spéciaux → Run workflow, et Actions → Robot de
 
 ## Reels et photos du frigo (Gemini de chaque personne)
 
-Chaque personne colle sa propre clé Gemini gratuite (aistudio.google.com) dans Profil → Épiceries. Elle reste sur le téléphone (clé `menu_epicerie_gemini`, hors des sauvegardes). Le téléphone appelle directement `generativelanguage.googleapis.com` (Google accepte les appels venant du site), la clé dans l'en-tête `x-goog-api-key`, jamais dans l'adresse. L'app prend le modèle Gemini Flash le plus récent offert à la clé et passe au suivant s'il atteint sa limite (`gemLire`, `gemChoisir`).
+Chaque personne colle sa propre clé Gemini gratuite (aistudio.google.com) dans Profil → Compte. Elle reste sur le téléphone (clé `menu_epicerie_gemini`, hors des sauvegardes). Le téléphone appelle directement `generativelanguage.googleapis.com` (Google accepte les appels venant du site), la clé dans l'en-tête `x-goog-api-key`, jamais dans l'adresse. L'app prend le modèle Gemini Flash le plus récent offert à la clé et passe au suivant s'il atteint sa limite (`gemLire`, `gemChoisir`).
 
 - une recette revient en texte dans le format que lit `parseWebRecipe`, puis ouvre le formulaire « Nouvelle recette » pour être vérifiée;
 - un inventaire devient une liste à cocher qui met à jour Maison;
@@ -137,7 +144,7 @@ L'application ne peut pas lire maxi.ca elle-même : le site bloque les requêtes
 Trois autres choses corrigent aussi ces prix :
 
 - le prix payé, inscrit dans la liste d'épicerie ;
-- le prix habituel, inscrit dans l'onglet Articles ;
+- le prix habituel, inscrit dans Profil → Prix et budget → Articles ;
 - le prix habituel déduit des circulaires qui indiquent leur rabais.
 
 ## Prix par épicerie et « Où faire l'épicerie »
@@ -159,7 +166,7 @@ Un nom de circulaire est nettoyé : la partie anglaise après `|` et les formats
 - jamais de friandises (Kinder, Cadbury, Halloween…) pour un aliment de base ;
 - pour les variétés de fromage et de lait, les pourcentages (crème 35 %, lait 2 %) et les conserves, il faut la bonne variété.
 
-Dans l'onglet Articles, le bouton « Pas ce produit » écarte pour toujours un produit mal associé. Les mots cherchés et les mots exclus se règlent article par article.
+Dans Profil → Prix et budget → Articles, le bouton « Pas ce produit » écarte pour toujours un produit mal associé. Les mots cherchés et les mots exclus se règlent article par article.
 
 ## Format des données
 
@@ -196,7 +203,7 @@ Dans l'onglet Articles, le bouton « Pas ce produit » écarte pour toujours un 
 - `profil.membres[i]` : `nom` (facultatif), `g` (note par goût : 5 J'adore, 4 J'aime, 3 Je tolère, 2 Je n'aime pas, 1 Refuse d'en manger; clés dans `GOUTS`), `rx` (autres aliments refusés, séparés par des virgules).
 - `famAvis(r)` : qui refuse quoi et la note moyenne. Un plat que tout le monde refuse est écarté (`famBad`); la note pèse dans `score` (`famBonus`); `fill` répartit les coups de cœur entre les membres.
 - 2e protéine (`p2Info`) : si seulement certains refusent la protéine principale (`mainProts`), leur part est retirée de cette protéine et remplacée (`P2`) dans la liste et l'écran Cuisiner. `it.p2` : choix manuel (`non` = aucune).
-- `menu.q` : réponses du questionnaire de la semaine (`temps` : vite, normale, temps; `mix` : p2, eviter, pareil; `env`, `pas`). `menu.eb` : le menu est une ébauche (étape « ebauche » de Ma semaine) jusqu'à « Bâtir le menu final ».
+- `menu.q` : réponses du questionnaire de la semaine (`temps` : vite, normale, temps; `mix` : p2, eviter, pareil; `env`, `pas`). `menu.eb` : le menu est une ébauche (étape « ebauche » d’Aujourd’hui) jusqu'à « Bâtir le menu final ».
 - Repas plaisir (cheat meal) : `p.nCm` par semaine; `it.cm` = un souper « à l'occasion » (`r.oc`) ou de style pub, placé le vendredi ou le samedi (`repasPlaisir`, `assignDays`), jamais deux soirs de suite. Les poutines (style `poutine`) en font partie. Tendances TikTok : surtout des versions « … (TikTok) » ajoutées à la fin de `v` des plats existants (les numéros des versions déjà là ne bougent pas), plus des plats marqués `al: ["TikTok"]`; Recettes → Genre « Tendances TikTok » (`estTiktok`). `nouvelles/fusion.py` accepte aussi un dictionnaire `V` {plat : [versions]}. Les recettes `oc` ne sont jamais choisies comme souper ordinaire ni comme entrée; Recettes → Genre « Repas plaisir (soirs de match, poutines) », regroupé par style. `r.nonut` : pas de valeur nutritive par portion (bacon maison).
 - Soupes et entrées : `it.sr` = soupe-repas dans les soupers (`p.nSr`), accompagnements de type `soupe`; `it.ro` = rôle d'une soupe (`avec`, `lunch`) ou d'une entrée (`entree`, `avec`, `libre`), avec le jour `d` du souper (`assignExtras`).
 
