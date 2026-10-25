@@ -163,7 +163,7 @@ const LOFK = {souper:'items', dejeuner:'dej', entree:'ent', soupe:'sou', dessert
 const LBL = {items:'Soupers', din:'Dîners', dej:'Déjeuners', ent:'Entrées', sou:'Soupes et potages', des:'Desserts'};
 const kindOf = r => r.k || 'souper';
 const PRS = {poulet:'Poulet et volaille', boeuf:'Boeuf', porc:'Porc et charcuterie', poisson:'Poissons et fruits de mer', vege:'Végétarien et oeufs', mixte:'Autres viandes'};
-const STYS = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub et tailgate', pates:'Pâtes', riz:'Riz et nouilles', sandwich:'Sandwichs et burgers', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté et mijoteuse', bbq:'Grillé et BBQ', four:'Au four', poele:'À la poêle', soupe:'Soupes', salade:'Salades', bouchee:'Bouchées et trempettes', biscuit:'Biscuits et carrés', gateau:'Gâteaux, tartes et muffins', fruit:'Fruits et croustades', froid:'Poudings et desserts froids', crepe:'Crêpes', prepare:'Plats préparés', sauce:'Sauces'};
+const STYS = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub, sport et tailgate', pates:'Pâtes', riz:'Riz et nouilles', sandwich:'Sandwichs et burgers', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté et mijoteuse', bbq:'Grillé et BBQ', four:'Au four', poele:'À la poêle', soupe:'Soupes', salade:'Salades', bouchee:'Bouchées et trempettes', biscuit:'Biscuits et carrés', gateau:'Gâteaux, tartes et muffins', fruit:'Fruits et croustades', froid:'Poudings et desserts froids', crepe:'Crêpes', prepare:'Plats préparés', sauce:'Sauces'};
 function prOf(r){
   if(r.pr) return r.pr;
   if(kindOf(r)==='dessert' || kindOf(r)==='dejeuner') return '';
@@ -348,6 +348,7 @@ function metaTags(r, souper){
   const t = [PRS_S[prOf(r)], ...styOf(r).map(s => STYS_S[s])].filter(Boolean).map(x => `<span>${esc(x)}</span>`);
   if(r.nw) t.push('<span class="new">Nouveau</span>');
   if(r.fam) t.push('<span class="liked">Famille</span>');
+  if(r.oc) t.push('<span class="long">À l\'occasion</span>');
   if(S.fav[r.n]) t.push('<span class="fav">Favori</span>');
   if(souper && isLong(r)) t.push('<span class="long">Fin de semaine</span>');
   methods(r).slice(1).forEach(m => t.push(`<span class="cmt">${esc(m.l)}</span>`));
@@ -427,11 +428,19 @@ function mkSoupe(r, used){
   it.sf = chooseSide(rs, 'f', used); if(it.sf) used.add(it.sf); it.sv = chooseSide(rs, 'v', used);
   return it;
 }
+/* repas plaisir : un plat « à l'occasion » (soir de match, tailgate) ou de style pub */
+const plaisirOk = r => kindOf(r)==='souper' && (r.oc || styOf(r).includes('pub'));
+function repasPlaisir(items, k, banned){
+  const taken = new Set(items.map(x => x.r));
+  const C = allRecipes().filter(r => plaisirOk(r) && !S.dis[r.n] && !softBad(r) && ppOk(r) && !taken.has(r.n))
+    .map(r => ({r, s:score(r) + (r.oc ? 1 : 0) - (banned && banned.has(r.n) ? 6 : 0)})).sort((a, b) => b.s - a.s);
+  C.slice(0, k).forEach(({r}) => { const it = mkItem(r, usedSides(items), pickVar(r)); it.cm = 1; items.push(it); });
+}
 /* une soupe nourrissante (viande, légumineuses, pâtes, riz, pommes de terre) passe en premier comme repas */
 const copieux = r => mainProts(r, 0).length > 0 || /lentille|pois chiche|haricot|feve|pates|nouille|riz|orge|pois casses|pommes? de terre|tortellini|gnocchi/.test(goutTxt(r, 0));
 function soupesRepas(items, k, banned){
   const taken = new Set(items.map(x => x.r));
-  const C = allRecipes().filter(r => kindOf(r)==='soupe' && !S.dis[r.n] && !softBad(r) && !taken.has(r.n))
+  const C = allRecipes().filter(r => kindOf(r)==='soupe' && !r.oc && !S.dis[r.n] && !softBad(r) && !taken.has(r.n))
     .map(r => ({r, s:score(r) + (copieux(r) ? 1.2 : 0) - (banned && banned.has(r.n) ? 6 : 0)})).sort((a, b) => b.s - a.s);
   C.slice(0, k).forEach(({r}) => items.push(mkSoupe(r, usedSides(items))));
 }
@@ -693,7 +702,7 @@ function texteMenu(){
     const X = mlist(l).slice(); if(!X.length) return; L.push('', LBL[l].toUpperCase());
     if(l==='items' || l==='dej') X.sort((a,b) => (a.d||'9').localeCompare(b.d||'9'));
     X.forEach((it,i) => { const x = ligneSouper(it,i); if(!x) return;
-      L.push(it.d && (l==='items' || l==='dej') ? `${dayLbl(it.d)} : ${x.titre.replace(/^\d+\. /,'')}${it.sr ? ' (soupe-repas)' : ''}` : x.titre);
+      L.push(it.d && (l==='items' || l==='dej') ? `${dayLbl(it.d)} : ${x.titre.replace(/^\d+\. /,'')}${it.sr ? ' (soupe-repas)' : it.cm ? ' (repas plaisir)' : ''}` : x.titre);
       if((l==='ent' || l==='sou') && it.ro) L.push('   ' + roleTxt(it, l));
       if(x.ac) L.push('   Avec : '+x.ac);
       if(it.sc) L.push('   Sauce : '+it.sc);
@@ -1059,11 +1068,11 @@ const gapDays = (a, b) => Math.round((new Date(b+'T12:00:00') - new Date(a+'T12:
 function spreadDays(){
   const L = mlist('items').filter(x => x.d), at = new Map(L.map(x => [x.d, x])), R = x => byName(x.r);
   const cost = () => { let c = 0;
-    at.forEach((x, d) => { const y = at.get(addDays(d, 1)); if(y) c += simR(R(x), R(y)); });
+    at.forEach((x, d) => { const y = at.get(addDays(d, 1)); if(y) c += simR(R(x), R(y)) + (x.cm && y.cm ? 8 : 0); });
     { const w0 = weekStart(); L.forEach(x => { c += .5 * perishOf(R(x)) * Math.max(0, gapDays(w0, x.d)); }); }
     L.forEach(x => { if(!x.after) return; const pa = L.find(y => y.r===x.after); if(!pa) return; const g = gapDays(pa.d, x.d); c += g < 1 ? 99 : g===1 ? 3 : g===4 ? 1 : g >= 5 ? 6 : 0; });
     return c; };
-  const mov = L.filter(x => !x.dfix), okAt = (x, d) => { const r = R(x); return !(r && isLong(r) && !isOff(d)); };
+  const mov = L.filter(x => !x.dfix && !x.cm), okAt = (x, d) => { const r = R(x); return !(r && isLong(r) && !isOff(d)); };   /* les repas plaisir gardent leur soir */
   const sw = (a, b) => { const t = a.d; a.d = b.d; b.d = t; at.set(a.d, a); at.set(b.d, b); };
   for(let k = 0; k < 40; k++){
     const c0 = cost(); let best = 0, bp = null;
@@ -1086,11 +1095,19 @@ function assignDays(force){
   if(force) L.forEach(x => { if(!x.dfix) delete x.d; });
   L.forEach(x => { if(!x.d || !dates.includes(x.d) || seen.has(x.d)) delete x.d; else seen.add(x.d); });
   const todo = L.filter(x => !x.d); if(!todo.length) return;
-  const pick = dates.filter(d => !seen.has(d)).slice(0, todo.length);
+  const free = dates.filter(d => !seen.has(d));
+  /* repas plaisir d'abord, parmi tous les jours libres : vendredi ou samedi (congé pour une longue cuisson), jamais deux soirs de suite */
+  { const dw = d => new Date(d+'T12:00:00').getDay(), cmDays = L.filter(x => x.cm && x.d).map(x => x.d);
+    todo.filter(x => x.cm && !(x.after && L.some(y => y.r===x.after))).forEach(x => { const r = byName(x.r), lg = r && isLong(r);
+      const C = free.filter(d => lg ? isOff(d) : [5,6].includes(dw(d))).concat(free.filter(d => isOff(d) || [5,6].includes(dw(d))));
+      const d = C.find(d => !cmDays.some(c => Math.abs(gapDays(c, d)) === 1)) || C[0];
+      if(d){ free.splice(free.indexOf(d), 1); x.d = d; cmDays.push(d); } }); }
+  const rest = todo.filter(x => !x.d); if(!rest.length) return;
+  const pick = free.slice(0, rest.length);
   const isFol = x => x.after && L.some(y => y.r===x.after);
-  const main = todo.filter(x => !isFol(x)).sort((a,b) => ((byName(b.r)||{}).rs?1:0) - ((byName(a.r)||{}).rs?1:0)), fol = todo.filter(isFol);
+  const main = rest.filter(x => !isFol(x)).sort((a,b) => ((byName(b.r)||{}).rs?1:0) - ((byName(a.r)||{}).rs?1:0)), fol = rest.filter(isFol);
   const take = off => { const i = pick.findIndex(d => isOff(d)===off); return i>=0 ? pick.splice(i,1)[0] : pick.shift(); };
-  main.filter(x => { const r = byName(x.r); return r && isLong(r); }).forEach(x => { x.d = take(true); });
+  main.filter(x => { const r = byName(x.r); return !x.d && r && isLong(r); }).forEach(x => { x.d = take(true); });
   main.filter(x => !x.d).forEach(x => { x.d = take(false); });
   fol.forEach(x => { const p = L.find(y => y.r===x.after); let i = -1;
     if(p && p.d){ for(const k of [2,3,1,4]){ i = pick.indexOf(addDays(p.d, k)); if(i >= 0) break; } if(i < 0) i = pick.findIndex(d => d > p.d); }
@@ -1159,7 +1176,7 @@ function dinPlan(){
 }
 function fillDin(n, keep, ban){
   const items = keep.slice(), taken = new Set(items.map(x => x.r)), banned = new Set([...recentSet(), ...taken, ...(ban||[])]);
-  const ok = r => kindOf(r)==='souper' && !S.dis[r.n] && !softBad(r) && !r.ur && !r.rs && !r.pp && tpOf(r) <= Math.max(30, S.p.maxTm||35) && tmOf(r) <= 60;
+  const ok = r => kindOf(r)==='souper' && !r.oc && !S.dis[r.n] && !softBad(r) && !r.ur && !r.rs && !r.pp && tpOf(r) <= Math.max(30, S.p.maxTm||35) && tmOf(r) <= 60;
   let pool = allRecipes().filter(r => ok(r) && !banned.has(r.n));
   if(pool.length < n - items.length) pool = allRecipes().filter(r => ok(r) && !taken.has(r.n) && !(ban||new Set()).has(r.n));
   const prot = {}, fams = new Set(), typs = {};
@@ -1213,7 +1230,7 @@ const primOf = it => it.after && S.p.reste!==false ? mlist('items').find(x => x.
 const follOf = it => S.p.reste!==false ? mlist('items').find(x => x.after===it.r) || null : null;
 function pickFollow(rp, taken, avoid){
   const fp = famOf(rp), pen = r => { const f = famOf(r); return (f && (f===fp || (avoid && avoid.has(f))) ? 3 : 0) + ((r.t||'viande')!=='viande' && r.t===rp.t ? 1.5 : 0); };
-  const c = allRecipes().filter(r => kindOf(r)==='souper' && !taken.has(r.n) && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !r.pp && pairs(rp, r)).map(r => ({r, s:score(r) - pen(r)})).sort((a,b) => b.s-a.s);
+  const c = allRecipes().filter(r => kindOf(r)==='souper' && !r.oc && !taken.has(r.n) && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !r.pp && pairs(rp, r)).map(r => ({r, s:score(r) - pen(r)})).sort((a,b) => b.s-a.s);
   return c.length ? c[0].r : null;
 }
 function linkFollow(it){
@@ -1706,7 +1723,7 @@ function score(r){
 
 function fillDej(n, keep, ban){
   const items = keep.slice(), taken = new Set(items.map(x => x.r)), banned = new Set([...recentSet(), ...taken, ...(ban||[])]);
-  const base = allRecipes().filter(r => kindOf(r)==='dejeuner' && !S.dis[r.n] && !softBad(r) && ppOk(r) && !(ban && ban.has(r.n)));
+  const base = allRecipes().filter(r => kindOf(r)==='dejeuner' && !r.oc && !S.dis[r.n] && !softBad(r) && ppOk(r) && !(ban && ban.has(r.n)));
   const best = semaine => { const ok = r => (STK ? stkOk(r, pDej()) : isSimple(r)===semaine) && !taken.has(r.n);
     let c = base.filter(r => ok(r) && !banned.has(r.n)); if(!c.length) c = base.filter(ok); if(!c.length) c = base.filter(r => !taken.has(r.n));
     if(STK) c = c.filter(r => stkOk(r, pDej()));
@@ -1723,7 +1740,7 @@ function fill(n, keep, l, ban){
   const items = keep.slice();
   const banned = new Set([...recentSet(), ...items.map(x => x.r), ...(ban||[])]);
   const ptL = l==='items' ? totalPortions() : 0;
-  const pool = allRecipes().filter(r => kindOf(r)===kind && !S.dis[r.n] && !softBad(r) && (STK ? true : ppOk(r)) && simpleOk(r) && !(ban && ban.has(r.n)) && (!STK || (!r.ur && stkOk(r, ptL))));
+  const pool = allRecipes().filter(r => kindOf(r)===kind && !r.oc && !S.dis[r.n] && !softBad(r) && (STK ? true : ppOk(r)) && simpleOk(r) && !(ban && ban.has(r.n)) && (!STK || (!r.ur && stkOk(r, ptL))));
   let cands = pool.filter(r => !banned.has(r.n));
   /* pas assez de plats « frais » : on complète avec des plats récents, mais toujours après les nouveaux */
   if(cands.length < n - items.length) cands = pool.filter(r => !items.some(x => x.r===r.n));
@@ -1734,7 +1751,8 @@ function fill(n, keep, l, ban){
     for(const {r} of cands){ if(items.length>=n) break; if(taken.has(r.n) || (r.pp && pps>=1) || !stkOk(r, ptL)) continue; items.push(Object.assign({r:r.n, v:STK ? 0 : pickVar(r)}, l==='ent' ? {ro:'entree'} : l==='sou' ? {ro:'avec'} : {})); taken.add(r.n); if(r.pp) pps++; stkUse(r, ptL); }
     return items;
   }
-  const nsr = l==='items' && !STK ? Math.min(S.p.nSr||0, n) : 0, srMiss = Math.max(0, nsr - items.filter(x => x.sr).length), nN = n - srMiss;
+  const nsr = l==='items' && !STK ? Math.min(S.p.nSr||0, n) : 0, srMiss = Math.max(0, nsr - items.filter(x => x.sr).length);
+  const ncm = l==='items' && !STK ? Math.min(S.p.nCm||0, Math.max(0, n - nsr)) : 0, cmMiss = Math.max(0, ncm - items.filter(x => x.cm).length), nN = n - srMiss - cmMiss;
   const prot = {}, fams = {}, typs = {}; let pastas = 0, longs = 0, duos = items.filter(x => x.after).length; const maxLong = nLongW(), maxDuo = n>=6 ? 2 : 1;
   const note = r => { const p = protein(r); prot[p] = (prot[p]||0)+1; pastas += isPasta(r)?1:0; longs += isLong(r)?1:0;
     const f = famOf(r); if(f) fams[f] = (fams[f]||0)+1; const ty = r.t||'viande'; typs[ty] = (typs[ty]||0)+1; };
@@ -1763,6 +1781,7 @@ function fill(n, keep, l, ban){
   } };
   pass(0); if(items.length<nN) pass(1); if(items.length<nN) pass(2);
   if(srMiss) soupesRepas(items, srMiss, banned);
+  if(cmMiss) repasPlaisir(items, cmMiss, banned);
   return items;
 }
 function today(){ return fmtDate(shopISO()); }
@@ -1791,13 +1810,13 @@ function budgetFit(){
   const b = +S.p.budget || 0; if(!b || !S.menu.date || S.menu.achete) return 0;
   let changed = 0; const recent = recentSet(), tried = new Set();
   /* candidats évalués une seule fois (note et coût), pas à chaque tour */
-  const pool = allRecipes().filter(r => kindOf(r)==='souper' && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !recent.has(r.n))
+  const pool = allRecipes().filter(r => kindOf(r)==='souper' && !r.oc && !S.dis[r.n] && !softBad(r) && ppOk(r) && simpleOk(r) && !recent.has(r.n))
     .map(r => { const it = mkItem(r, new Set(), pickVar(r)); return {r, s: score(r), c: dishCost(it)}; });
   for(let k = 0; k < 6; k++){
     resetCaches();
     if(listTotals(buyList().rows).cost <= b) break;
     const L = mlist('items'), used = new Set(allItems().map(x => x.r));
-    const cand = L.map((it, i) => ({it, i, c: dishCost(it)})).filter(o => !o.it.lock && !o.it.sr && !o.it.dfix && !o.it.after && !follOf(o.it) && !tried.has(o.it.r) && byName(o.it.r)).sort((a, c) => c.c - a.c)[0];
+    const cand = L.map((it, i) => ({it, i, c: dishCost(it)})).filter(o => !o.it.lock && !o.it.sr && !o.it.cm && !o.it.dfix && !o.it.after && !follOf(o.it) && !tried.has(o.it.r) && byName(o.it.r)).sort((a, c) => c.c - a.c)[0];
     if(!cand) break;
     tried.add(cand.it.r);
     const longOk = isLong(byName(cand.it.r));
@@ -1837,6 +1856,9 @@ function ajuster(){
   { const I = mlist('items'), want = Math.min(S.p.nSr||0, nOf('items')), have = I.filter(x => x.sr);
     if(have.length > want) have.filter(x => !x.lock).slice(0, have.length - want).forEach(x => I.splice(I.indexOf(x), 1));
     else if(have.length < want && I.length >= nOf('items')) I.filter(x => !x.sr && !x.lock && !x.dfix).slice(-(want - have.length)).forEach(x => I.splice(I.indexOf(x), 1)); }
+  { const I = mlist('items'), want = Math.min(S.p.nCm||0, Math.max(0, nOf('items') - Math.min(S.p.nSr||0, nOf('items')))), have = I.filter(x => x.cm);
+    if(have.length > want) have.filter(x => !x.lock).slice(0, have.length - want).forEach(x => I.splice(I.indexOf(x), 1));
+    else if(have.length < want && I.length >= nOf('items')) I.filter(x => !x.sr && !x.cm && !x.lock && !x.dfix).slice(-(want - have.length)).forEach(x => I.splice(I.indexOf(x), 1)); }
   ['items','dej','ent','sou','des'].forEach(l => {
     const n = nOf(l), cur = mlist(l);
     if(cur.length > n){ const locked = cur.filter(x => x.lock), rest = cur.filter(x => !x.lock).slice(0, Math.max(0, n-locked.length)); m[l] = cur.filter(x => x.lock || rest.includes(x)); }
@@ -2251,7 +2273,7 @@ const famSan = o => { if(!isObj(o) || typeof o.n !== 'string' || !o.n.trim() || 
   const str = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
   return {n:o.n.trim().slice(0, 120), e:'', m:(Array.isArray(o.m) ? o.m : []).filter(x => typeof x==='string').slice(0, 12), k:KINDS[o.k] ? o.k : 'souper', pr:PRS[o.pr] ? o.pr : '', st:(Array.isArray(o.st) ? o.st : []).filter(x => STYS[x]),
     t:TYPES[o.t] ? o.t : 'viande', tm:isFinite(+o.tm) && +o.tm > 0 ? +o.tm : 30, tp:isFinite(+o.tp) && +o.tp > 0 ? +o.tp : undefined, mj:+o.mj ? 1 : 0, sf:str(o.sf, 40), sv:str(o.sv, 40),
-    i, s:str(o.s, 6000), v:[], src:str(o.src, 300), ajout:str(o.ajout, 10), fam:true, nw: !!o.ajout && gapDays(o.ajout, isoToday()) <= 21}; };
+    i, s:str(o.s, 6000), v:[], src:str(o.src, 300), ajout:str(o.ajout, 10), oc:+o.oc ? 1 : 0, fam:true, nw: !!o.ajout && gapDays(o.ajout, isoToday()) <= 21}; };
 function famLoad(){ try{ const o = JSON.parse(localStorage.getItem(FAM_KEY) || 'null'); FAMREC = o && Array.isArray(o.recettes) ? o.recettes.map(famSan).filter(Boolean) : []; }catch(e){ FAMREC = []; } }
 function famSet(L, t){ FAMREC = L.map(famSan).filter(Boolean); try{ localStorage.setItem(FAM_KEY, JSON.stringify({recettes:L, t:t || Date.now()})); }catch(e){} _AR = null; resetCaches(); }
 async function famFetch(force){
@@ -2271,7 +2293,7 @@ async function famModifier(fn, msg){
   }
   throw errC('La banque commune est occupée : réessaie dans un moment.', 'conflit');
 }
-const famObj = r => ({n:r.n, m:r.m || [], k:kindOf(r), pr:r.pr || '', st:r.st || [], t:r.t || 'viande', tm:tmOf(r), tp:tpOf(r), mj:mjOf(r) ? 1 : 0, sf:r.sf || '', sv:r.sv || '', i:r.i, s:r.s || '', src:r.src || '', ajout:isoToday()});
+const famObj = r => ({n:r.n, m:r.m || [], k:kindOf(r), pr:r.pr || '', st:r.st || [], t:r.t || 'viande', tm:tmOf(r), tp:tpOf(r), mj:mjOf(r) ? 1 : 0, sf:r.sf || '', sv:r.sv || '', i:r.i, s:r.s || '', src:r.src || '', oc:r.oc ? 1 : 0, ajout:isoToday()});
 const famPublier = r => famModifier(L => L.filter(x => norm(x.n) !== norm(r.n)).concat([famObj(r)]), 'Recette ajoutée : ' + r.n);
 const famRetirer = n => famModifier(L => L.filter(x => norm(x.n) !== norm(n)), 'Recette retirée : ' + n);
 const famHas = n => (FAMREC || []).some(x => norm(x.n) === norm(n));
@@ -2710,7 +2732,7 @@ let altKey = '';
 function altsFor(it, l){
   const r = byName(it.r); if(!r) return [];
   const kind = kindOf(r), used = new Set(allItems().map(x => x.r)), recent = recentSet(), c0 = dishCost(it), t0 = tpOf(r), lg = isLong(r);
-  return allRecipes().filter(x => kindOf(x)===kind && !used.has(x.n) && !S.dis[x.n] && !softBad(x) && ppOk(x) && simpleOk(x) && !recent.has(x.n) && (lg || !isLong(x)) && Math.abs(tpOf(x) - t0) <= 20)
+  return allRecipes().filter(x => kindOf(x)===kind && (!x.oc || r.oc) && !used.has(x.n) && !S.dis[x.n] && !softBad(x) && ppOk(x) && simpleOk(x) && !recent.has(x.n) && (lg || !isLong(x)) && Math.abs(tpOf(x) - t0) <= 20)
     .map(x => ({x, s: score(x) + (protein(x)===protein(r) ? .3 : 0)})).sort((a, b) => b.s - a.s).slice(0, 3)
     .map(({x}) => { const ni = (l==='items' || l==='din') ? mkItem(x, new Set(), pickVar(x)) : {r:x.n, v:0}; if(it.pt) ni.pt = it.pt; return {x, dc: dishCost(ni) - c0, why: whyOf(ni)}; });
 }
@@ -2732,7 +2754,7 @@ function carte(it, i, l){
   const xtra = l==='ent' || l==='sou', dcol = dated || (xtra && it.d) ? dcolHtml(it.d) : '';
   const ext = souper ? extrasDe(it.d) : [];
   const restA = l==='din' ? restesAvail(it.d) : null;
-  const flags = [it.sr ? ['Soupe-repas','k'] : null, xtra && it.ro ? [roleTxt(it, l).replace(/,.*$/, '').replace(/ de .*$/, ''),'a'] : null, it.rep ? ['Reporté','k'] : null, it.pt && it.pt!==ptDef(it, l) ? [`${it.pt} portion${it.pt>1?'s':''}`,'a'] : null, it.lock ? ['Gardé','a'] : null, cur ? [vname(cur[0]),''] : null, fo ? ['Donne des restes','k'] : null, pr ? ['Avec les restes','k'] : null,
+  const flags = [it.sr ? ['Soupe-repas','k'] : null, it.cm ? ['Repas plaisir','k'] : null, xtra && it.ro ? [roleTxt(it, l).replace(/,.*$/, '').replace(/ de .*$/, ''),'a'] : null, it.rep ? ['Reporté','k'] : null, it.pt && it.pt!==ptDef(it, l) ? [`${it.pt} portion${it.pt>1?'s':''}`,'a'] : null, it.lock ? ['Gardé','a'] : null, cur ? [vname(cur[0]),''] : null, fo ? ['Donne des restes','k'] : null, pr ? ['Avec les restes','k'] : null,
     meal && p2Info(it, l) ? ['2e protéine','k'] : null, r.pp ? ['Prêt à servir',''] : null, k ? [CM_L[k],'k'] : souper && mjOf(r) && it.d && !isOff(it.d) && (mjOf(r)===1 || tmOf(r) > MAX_FOUR) ? ['Mijoteuse','k'] : null, it.rt==='up' ? ['Aimé','a'] : it.rt==='down' ? ['Pas aimé','w'] : null, sto.length ? ['Déjà à la maison','a'] : null].filter(Boolean);
   return `<details class="dish${it.lock?' locked':''}" data-pan="${pk}" ${open?'open':''}><summary>${dcol}
     <span class="dmain"><span class="dline"><span class="dname">${esc(r.n)}</span><span class="lead" aria-hidden="true"></span><span class="dtime">${fmtMin(tpM(r, k))}</span></span>
@@ -2772,7 +2794,7 @@ function carte(it, i, l){
     <div class="small" id="rmsg_${l}_${i}"></div></div></details>`;
 }
 function countSelects(dis){
-  return [['nDej','Déjeuners',[0,1,2,3,4,5,6,7]],['nDin','Dîners',[0,1,2,3,4,5,6,7]],['n','Soupers',[3,4,5,6,7]],['nSr','Dont soupes-repas',[0,1,2]],['nEnt','Entrées',[0,1,2,3,4,5,6,7]],['nSou','Soupes à côté',[0,1,2,3]],['nDes','Desserts',[0,1,2,3,4,5,6,7]]].map(([k,lab,opts]) => `<label class="f">${lab}<select data-p="${k}" ${dis||''}>${opts.map(v=>`<option ${(S.p[k]||0)===v?'selected':''}>${v}</option>`).join('')}</select></label>`).join('');
+  return [['nDej','Déjeuners',[0,1,2,3,4,5,6,7]],['nDin','Dîners',[0,1,2,3,4,5,6,7]],['n','Soupers',[3,4,5,6,7]],['nSr','Dont soupes-repas',[0,1,2]],['nCm','Dont repas plaisir',[0,1,2]],['nEnt','Entrées',[0,1,2,3,4,5,6,7]],['nSou','Soupes à côté',[0,1,2,3]],['nDes','Desserts',[0,1,2,3,4,5,6,7]]].map(([k,lab,opts]) => `<label class="f">${lab}<select data-p="${k}" ${dis||''}>${opts.map(v=>`<option ${(S.p[k]||0)===v?'selected':''}>${v}</option>`).join('')}</select></label>`).join('');
 }
 function renderSetup(){
   const p = S.p;
@@ -3499,7 +3521,8 @@ function recFiltered(){
   return allRecipes().filter(r => {
     if(rf.k==='acc') return false;
     if(q && !norm(r.n+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
-    if(rf.k && kindOf(r)!==rf.k) return false;
+    if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub')) return false; }
+    else if(rf.k && kindOf(r)!==rf.k) return false;
     if(rf.pr && prOf(r)!==rf.pr) return false;
     if(rf.st && !styOf(r).includes(rf.st)) return false;
     if(rf.fast && tpOf(r) > 30) return false;
@@ -3548,7 +3571,7 @@ function varFromDraft(key){
 }
 function recEditor(r){
   const key = 'edit|'+r.n;
-  const d = draftFor(key, () => ({k:kindOf(r), pr:r.pr||'', st:styOf(r), t:r.t||'viande', tm:String(tmOf(r)), tp:String(tpOf(r)), mj:!!mjOf(r), sp:!!r.sp, sf:r.sf||'', sv:r.sv||'', m:(r.m||[]).join(', '), s:r.s||'', rows:rowsFromIng(r.i)}));
+  const d = draftFor(key, () => ({k:kindOf(r), pr:r.pr||'', st:styOf(r), t:r.t||'viande', tm:String(tmOf(r)), tp:String(tpOf(r)), mj:!!mjOf(r), sp:!!r.sp, oc:!!r.oc, sf:r.sf||'', sv:r.sv||'', m:(r.m||[]).join(', '), s:r.s||'', rows:rowsFromIng(r.i)}));
   return `<div class="rbox">
     <div class="grid2"><label class="f">Genre<select ${F(key,'k')}>${Object.entries(KIND1).map(([k,v]) => `<option value="${k}" ${d.k===k?'selected':''}>${v}</option>`).join('')}</select></label>
     <label class="f">Protéine<select ${F(key,'pr')}><option value="">Automatique</option>${Object.entries(PRS).map(([k,v]) => `<option value="${k}" ${d.pr===k?'selected':''}>${v}</option>`).join('')}</select></label></div>
@@ -3558,6 +3581,7 @@ function recEditor(r){
     <div class="grid2"><label class="f">Temps total<select ${F(key,'tm')}>${optMin(TM_L, d.tm)}</select></label>
     <label class="check"><input type="checkbox" ${F(key,'mj')} ${d.mj?'checked':''}> Peut cuire à la mijoteuse pendant la journée</label></div>
     <label class="check"><input type="checkbox" ${F(key,'sp')} ${d.sp?'checked':''}> Déjeuner de semaine (jours de travail) ou dessert simple (pas proposé, sauf si permis dans Profil)</label>
+    <label class="check"><input type="checkbox" ${F(key,'oc')} ${d.oc?'checked':''}> À l'occasion seulement (soir de match, tailgate) : jamais choisi pour le menu de la semaine</label>
     <div class="grid2"><label class="f">Féculent par défaut<select ${F(key,'sf')}>${sideOpts('f', d.sf, true)}</select></label><label class="f">Légume par défaut<select ${F(key,'sv')}>${sideOpts('v', d.sv, true)}</select></label></div>
     <p class="small"><b>Ingrédients</b>${kindOf(r)==='souper' ? ' pour 6 portions' : ''}. Tape quelques lettres et choisis l'aliment proposé.</p>
     ${ingBuilder(key, d.rows)}
@@ -3613,7 +3637,7 @@ function recBody(r, idx){
     <div class="acts"><button class="btn s ${S.fav[r.n]?'p':''}" data-a="fav" data-r="${esc(r.n)}">${S.fav[r.n]?'Favori ✓':'Ajouter aux favoris'}</button>
       <button class="btn s ${S.dis[r.n]?'p':''}" data-a="rdis" data-r="${esc(r.n)}">${S.dis[r.n]?'Remettre dans la banque':"Je n'aime pas"}</button></div>
     <ul class="ing">${r.i.map(g=>`<li><span>${esc(g[2])}</span><span>${fq(g[0],g[1])}</span></li>`).join('')}</ul>
-    ${['souper','soupe','dejeuner','entree','dessert'].includes(kd) ? nutLigne(nutRecette(r, 0), kd==='souper') : ''}
+    ${['souper','soupe','dejeuner','entree','dessert'].includes(kd) && !r.nonut ? nutLigne(nutRecette(r, 0), kd==='souper') : ''}
     ${r.s?`<p class="steps">${esc(r.s)}</p>`:''}
     ${(M => M.length ? `<h3 style="font-size:1rem">Autres façons de le cuire</h3><p class="small">Mêmes ingrédients que la recette ci-dessus (${esc(M[0].l.toLowerCase())}).</p>${M.slice(1).map(m => { const pk = 'cm|'+r.n+'|'+m.k; return `<details class="panel" data-pan="${esc(pk)}" ${openPan.has(pk)?'open':''}><summary>${esc(m.l)} · ${esc(tmTxtM(r, m.k))}</summary><p class="steps">${esc(stepsM(r, m.k))}</p><div class="acts"><button class="btn s" data-a="cook" data-r="${esc(r.n)}" data-cm="${m.k}">Cuisiner : ${esc(m.l.toLowerCase())}</button></div></details>`; }).join('')}` : '')(methods(r))}
     <h3 style="font-size:1rem">Variantes <span class="small">${rows.length}</span></h3>
@@ -3632,7 +3656,7 @@ function renderRecettes(){
   const sel = (key, label, opts) => `<label class="f">${label}<select data-rf="${key}">${opts.map(([v,n]) => `<option value="${v}" ${rf[key]===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
   const chk = (key, label) => `<label class="chip"><input type="checkbox" data-rf="${key}" ${rf[key]?'checked':''}>${label}</label>`;
   let h = (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
-    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
+    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['match','Soirs de match et tailgate'],['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
     <div class="chips">${chk('fast','Préparation 30 min ou moins')}${chk('mij','Mijoteuse')}${chk('af','Air fryer')}${chk('spec','En spécial cette semaine')}${chk('aime','Aimés de la famille')}${chk('fav','Favoris')}${chk('dis',"Mis de côté")}</div>
     <p class="small">${list.length} recette${list.length>1?'s':''} sur ${allRecipes().length}.</p></div>`;
   const dn = draftFor('new', () => ({n:'', k:'souper', pr:'', st:[], t:'viande', tm:'30', tp:'20', mj:false, sf:'auto', sv:'auto', fam:false, m:'', s:'', rows:emptyRows(4)}));
@@ -3649,6 +3673,7 @@ function renderRecettes(){
     <label class="check"><input type="checkbox" ${F('new','mj')} ${dn.mj?'checked':''}> Peut cuire à la mijoteuse pendant la journée</label></div>
     <div class="grid2"><label class="f">Féculent<select ${F('new','sf')}>${sideOpts('f', dn.sf, true)}</select></label><label class="f">Légume ou salade<select ${F('new','sv')}>${sideOpts('v', dn.sv, true)}</select></label></div>
     <label class="check"><input type="checkbox" ${F('new','fam')} ${dn.fam?'checked':''}> La famille aime ce plat (il revient plus souvent)</label>
+    <label class="check"><input type="checkbox" ${F('new','oc')} ${dn.oc?'checked':''}> À l'occasion seulement (soir de match, tailgate) : jamais choisi pour le menu de la semaine</label>
     ${familleCode() ? `<label class="check"><input type="checkbox" ${F('new','partage')} ${dn.partage?'checked':''}> Ajouter à la banque commune : toute la famille l'aura</label>` : ''}
     <p class="small"><b>Ingrédients pour 6 portions.</b> Tape quelques lettres et choisis l'aliment proposé : l'unité et le rayon se remplissent tout seuls.</p>
     ${ingBuilder('new', dn.rows)}
@@ -3704,6 +3729,7 @@ function saveRecette(){
   if(!mots.length) mots = autoMots(ing, name);
   const k = d.k;
   const nr = {n:name, e:d.fam ? 'ff' : '', m:mots, k, pr:d.pr, st:d.st, t:d.t, tm:+d.tm, tp:Math.min(+d.tp||+d.tm, +d.tm), mj:d.mj ? 1 : 0, sf:k==='souper' ? d.sf : '', sv:k==='souper' ? d.sv : '', nw:true, c:true, i:ing, s:String(d.s||'').trim(), v:[]};
+  if(d.oc) nr.oc = 1;
   if(d.src) nr.src = String(d.src).slice(0, 300);
   S.custom.push(nr);
   delete drafts.new; openRec.delete('__new'); openRec.add(name); rf = Object.assign(rf, {q:'', k:'', pr:'', st:'', fast:false, fav:false, dis:false});
@@ -3717,7 +3743,7 @@ function saveRecEdit(btn){
   const {ing, err} = readRows(d.rows); if(err){ say(msg, err); return; }
   if(!ing.length){ say(msg, 'La recette doit garder au moins un ingrédient.'); return; }
   const k = d.k;
-  const patch = {k, pr:d.pr, st:d.st, t:d.t, tm:+d.tm, tp:Math.min(+d.tp||+d.tm, +d.tm), mj:d.mj ? (mjOf(r)||1) : 0, sp:d.sp ? 1 : 0, sf:k==='souper' ? d.sf : '', sv:k==='souper' ? d.sv : '', i:ing, m:String(d.m||'').split(',').map(x => x.trim()).filter(Boolean), s:String(d.s||'').trim()};
+  const patch = {k, pr:d.pr, st:d.st, t:d.t, tm:+d.tm, tp:Math.min(+d.tp||+d.tm, +d.tm), mj:d.mj ? (mjOf(r)||1) : 0, sp:d.sp ? 1 : 0, oc:d.oc ? 1 : 0, sf:k==='souper' ? d.sf : '', sv:k==='souper' ? d.sv : '', i:ing, m:String(d.m||'').split(',').map(x => x.trim()).filter(Boolean), s:String(d.s||'').trim()};
   if(r.c) Object.assign(S.custom.find(x => x.n===r.n), patch); else S.redit[r.n] = patch;
   delete S.tmx[r.n]; delete (S.tpx||{})[r.n]; delete drafts[key]; openPan.delete(key); openRec.add(r.n); save(); render();
 }
@@ -4323,7 +4349,7 @@ function weekStrip(){
   const pv = PV.map(it => `<div class="calday prev${it.d===today ? ' today' : ''}"><span class="cd">${esc(dayLbl(it.d))}</span><span class="cm"><b>${esc(it.r)}</b><small>semaine en cours</small></span><button class="btn s" data-a="cook" data-ml="prev" data-i="${(S.menu.prev||[]).indexOf(it)}">Cuisiner</button></div>`).join('');
   return `<div class="cal">${pv}${weekDates().map(d => { const i = L.findIndex(x => x.d===d), it = L[i], r = it && byName(it.r);
     const k = it && r ? cmEff(it, r) : '';
-    const tags = it ? [it.sr ? 'soupe-repas' : '', itemDeals(it, r||{i:[],m:[]}).length ? 'spécial' : '', it.after ? 'restes' : '', k ? CM_L[k].toLowerCase() : r && mjOf(r)===1 ? 'mijoteuse' : ''].concat(extrasDe(d).map(x => '+ ' + x.split(' : ')[0])).filter(Boolean) : [];
+    const tags = it ? [it.sr ? 'soupe-repas' : '', it.cm ? 'repas plaisir' : '', itemDeals(it, r||{i:[],m:[]}).length ? 'spécial' : '', it.after ? 'restes' : '', k ? CM_L[k].toLowerCase() : r && mjOf(r)===1 ? 'mijoteuse' : ''].concat(extrasDe(d).map(x => '+ ' + x.split(' : ')[0])).filter(Boolean) : [];
     return `<div class="calday${d===today ? ' today' : ''}"><span class="cd">${esc(dayLbl(d))}</span><span class="cm">${it ? `<b>${esc(it.r)}</b><small>${r ? esc(fmtMin(tpM(r, k))) : ''}${tags.length ? ' · ' + esc(tags.join(' · ')) : ''}</small>` : '<small>—</small>'}</span>${it ? `<button class="btn s" data-a="cook" data-ml="items" data-i="${i}" aria-label="Cuisiner ${esc(it.r)}">Cuisiner</button>` : ''}</div>`; }).join('')}</div>`;
 }
 /* Menu pour le frigo : une image de la semaine à enregistrer dans Photos, imprimer ou envoyer */
@@ -4357,7 +4383,8 @@ async function partagerFrigo(){
    Sorte : L légume ou fruit, P protéine, C céréale ou féculent. Valeurs moyennes des tables de composition courantes (aliment cru,
    sauf indication). Le premier motif qui correspond l'emporte : les plus précis d'abord. Le sel ajouté « au goût » n'est pas compté. */
 const NUT = [
-  [/bouillon|consomme|fond de/,5,.5,.5,.2,0,300,0,1,''],[/planches? de cedre/,0,0,0,0,0,0,0,1,''],[/gingembre/,80,1.8,18,.8,2,13,0,1,''],
+  [/bouillon|consomme|fond de/,5,.5,.5,.2,0,300,0,1,''],[/sel nitrite|prague/,0,0,0,0,0,38000,0,1.2,''],[/^gros sel|^sel\b/,0,0,0,0,0,38700,0,1.2,''],
+  [/flanc de porc/,518,9,0,53,0,32,0,1,'P'],[/semoule de mais/,370,7,79,1.8,7,35,0,.6,'C'],[/brochettes de bois|cure-dents/,0,0,0,0,0,0,0,1,''],[/epices a frotter/,300,5,55,5,10,5000,0,.6,''],[/planches? de cedre/,0,0,0,0,0,0,0,1,''],[/gingembre/,80,1.8,18,.8,2,13,0,1,''],
   [/sauce a l.ail|toum/,680,1,.6,75,0,630,0,.92,''],[/trempette/,350,1,15,30,0,700,125,1,''],[/poudre pour creme anglaise/,350,.5,88,.5,0,300,0,.6,''],
   // plats et produits préparés
   [/lasagne surgelee/,140,8,14,6,1.5,400,2500,1,''],[/pate chinois surgele/,110,5,14,4,1.5,300,1800,1,''],[/pates? au poulet surgele/,250,7,23,14,1,450,600,1,''],
@@ -4454,7 +4481,7 @@ const NUT = [
   [/dattes/,280,2.5,75,.4,8,2,0,1,''],[/canneberges sechees/,325,.1,82,1.4,5.7,3,0,1,''],[/sauce aux canneberges/,150,.2,38,.1,1,30,0,1.1,''],[/rhubarbe/,21,.9,4.5,.2,1.8,4,0,1,'L'],
   [/cerises au marasquin/,165,.2,42,.2,3,4,300,1,''],[/cerises/,60,1,15,.2,1.6,3,350,1,'L'],
   // gras, sauces, condiments
-  [/huile/,884,0,0,100,0,0,0,.92,''],[/mayonnaise/,680,1,.6,75,0,630,0,.92,''],[/ranch/,450,1,6,46,0,900,125,1,''],
+  [/huile (pour la |a )?friture/,88,0,0,10,0,0,0,.92,''],[/huile/,884,0,0,100,0,0,0,.92,''],[/mayonnaise/,680,1,.6,75,0,630,0,.92,''],[/ranch/,450,1,6,46,0,900,125,1,''],
   [/vinaigrette|sauce cesar/,350,.5,8,35,0,900,0,1,''],[/ketchup/,100,1.2,26,.1,.3,900,0,1.15,''],[/moutarde au miel/,230,1,30,11,1,600,125,1.1,''],
   [/moutarde/,66,4,6,3.3,3,1100,0,1.05,''],[/relish/,130,.5,35,.5,1,800,0,1.1,''],[/raifort/,48,1.2,11,.7,3.3,420,0,1,''],
   [/sauce soya|soya/,53,8,5,.6,.8,5500,0,1.15,''],[/teriyaki/,90,6,16,0,.1,3800,0,1.1,''],[/hoisin/,220,3.3,44,3.4,2.8,1600,0,1.15,''],[/huitres/,51,1.4,11,.3,.3,2700,0,1.2,''],
@@ -4492,7 +4519,7 @@ function nutSomme(ings, np){
 }
 /* par portion d'un plat du menu (accompagnements, sauce et 2e protéine compris) */
 function nutPlat(it){
-  const r = byName(it.r); if(!r) return null; const kd = kindOf(r);
+  const r = byName(it.r); if(!r || r.nonut) return null; const kd = kindOf(r);
   const np = kd==='souper' || it.sr ? portionsOf(it) : kd==='dejeuner' ? (it.pt || pDej()) : (it.pt || 6);
   return nutSomme(fullIngs(it), np);
 }
@@ -4532,7 +4559,7 @@ function nutSemaine(){
    « Préparer ma semaine » ouvre quelques questions déjà remplies (combien, le temps, les protéines, les envies).
    L'app bâtit ensuite une ébauche avec ses questions par repas; « Bâtir le menu final » la confirme. */
 let qzOpen = false, qz = null;
-const QZ_N = [['n','Soupers',[3,4,5,6,7]],['nSr','Dont soupes-repas',[0,1,2]],['nSou','Soupes à côté',[0,1,2,3]],['nEnt','Entrées',[0,1,2,3,4,5,6,7]],
+const QZ_N = [['n','Soupers',[3,4,5,6,7]],['nSr','Dont soupes-repas',[0,1,2]],['nCm','Dont repas plaisir',[0,1,2]],['nSou','Soupes à côté',[0,1,2,3]],['nEnt','Entrées',[0,1,2,3,4,5,6,7]],
   ['nDes','Desserts',[0,1,2,3,4,5,6,7]],['nDej','Déjeuners',[0,1,2,3,4,5,6,7]],['nDin','Dîners',[0,1,2,3,4,5,6,7]]];
 const QZ_ENV = [['poulet','Poulet'],['boeuf','Boeuf'],['porc','Porc'],['poisson','Poisson'],['vege','Végé'],['bbq','BBQ et grillades'],['mijote','Mijoteuse'],['pates','Pâtes'],
   ['mex','Mexicain'],['asia','Asiatique'],['pub','Pub'],['sandwich','Burgers et sandwichs'],['fumoir','Fumoir'],['soupe','Soupes']];
@@ -4595,7 +4622,7 @@ function ebaucheCard(){
     const pp = x => pasPour(x) ? `<small>${esc(pasPour(x))}</small>` : '';
     mlist('ent').forEach((x, j) => { if(x.d===d && (x.ro==='entree' || x.ro==='avec')){ qs.push(`<div class="eb-x"><span>${esc(x.r)}${pp(x)}</span>${roSel(x, j, 'ent')}</div>`); nq++; } });
     mlist('sou').forEach((x, j) => { if(x.d===d && x.ro==='avec'){ qs.push(`<div class="eb-x"><span>Soupe : ${esc(x.r)}${pp(x)}</span>${roSel(x, j, 'sou')}</div>`); nq++; } });
-    const k = cmEff(it, r), fl = [fmtMin(tpM(r, k)), it.sr ? 'soupe-repas' : '', itemDeals(it, r).length ? 'spécial' : '', it.after ? 'avec des restes' : '', k ? CM_L[k].toLowerCase() : '', p2Info(it, 'items') ? '2e protéine' : ''].filter(Boolean);
+    const k = cmEff(it, r), fl = [fmtMin(tpM(r, k)), it.sr ? 'soupe-repas' : '', it.cm ? 'repas plaisir' : '', itemDeals(it, r).length ? 'spécial' : '', it.after ? 'avec des restes' : '', k ? CM_L[k].toLowerCase() : '', p2Info(it, 'items') ? '2e protéine' : ''].filter(Boolean);
     return `<div class="eb-day${isOff(d) ? ' off' : ''}"><span class="eb-d">${esc(dayLbl(d))}</span><span class="eb-m"><b>${esc(r.n)}</b><small>${esc(fl.join(' · '))}</small></span><button class="btn s" data-a="mswap" data-ml="items" data-i="${i}" aria-label="Changer ${esc(r.n)}">Changer</button>${qs.length ? `<div class="eb-qs">${qs.join('')}</div>` : ''}</div>`;
   };
   const jours = weekDates().map(day).join('');
@@ -4785,7 +4812,7 @@ document.addEventListener('click', e => {
   if(id==='frigo'){ menuFrigo().catch(() => setSync("L'image n'a pas pu être créée.")); return; }
   if(id==='prep_week'){ if(prepBusy) return; if(S.menu.date && S.menu.start <= isoToday() && t.dataset.armed!=='1'){ arm(t, 'Confirmer : préparer la prochaine semaine', () => {}); return; } qzOpen = true; qzInit(); render(); const qc = $('#qz_card'); if(qc) qc.scrollIntoView({block:'start'}); return; }
   if(id==='prep_go'){ if(prepBusy || !qz) return;
-    Object.assign(S.p, qz.n); S.p.nSr = Math.min(S.p.nSr||0, S.p.n||0); S.p.budget = qz.budget || 0; S.qLast = {mix:qz.mix};
+    Object.assign(S.p, qz.n); S.p.nSr = Math.min(S.p.nSr||0, S.p.n||0); S.p.nCm = Math.min(S.p.nCm||0, Math.max(0, (S.p.n||0) - S.p.nSr)); S.p.budget = qz.budget || 0; S.qLast = {mix:qz.mix};
     QW = {temps:qz.temps, mix:qz.mix, env:qz.env.slice(), pas:qz.pas.slice()}; qzOpen = false; t.disabled = true;
     preparerSemaine(true).catch(e => setSync('Petit problème : ' + (e.message||'erreur'))).finally(() => { QW = null; qz = null; render(); }); return; }
   if(id==='eb_ok'){ ebaucheOk(); return; }
@@ -4868,7 +4895,7 @@ document.addEventListener('click', e => {
     if(a==='dinrest' || a==='dinno'){ const d = it.d; L.splice(i, 1); if(d){ if(a==='dinrest') delete (S.menu.dinCook||{})[d]; else (S.menu.dinNo = S.menu.dinNo||{})[d] = true; } save(); render(); return; }
     if(a==='malts'){ altKey = altKey===ml+'|'+i ? '' : ml+'|'+i; render(); return; }
     if(a==='mpick'){ const nr = byName(t.dataset.r); if(!nr) return; const others = L.filter((_,j) => j!==i); others.forEach(x => { if(x.after===it.r) delete x.after; });
-      const ni = it.sr && kindOf(nr)==='soupe' ? mkSoupe(nr, usedSides(others)) : (ml==='items' || ml==='din') ? mkItem(nr, usedSides(others), pickVar(nr)) : Object.assign({r:nr.n, v:pickVar(nr)}, it.ro ? {ro:it.ro} : {}); if(it.d) ni.d = it.d; if(it.dfix) ni.dfix = true; if(it.pt) ni.pt = it.pt;
+      const ni = it.sr && kindOf(nr)==='soupe' ? mkSoupe(nr, usedSides(others)) : it.cm ? Object.assign(mkItem(nr, usedSides(others), pickVar(nr)), {cm:1}) : (ml==='items' || ml==='din') ? mkItem(nr, usedSides(others), pickVar(nr)) : Object.assign({r:nr.n, v:pickVar(nr)}, it.ro ? {ro:it.ro} : {}); if(it.d) ni.d = it.d; if(it.dfix) ni.dfix = true; if(it.pt) ni.pt = it.pt;
       L[i] = ni; altKey = ''; save(); render(); return; }
     if(a==='srback'){ S.flash = soupeACote(i); save(); render(); return; }
     if(a==='mlock') it.lock = !it.lock;
@@ -5049,7 +5076,7 @@ document.addEventListener('change', e => {
     else if(t.value==='repas'){ S.flash = soupeEnRepas(l, +t.dataset.i); }
     else { it.ro = t.value; delete it.dfix; if(it.ro==='lunch' || it.ro==='libre') delete it.d; assignExtras(false); }
     save(); render(); return; }
-  if(t.dataset.qn){ if(qz){ qz.n[t.dataset.qn] = +t.value || 0; if(qz.n.nSr > qz.n.n) qz.n.nSr = qz.n.n; } return; }
+  if(t.dataset.qn){ if(qz){ qz.n[t.dataset.qn] = +t.value || 0; if(qz.n.nSr > qz.n.n) qz.n.nSr = qz.n.n; if(qz.n.nCm > qz.n.n - qz.n.nSr) qz.n.nCm = Math.max(0, qz.n.n - qz.n.nSr); } return; }
   if(t.dataset.qb){ if(qz) qz.budget = numIn(t.value); return; }
   if(t.dataset.a==='p2sel'){ const it = mlist(t.dataset.ml)[+t.dataset.i]; if(it){ it.p2 = t.value; save(); render(); } return; }
   if(t.dataset.a==='msauce'){ const it = mlist(t.dataset.ml)[+t.dataset.i]; if(it){ if(t.value) it.sc = t.value; else delete it.sc; save(); render(); } return; }
@@ -5220,6 +5247,7 @@ function renderAide(){
   + D('12. La banque de recettes', `<ul><li>L'onglet <b>Recettes</b> regroupe les plats par <b>protéine</b>, par <b>style</b> ou par <b>genre</b> (soupers, entrées, desserts). Les filtres combinent recherche, genre, protéine, style, « 30 min ou moins » et favoris.</li>
     <li><b>Je n'aime pas</b> met une recette de côté : elle n'est plus jamais proposée. Coche « Mis de côté » pour les revoir et <b>Remettre dans la banque</b>.</li>
     <li><b>Accompagnements</b> : chaque souper montre son féculent et son légume. « Varié » laisse l'application choisir chaque semaine parmi ceux qui vont avec le plat; choisis-en un pour l'avoir à tout coup, ou « Aucun ». La section <b>Accompagnements</b> (en bas de l'onglet, ou Genre : Accompagnements) montre tous les féculents et légumes avec leurs ingrédients; « Ne plus le proposer » le retire des choix automatiques.</li>
+    <li><b>Repas plaisir et soirs de match</b> : Recettes → Genre « Soirs de match et tailgate » (bouchées, frites chargées, bombe de bacon, bacon maison…). Ces recettes « À l'occasion » ne sont jamais choisies comme souper ordinaire. Dans le questionnaire de la semaine, « Dont repas plaisir » (0, 1 ou 2) en met au menu, le vendredi ou le samedi d'abord, jamais deux soirs de suite. Les bouchées s'ajoutent à la main (Ajouter au menu de la semaine), ou dans une liste à part avec « Tu reçois ? » dans Menu.</li>
     <li><b>Soupes et potages</b> : une soupe sert de trois façons. <b>Soupe-repas</b> : elle remplace un souper et vient avec son accompagnement (grilled cheese, pain croûté et cheddar, sandwichs, salade). <b>À côté du souper</b> : elle accompagne le souper d'un jour de semaine. <b>Pour les lunchs</b>. Choisis combien de chaque sorte dans le questionnaire de la semaine; dans la carte d'une soupe, « Servie » change son rôle.</li>
     <li><b>Sauces</b> : des compléments, pas des repas. Ouvre un souper du menu et choisis une « Sauce en complément » (sauce au poivre avec un steak, par exemple), ou touche <b>Ajouter à un plat du menu</b> dans la recette de la sauce. Ses ingrédients vont dans la liste d'épicerie.</li>
     <li><b>Nouvelle recette</b>, <b>Modifier la recette</b> et les versions utilisent le même formulaire guidé : pour chaque ingrédient, tape quelques lettres, touche l'aliment proposé, puis indique la quantité et l'unité dans les menus. Le rayon se remplit tout seul; pour un aliment nouveau, l'application demande dans quel rayon il se trouve.</li>
