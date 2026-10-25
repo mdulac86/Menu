@@ -163,7 +163,7 @@ const LOFK = {souper:'items', dejeuner:'dej', entree:'ent', soupe:'sou', dessert
 const LBL = {items:'Soupers', din:'Dîners', dej:'Déjeuners', ent:'Entrées', sou:'Soupes et potages', des:'Desserts'};
 const kindOf = r => r.k || 'souper';
 const PRS = {poulet:'Poulet et volaille', boeuf:'Boeuf', porc:'Porc et charcuterie', poisson:'Poissons et fruits de mer', vege:'Végétarien et oeufs', mixte:'Autres viandes'};
-const STYS = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub, sport et tailgate', pates:'Pâtes', riz:'Riz et nouilles', sandwich:'Sandwichs et burgers', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté et mijoteuse', bbq:'Grillé et BBQ', four:'Au four', poele:'À la poêle', soupe:'Soupes', salade:'Salades', bouchee:'Bouchées et trempettes', biscuit:'Biscuits et carrés', gateau:'Gâteaux, tartes et muffins', fruit:'Fruits et croustades', froid:'Poudings et desserts froids', crepe:'Crêpes', prepare:'Plats préparés', sauce:'Sauces'};
+const STYS = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub, sport et tailgate', poutine:'Poutines', pates:'Pâtes', riz:'Riz et nouilles', sandwich:'Sandwichs et burgers', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté et mijoteuse', bbq:'Grillé et BBQ', four:'Au four', poele:'À la poêle', soupe:'Soupes', salade:'Salades', bouchee:'Bouchées et trempettes', biscuit:'Biscuits et carrés', gateau:'Gâteaux, tartes et muffins', fruit:'Fruits et croustades', froid:'Poudings et desserts froids', crepe:'Crêpes', prepare:'Plats préparés', sauce:'Sauces'};
 function prOf(r){
   if(r.pr) return r.pr;
   if(kindOf(r)==='dessert' || kindOf(r)==='dejeuner') return '';
@@ -198,7 +198,7 @@ const NOTES = [[5,"J'adore"],[4,"J'aime"],[3,'Je tolère'],[2,"Je n'aime pas"],[
 const NOTE_PTS = {5:1.6, 4:.8, 3:0, 2:-1.3};
 const GOUTS = [
   ['Protéines', [['poulet','Poulet'],['boeuf','Boeuf'],['porc','Porc'],['poisson','Poisson'],['mer','Fruits de mer'],['vege','Végé (tofu, légumineuses)']]],
-  ['Sortes de plats', [['pates','Pâtes'],['riz','Riz et nouilles'],['mex','Mexicain'],['asia','Asiatique'],['sandwich','Sandwichs et burgers'],['pub','Pub'],['bbq','BBQ et grillades'],['fumoir','Fumoir'],['mijote','Mijotés'],['soupe','Soupes'],['salade','Salades'],['piquant','Épicé (piquant)']]],
+  ['Sortes de plats', [['pates','Pâtes'],['riz','Riz et nouilles'],['mex','Mexicain'],['asia','Asiatique'],['sandwich','Sandwichs et burgers'],['pub','Pub'],['poutine','Poutine'],['bbq','BBQ et grillades'],['fumoir','Fumoir'],['mijote','Mijotés'],['soupe','Soupes'],['salade','Salades'],['piquant','Épicé (piquant)']]],
   ['Aliments', [['champi','Champignons'],['poivron','Poivrons'],['oignon','Oignons'],['tomate','Tomates'],['olive','Olives'],['brocoli','Brocoli'],['epinard','Épinards'],['coriandre','Coriandre'],['fromage','Fromage']]]];
 const GOUT_L = Object.fromEntries(GOUTS.flatMap(g => g[1]));
 const GOUT_PROT = ['poulet','boeuf','porc','poisson','mer','vege'];
@@ -343,7 +343,7 @@ function goutsBlock(m, i){
     <label class="f">Refuse aussi (autres aliments, séparés par des virgules)<input type="text" data-pf="rx" data-i="${i}" value="${esc(m.rx||'')}" placeholder="ex. betteraves, câpres" autocomplete="off"></label></details>`;
 }
 const PRS_S = {poulet:'Poulet', boeuf:'Boeuf', porc:'Porc', poisson:'Poisson', vege:'Végé', mixte:'Viande'};
-const STYS_S = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub', pates:'Pâtes', riz:'Riz', sandwich:'Sandwich', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté', bbq:'Grillé', four:'Four', poele:'Poêle', soupe:'Soupe', salade:'Salade', bouchee:'Bouchée', biscuit:'Biscuits', gateau:'Gâteau', fruit:'Fruits', froid:'Froid', crepe:'Crêpes'};
+const STYS_S = {fumoir:'Fumoir', plancha:'Plancha', pub:'Pub', poutine:'Poutine', pates:'Pâtes', riz:'Riz', sandwich:'Sandwich', mex:'Mexicain', asia:'Asiatique', mijote:'Mijoté', bbq:'Grillé', four:'Four', poele:'Poêle', soupe:'Soupe', salade:'Salade', bouchee:'Bouchée', biscuit:'Biscuits', gateau:'Gâteau', fruit:'Fruits', froid:'Froid', crepe:'Crêpes'};
 function metaTags(r, souper){
   const t = [PRS_S[prOf(r)], ...styOf(r).map(s => STYS_S[s])].filter(Boolean).map(x => `<span>${esc(x)}</span>`);
   if(r.nw) t.push('<span class="new">Nouveau</span>');
@@ -429,7 +429,7 @@ function mkSoupe(r, used){
   return it;
 }
 /* repas plaisir : un plat « à l'occasion » (soir de match, tailgate) ou de style pub */
-const plaisirOk = r => kindOf(r)==='souper' && (r.oc || styOf(r).includes('pub'));
+const plaisirOk = r => kindOf(r)==='souper' && (r.oc || styOf(r).includes('pub') || styOf(r).includes('poutine'));
 function repasPlaisir(items, k, banned){
   const taken = new Set(items.map(x => x.r));
   const C = allRecipes().filter(r => plaisirOk(r) && !S.dis[r.n] && !softBad(r) && ppOk(r) && !taken.has(r.n))
@@ -3521,7 +3521,7 @@ function recFiltered(){
   return allRecipes().filter(r => {
     if(rf.k==='acc') return false;
     if(q && !norm(r.n+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
-    if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub')) return false; }
+    if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub') && !styOf(r).includes('poutine')) return false; }
     else if(rf.k && kindOf(r)!==rf.k) return false;
     if(rf.pr && prOf(r)!==rf.pr) return false;
     if(rf.st && !styOf(r).includes(rf.st)) return false;
@@ -3656,7 +3656,7 @@ function renderRecettes(){
   const sel = (key, label, opts) => `<label class="f">${label}<select data-rf="${key}">${opts.map(([v,n]) => `<option value="${v}" ${rf[key]===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
   const chk = (key, label) => `<label class="chip"><input type="checkbox" data-rf="${key}" ${rf[key]?'checked':''}>${label}</label>`;
   let h = (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
-    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['match','Soirs de match et tailgate'],['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
+    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['match','Repas plaisir (soirs de match, poutines)'],['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
     <div class="chips">${chk('fast','Préparation 30 min ou moins')}${chk('mij','Mijoteuse')}${chk('af','Air fryer')}${chk('spec','En spécial cette semaine')}${chk('aime','Aimés de la famille')}${chk('fav','Favoris')}${chk('dis',"Mis de côté")}</div>
     <p class="small">${list.length} recette${list.length>1?'s':''} sur ${allRecipes().length}.</p></div>`;
   const dn = draftFor('new', () => ({n:'', k:'souper', pr:'', st:[], t:'viande', tm:'30', tp:'20', mj:false, sf:'auto', sv:'auto', fam:false, m:'', s:'', rows:emptyRows(4)}));
@@ -3700,7 +3700,8 @@ function renderRecettes(){
     <p class="small">Colle une recette copiée d'un site (Ricardo, 5-15, Pratico-pratiques, Trois fourchettes…) : sélectionne le titre, les ingrédients et la préparation, puis Copier. Le formulaire « Nouvelle recette » se remplit pour que tu vérifies avant d'enregistrer. Une recette copiée avec « Copier la recette » de l'application est ajoutée directement, versions comprises.</p>
     <textarea id="imp_txt" placeholder="Colle le message ici"></textarea>
     <button class="btn p" id="imp_go">Importer</button><div class="small" id="imp_msg"></div></div></details></div>`;
-  const grp = r => rf.g==='pr' ? (kindOf(r)==='souper' ? PRS[prOf(r)] : KINDS[kindOf(r)]) : rf.g==='st' ? (STYS[styOf(r)[0]]||'Autres') : rf.g==='k' ? KINDS[kindOf(r)] : '';
+  const rg = rf.k==='match' && rf.g==='pr' ? 'st' : rf.g;   /* repas plaisir : regroupés par sorte (poutines, pub…) */
+  const grp = r => rg==='pr' ? (kindOf(r)==='souper' ? PRS[prOf(r)] : KINDS[kindOf(r)]) : rg==='st' ? (STYS[styOf(r)[0]]||'Autres') : rg==='k' ? KINDS[kindOf(r)] : '';
   const order = rf.g==='pr' ? [...Object.values(PRS), ...Object.values(KINDS)] : rf.g==='st' ? [...Object.values(STYS),'Autres'] : Object.values(KINDS);
   const groups = new Map(); list.forEach(r => { const g = grp(r); if(!groups.has(g)) groups.set(g, []); groups.get(g).push(r); });
   [...groups.keys()].sort((a,b) => order.indexOf(a)-order.indexOf(b)).forEach(g => {
@@ -4409,7 +4410,7 @@ const NUT = [
   [/boeuf|ragout|palette/,180,20,0,11,0,60,0,1,'P'],
   // porc et charcuteries
   [/bacon cuit/,540,37,1.4,42,0,1700,0,1,'P'],[/bacon/,400,12,1.3,38,0,750,0,1,'P'],[/lardons/,380,13,1,36,0,900,0,1,'P'],[/lard sale/,750,3,0,80,0,1400,0,1,''],
-  [/jarret de porc fume/,200,18,0,14,0,900,400,1,'P'],[/jambon fume|epaule de jambon/,180,17,1,12,0,1100,0,1,'P'],[/jambon/,145,18,1.5,7,0,1200,0,1,'P'],
+  [/jarret de porc fume/,200,18,0,14,0,900,400,1,'P'],[/viande fumee|smoked meat|pastrami/,220,24,1,13,0,1100,0,1,'P'],[/jambon fume|epaule de jambon/,180,17,1,12,0,1100,0,1,'P'],[/jambon/,145,18,1.5,7,0,1200,0,1,'P'],
   [/saucisses? a hot-dog/,290,11,3,26,0,1000,45,1,'P'],[/mini-saucisses/,300,11,3,27,0,1000,10,1,'P'],[/merguez/,300,15,1,26,0,800,60,1,'P'],[/saucisses? fumee/,300,12,2,27,0,1000,60,1,'P'],
   [/saucisses?/,300,14,2,26,0,750,100,1,'P'],[/chorizo/,450,24,2,38,0,1200,0,1,'P'],[/pepperoni/,500,20,1,45,0,1600,0,1,'P'],[/salami/,400,22,1,34,0,1700,0,1,'P'],
   [/prosciutto/,250,26,0,16,0,2400,0,1,'P'],[/mortadelle/,310,15,1,27,0,1200,0,1,'P'],[/bologne/,300,11,3,27,0,1000,0,1,'P'],[/cretons/,300,14,4,26,0,800,0,1,'P'],
@@ -4467,7 +4468,7 @@ const NUT = [
   [/sauce a pizza/,55,2,9,1.5,2,400,0,1.05,''],[/sauce tomate|sauce marinara/,60,1.8,9,2,2,450,0,1.05,'L'],[/pate de tomates/,82,4.3,19,.5,4,60,0,1.1,'L'],
   [/puree de tomates/,38,1.6,9,.2,1.9,150,0,1.05,'L'],[/tomates sechees/,210,5,23,14,6,270,0,.9,'L'],[/tomates (en des|broyees)|boites de tomates/,27,1.3,5.5,.2,1.7,190,0,1.05,'L'],
   [/tomates?/,18,.9,3.9,.2,1.2,5,120,1,'L'],[/salsa/,30,1.5,6.5,.2,1.5,600,0,1.05,'L'],
-  [/mais en creme/,72,1.7,18,.4,1.2,260,400,1,'L'],[/boites? de mais|mais en grains$/,80,2.5,18,1,2,200,250,1,'L'],[/mais/,86,3.2,19,1.2,2.4,2,0,1,'L'],
+  [/mais en creme/,72,1.7,18,.4,1.2,260,400,1,'L'],[/boites? de mais|mais en grains$/,80,2.5,18,1,2,200,250,1,'L'],[/\bmais\b/,86,3.2,19,1.2,2.4,2,0,1,'L'],
   [/pois et carottes|petits pois|pois verts/,70,4,12,.4,4,70,0,1,'L'],[/legumes melanges|melange de legumes/,60,3,12,.3,3.5,40,0,1,'L'],
   [/feves germees|pousses de soya/,30,3,6,.2,1.8,6,0,1,'L'],[/pois mange-tout/,42,2.8,7.5,.2,2.6,4,0,1,'L'],[/bok choy|pak-choi/,13,1.5,2.2,.2,1,65,200,1,'L'],
   [/fenouil/,31,1.2,7,.2,3.1,52,250,1,'L'],[/panais/,75,1.2,18,.3,4.9,10,150,1,'L'],[/courge/,45,1,12,.1,2,4,0,1,'L'],[/betteraves/,65,.8,16,.1,1.5,300,500,1,'L'],
@@ -4481,7 +4482,7 @@ const NUT = [
   [/dattes/,280,2.5,75,.4,8,2,0,1,''],[/canneberges sechees/,325,.1,82,1.4,5.7,3,0,1,''],[/sauce aux canneberges/,150,.2,38,.1,1,30,0,1.1,''],[/rhubarbe/,21,.9,4.5,.2,1.8,4,0,1,'L'],
   [/cerises au marasquin/,165,.2,42,.2,3,4,300,1,''],[/cerises/,60,1,15,.2,1.6,3,350,1,'L'],
   // gras, sauces, condiments
-  [/huile (pour la |a )?friture/,88,0,0,10,0,0,0,.92,''],[/huile/,884,0,0,100,0,0,0,.92,''],[/mayonnaise/,680,1,.6,75,0,630,0,.92,''],[/ranch/,450,1,6,46,0,900,125,1,''],
+  [/huile (pour la |a )?friture/,88,0,0,10,0,0,0,.92,''],[/huile/,884,0,0,100,0,0,0,.92,''],[/mayonnaise/,680,1,.6,75,0,630,0,.92,''],[/\branch\b/,450,1,6,46,0,900,125,1,''],
   [/vinaigrette|sauce cesar/,350,.5,8,35,0,900,0,1,''],[/ketchup/,100,1.2,26,.1,.3,900,0,1.15,''],[/moutarde au miel/,230,1,30,11,1,600,125,1.1,''],
   [/moutarde/,66,4,6,3.3,3,1100,0,1.05,''],[/relish/,130,.5,35,.5,1,800,0,1.1,''],[/raifort/,48,1.2,11,.7,3.3,420,0,1,''],
   [/sauce soya|soya/,53,8,5,.6,.8,5500,0,1.15,''],[/teriyaki/,90,6,16,0,.1,3800,0,1.1,''],[/hoisin/,220,3.3,44,3.4,2.8,1600,0,1.15,''],[/huitres/,51,1.4,11,.3,.3,2700,0,1.2,''],
@@ -4562,7 +4563,7 @@ let qzOpen = false, qz = null;
 const QZ_N = [['n','Soupers',[3,4,5,6,7]],['nSr','Dont soupes-repas',[0,1,2]],['nCm','Dont repas plaisir',[0,1,2]],['nSou','Soupes à côté',[0,1,2,3]],['nEnt','Entrées',[0,1,2,3,4,5,6,7]],
   ['nDes','Desserts',[0,1,2,3,4,5,6,7]],['nDej','Déjeuners',[0,1,2,3,4,5,6,7]],['nDin','Dîners',[0,1,2,3,4,5,6,7]]];
 const QZ_ENV = [['poulet','Poulet'],['boeuf','Boeuf'],['porc','Porc'],['poisson','Poisson'],['vege','Végé'],['bbq','BBQ et grillades'],['mijote','Mijoteuse'],['pates','Pâtes'],
-  ['mex','Mexicain'],['asia','Asiatique'],['pub','Pub'],['sandwich','Burgers et sandwichs'],['fumoir','Fumoir'],['soupe','Soupes']];
+  ['mex','Mexicain'],['asia','Asiatique'],['pub','Pub'],['poutine','Poutine'],['sandwich','Burgers et sandwichs'],['fumoir','Fumoir'],['soupe','Soupes']];
 const QZ_PAS = [['poulet','Poulet'],['boeuf','Boeuf'],['porc','Porc'],['poisson','Poisson et fruits de mer'],['vege','Végé']];
 function qzInit(){
   const p = S.p, q = (S.menu && S.menu.eb && S.menu.q) || {};
@@ -5247,7 +5248,7 @@ function renderAide(){
   + D('12. La banque de recettes', `<ul><li>L'onglet <b>Recettes</b> regroupe les plats par <b>protéine</b>, par <b>style</b> ou par <b>genre</b> (soupers, entrées, desserts). Les filtres combinent recherche, genre, protéine, style, « 30 min ou moins » et favoris.</li>
     <li><b>Je n'aime pas</b> met une recette de côté : elle n'est plus jamais proposée. Coche « Mis de côté » pour les revoir et <b>Remettre dans la banque</b>.</li>
     <li><b>Accompagnements</b> : chaque souper montre son féculent et son légume. « Varié » laisse l'application choisir chaque semaine parmi ceux qui vont avec le plat; choisis-en un pour l'avoir à tout coup, ou « Aucun ». La section <b>Accompagnements</b> (en bas de l'onglet, ou Genre : Accompagnements) montre tous les féculents et légumes avec leurs ingrédients; « Ne plus le proposer » le retire des choix automatiques.</li>
-    <li><b>Repas plaisir et soirs de match</b> : Recettes → Genre « Soirs de match et tailgate » (bouchées, frites chargées, bombe de bacon, bacon maison…). Ces recettes « À l'occasion » ne sont jamais choisies comme souper ordinaire. Dans le questionnaire de la semaine, « Dont repas plaisir » (0, 1 ou 2) en met au menu, le vendredi ou le samedi d'abord, jamais deux soirs de suite. Les bouchées s'ajoutent à la main (Ajouter au menu de la semaine), ou dans une liste à part avec « Tu reçois ? » dans Menu.</li>
+    <li><b>Repas plaisir et soirs de match</b> : Recettes → Genre « Repas plaisir » : les poutines gastronomiques, la fondue chinoise et les recettes de soirs de match (bouchées, frites chargées, bombe de bacon, bacon maison…). Ces recettes « À l'occasion » ne sont jamais choisies comme souper ordinaire. Dans le questionnaire de la semaine, « Dont repas plaisir » (0, 1 ou 2) en met au menu, le vendredi ou le samedi d'abord, jamais deux soirs de suite. Les bouchées s'ajoutent à la main (Ajouter au menu de la semaine), ou dans une liste à part avec « Tu reçois ? » dans Menu.</li>
     <li><b>Soupes et potages</b> : une soupe sert de trois façons. <b>Soupe-repas</b> : elle remplace un souper et vient avec son accompagnement (grilled cheese, pain croûté et cheddar, sandwichs, salade). <b>À côté du souper</b> : elle accompagne le souper d'un jour de semaine. <b>Pour les lunchs</b>. Choisis combien de chaque sorte dans le questionnaire de la semaine; dans la carte d'une soupe, « Servie » change son rôle.</li>
     <li><b>Sauces</b> : des compléments, pas des repas. Ouvre un souper du menu et choisis une « Sauce en complément » (sauce au poivre avec un steak, par exemple), ou touche <b>Ajouter à un plat du menu</b> dans la recette de la sauce. Ses ingrédients vont dans la liste d'épicerie.</li>
     <li><b>Nouvelle recette</b>, <b>Modifier la recette</b> et les versions utilisent le même formulaire guidé : pour chaque ingrédient, tape quelques lettres, touche l'aliment proposé, puis indique la quantité et l'unité dans les menus. Le rayon se remplit tout seul; pour un aliment nouveau, l'application demande dans quel rayon il se trouve.</li>
