@@ -1,0 +1,50 @@
+name: Assembler la refonte 2.3.8
+on:
+  push:
+    branches: [refonte-2.3.8-complete]
+    paths: [.github/workflows/assembler-refonte.yml]
+permissions:
+  contents: write
+jobs:
+  assembler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vérifier et assembler les douze parties
+        run: |
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import hashlib, zipfile
+          expected = {'refonte-part-00.zip': 'e7854631b09fd58ae8ba8d9c69c31e33e470251d04917151d15a6f6561976177', 'refonte-part-01.zip': '948298257d5d6bd658b774da141dc9f3fe326e4ce3172a239a0a63430ec24521', 'refonte-part-02.zip': '9348289a4bb8114a6877b06ac16e1abab7d32ebce543680bf16597a3272c14f0', 'refonte-part-03.zip': 'd292102a2884b553fe8884ed124c01d249d8fcb489d264577ee502c86f314086', 'refonte-part-04.zip': '40d3892b6b3cfb06c7fa681bb6e6c1553a599146830b48cf9143b418dbb5d61d', 'refonte-part-05.zip': '91c210b6c54ab928ae47191c442c8324ee19a793e7d22772bfaaa176922fa5c5', 'refonte-part-06.zip': '660ea63891302b680bfb5f7c592b2ac71fdd42fd9f31a9f4d217982adbf71ecb', 'refonte-part-07.zip': '2735473a376577d4174493760d33208e4b9f246e8af0715d53a9f3cc1e655a1d', 'refonte-part-08.zip': 'ba7eadf696d8ca294fb5ee6d90654fe39960ab29ced8bcd9c5ca006d3713b82d', 'refonte-part-09.zip': '8dfa78940699ead7c73a22b651801ff00a1a947c4e0ed48c07e0692118b3d084', 'refonte-part-10.zip': 'c7a1b84883c898dc6f34b022c609d2e4b6e7bae7e5c456f41328a24a4c9ce0e1', 'refonte-part-11.zip': '70c60778c8ff18ec1909e3740c5fa27ac81b573932c0f9fd58774b788008bc74'}
+          seen = set()
+          for name, sha in expected.items():
+              p = Path(name)
+              assert hashlib.sha256(p.read_bytes()).hexdigest() == sha, name
+              with zipfile.ZipFile(p) as z:
+                  assert z.testzip() is None
+                  for n in z.namelist():
+                      q = Path(n)
+                      assert not q.is_absolute() and '..' not in q.parts and '.git' not in q.parts
+                      assert n not in seen, n
+                      seen.add(n)
+                  z.extractall('.')
+          assert len(list(Path('assets/recipes').glob('*.webp'))) == 407
+          PYTHON
+      - name: Vérifier l'application complète
+        run: |
+          node tests/unit.cjs
+          node tests/offline.cjs
+          node tests/assets.cjs
+      - name: Enregistrer la livraison prête à publier
+        run: |
+          rm refonte-part-??.zip
+          rm .github/workflows/assembler-refonte.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Assembler la refonte 2.3.8 et ses 407 illustrations validées"
+          git push origin HEAD:refonte-2.3.8-complete
