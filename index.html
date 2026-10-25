@@ -28,16 +28,16 @@
   <section id="tab-menu" hidden></section>
   <section id="tab-historique" hidden></section>
   <section id="tab-epicerie" hidden></section>
-  <section id="tab-articles" hidden></section>
-  <section id="tab-prix" hidden></section>
   <section id="tab-maison" hidden></section>
   <section id="tab-recettes" hidden></section>
   <section id="tab-profil" hidden></section>
 </div>
 
 <div id="cook" class="cookv" role="dialog" aria-modal="true" aria-label="Cuisiner" hidden></div>
+<div id="plus" class="plusv" role="dialog" aria-modal="true" aria-label="Ajouter" hidden></div>
+<button id="fab" class="fab" aria-label="Ajouter : un plat, un reel, une recette, une photo du frigo" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
 <nav class="tabs" role="tablist" id="tabs"><div>
-  <button role="tab" data-t="semaine" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19z"/><path d="M9 14.5l2 2 4-4"/></svg>Ma semaine</button>
+  <button role="tab" data-t="semaine" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19z"/><path d="M9 14.5l2 2 4-4"/></svg>Aujourd'hui</button>
   <button role="tab" data-t="menu" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h3M8 17h6"/></svg>Menu</button>
   <button role="tab" data-t="epicerie" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2.2l2.3 10.4a1.2 1.2 0 0 0 1.2.9h8.6a1.2 1.2 0 0 0 1.2-.9L20.5 7.5H6"/><circle cx="9.5" cy="19.3" r="1.3"/><circle cx="17" cy="19.3" r="1.3"/></svg>Épicerie<span class="badge" id="bgl" hidden></span></button>
   <button role="tab" data-t="recettes" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11.5A2.5 2.5 0 0 1 19 7v13H7.5A2.5 2.5 0 0 1 5 17.5z"/><path d="M5 17.5A2.5 2.5 0 0 1 7.5 15H19M9 8.5h6M9 11.5h4"/></svg>Recettes</button>
