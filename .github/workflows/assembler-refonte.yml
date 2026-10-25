@@ -42,7 +42,8 @@ jobs:
       - name: Enregistrer la livraison prête à publier
         run: |
           rm refonte-part-??.zip
-          rm .github/workflows/assembler-refonte.yml
+          git restore -- .github/workflows
+          rm -f .github/workflows/tests.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
