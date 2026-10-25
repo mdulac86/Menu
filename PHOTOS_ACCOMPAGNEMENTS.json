@@ -1,0 +1,830 @@
+[
+  {
+    "id": "frites_four",
+    "nom": "Frites au four",
+    "fichier": "assets/recipes/side-frites_four.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1200,
+        "g",
+        "frites surgelées",
+        "surgelés"
+      ]
+    ],
+    "sha256": "cf2b50fd08e358dc61d47c15d6b2d12143188b73c7a37cd708fb3cefe9bbb58a",
+    "octets": 58454
+  },
+  {
+    "id": "patates_pilees",
+    "nom": "Patates pilées",
+    "fichier": "assets/recipes/side-patates_pilees.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1500,
+        "g",
+        "pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        60,
+        "g",
+        "beurre",
+        "produits laitiers"
+      ],
+      [
+        125,
+        "ml",
+        "lait",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "dccce9b425442dcc58a5316d648daf79c25c5e3fb76268fd51446765c2e9811e",
+    "octets": 34508
+  },
+  {
+    "id": "wedges",
+    "nom": "Potato wedges",
+    "fichier": "assets/recipes/side-wedges.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1500,
+        "g",
+        "pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        30,
+        "ml",
+        "huile d'olive",
+        "garde-manger"
+      ]
+    ],
+    "sha256": "8f27043628ceca3c48aad3aa7fcb7853ced1ab353c24350ad5c1ad49e901eb7a",
+    "octets": 75748
+  },
+  {
+    "id": "frites_maison",
+    "nom": "Frites maison au four",
+    "fichier": "assets/recipes/side-frites_maison.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1500,
+        "g",
+        "pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        30,
+        "ml",
+        "huile d'olive",
+        "garde-manger"
+      ]
+    ],
+    "sha256": "96c084cd1dcbd1e9017c1f5ec7e9ce0335f6510562428417df30060e68e78329",
+    "octets": 73610
+  },
+  {
+    "id": "patates_four",
+    "nom": "Patates au four",
+    "fichier": "assets/recipes/side-patates_four.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        6,
+        "un",
+        "grosses pommes de terre",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "5b79a3a9bba3b261906d0257b293d62df9d1420c75e8fb1fae7c2df64e16351f",
+    "octets": 88206
+  },
+  {
+    "id": "patates_douces",
+    "nom": "Frites de patates douces",
+    "fichier": "assets/recipes/side-patates_douces.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1500,
+        "g",
+        "patates douces",
+        "fruits et légumes"
+      ],
+      [
+        30,
+        "ml",
+        "huile d'olive",
+        "garde-manger"
+      ]
+    ],
+    "sha256": "de0ff101eaaa06bae1c50ab9311dc30c2482bb9391063fcac5a332e268fd6534",
+    "octets": 72194
+  },
+  {
+    "id": "grelots",
+    "nom": "Patates grelots rôties",
+    "fichier": "assets/recipes/side-grelots.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1200,
+        "g",
+        "patates grelots",
+        "fruits et légumes"
+      ],
+      [
+        30,
+        "ml",
+        "huile d'olive",
+        "garde-manger"
+      ]
+    ],
+    "sha256": "8ff6e601a40218d1255c72dc9f3e4a1273862a2d79a54e837ed26d7386e2d0b6",
+    "octets": 70130
+  },
+  {
+    "id": "gratin",
+    "nom": "Gratin dauphinois",
+    "fichier": "assets/recipes/side-gratin.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1500,
+        "g",
+        "pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        500,
+        "ml",
+        "crème 35%",
+        "produits laitiers"
+      ],
+      [
+        200,
+        "g",
+        "gruyère ou cheddar râpé",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "ed60f4bfbcaceda0c0ae5e2c349df8f5e328d8d727584f84531dc95e9ca95a04",
+    "octets": 68448
+  },
+  {
+    "id": "pelures",
+    "nom": "Pelures de pommes de terre gratinées",
+    "fichier": "assets/recipes/side-pelures.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        6,
+        "un",
+        "grosses pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        250,
+        "g",
+        "cheddar râpé",
+        "produits laitiers"
+      ],
+      [
+        150,
+        "g",
+        "bacon",
+        "viandes"
+      ],
+      [
+        250,
+        "ml",
+        "crème sure",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "5da5b26cd55aec55278a8d82dc4eca035dd2f183c4c21cbbfeb7b2f5f9434b13",
+    "octets": 72842
+  },
+  {
+    "id": "chips_maison",
+    "nom": "Chips maison au four",
+    "fichier": "assets/recipes/side-chips_maison.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1000,
+        "g",
+        "pommes de terre",
+        "fruits et légumes"
+      ],
+      [
+        30,
+        "ml",
+        "huile d'olive",
+        "garde-manger"
+      ]
+    ],
+    "sha256": "912268afecb97240a43f04af8cac0da16875f1fd002ab6355a77bb67949e86fd",
+    "octets": 61212
+  },
+  {
+    "id": "chips",
+    "nom": "Chips",
+    "fichier": "assets/recipes/side-chips.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de chips",
+        "épicerie"
+      ]
+    ],
+    "sha256": "462d677fd6a4bbe5f10b8769502e2a133dbe0fa1cda3ed09bb4f9902948058f8",
+    "octets": 42794
+  },
+  {
+    "id": "riz_blanc",
+    "nom": "Riz vapeur",
+    "fichier": "assets/recipes/side-riz_blanc.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        300,
+        "g",
+        "riz",
+        "épicerie"
+      ]
+    ],
+    "sha256": "12069b7dc91e5601bf1cb7628c40a1d52af9fbae301f7830f4ebdbbee7eef4c0",
+    "octets": 31312
+  },
+  {
+    "id": "pain_ail",
+    "nom": "Pain à l'ail",
+    "fichier": "assets/recipes/side-pain_ail.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "pain à l'ail",
+        "surgelés"
+      ]
+    ],
+    "sha256": "ca86ded73d6aba14876442dbbfb5c0f7d34ff7e05b6e08b1d42a167d364fa5d3",
+    "octets": 68938
+  },
+  {
+    "id": "pain_croute",
+    "nom": "Pain croûté",
+    "fichier": "assets/recipes/side-pain_croute.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "pain croûté",
+        "boulangerie"
+      ]
+    ],
+    "sha256": "55acbc8b34ff56c315511cf6e1eef2886816a6be6218bb516e96e3a146e97076",
+    "octets": 76752
+  },
+  {
+    "id": "riz_frit",
+    "nom": "Riz frit",
+    "fichier": "assets/recipes/side-riz_frit.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        300,
+        "g",
+        "riz",
+        "épicerie"
+      ],
+      [
+        3,
+        "un",
+        "oeufs",
+        "produits laitiers"
+      ],
+      [
+        200,
+        "g",
+        "pois et carottes surgelés",
+        "surgelés"
+      ],
+      [
+        60,
+        "ml",
+        "sauce soya",
+        "épicerie"
+      ]
+    ],
+    "sha256": "8910e959224cc7f81e07532374aabb130001c9acb388818358c1397f737164b6",
+    "octets": 68234
+  },
+  {
+    "id": "nouilles_oeufs",
+    "nom": "Nouilles aux oeufs",
+    "fichier": "assets/recipes/side-nouilles_oeufs.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        500,
+        "g",
+        "nouilles aux oeufs",
+        "épicerie"
+      ]
+    ],
+    "sha256": "7a930f7243eb1bc57ea814875ba918cc2701ed44f08f71fc2659afe3ab7fa07a",
+    "octets": 44048
+  },
+  {
+    "id": "gnocchi_poeles",
+    "nom": "Gnocchi poêlés au beurre",
+    "fichier": "assets/recipes/side-gnocchi_poeles.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1000,
+        "g",
+        "gnocchi",
+        "épicerie"
+      ],
+      [
+        30,
+        "g",
+        "beurre",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "a9f44ff04edff1c4b046d53118be180cbde32cbd616e566a52a8e25a26d7ca06",
+    "octets": 59860
+  },
+  {
+    "id": "naan",
+    "nom": "Pain naan",
+    "fichier": "assets/recipes/side-naan.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        6,
+        "un",
+        "pains naan",
+        "boulangerie"
+      ]
+    ],
+    "sha256": "31ad65bc9c4bd7357f7275e706e09553101f64d18f97eaf6d313fe88811b3fc7",
+    "octets": 65886
+  },
+  {
+    "id": "egg_rolls",
+    "nom": "Egg rolls",
+    "fichier": "assets/recipes/side-egg_rolls.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        12,
+        "un",
+        "egg rolls surgelés",
+        "surgelés"
+      ],
+      [
+        1,
+        "un",
+        "sauce aux prunes",
+        "épicerie"
+      ]
+    ],
+    "sha256": "a7996655bbb6da5ed2a9ed141871802bc193ba40aba2ad9d2e3b56b495731175",
+    "octets": 52776
+  },
+  {
+    "id": "nachos",
+    "nom": "Nachos gratinés",
+    "fichier": "assets/recipes/side-nachos.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        400,
+        "g",
+        "croustilles tortillas",
+        "épicerie"
+      ],
+      [
+        300,
+        "g",
+        "fromage mexicain râpé",
+        "produits laitiers"
+      ],
+      [
+        250,
+        "ml",
+        "salsa",
+        "épicerie"
+      ],
+      [
+        250,
+        "ml",
+        "crème sure",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "2be981befa13c2cd994157ab57578c788cdd90073355545bc0462d1e703ee76c",
+    "octets": 67980
+  },
+  {
+    "id": "salade_concombre",
+    "nom": "Salade de concombre",
+    "fichier": "assets/recipes/side-salade_concombre.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        2,
+        "un",
+        "concombres",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "c872c7eb37fbbc5ac6eaa95e777365f5122c812f8a0f8530b7bd8e0a394163ed",
+    "octets": 67490
+  },
+  {
+    "id": "salade_verte",
+    "nom": "Salade verte",
+    "fichier": "assets/recipes/side-salade_verte.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de laitue mélangée",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "8035fb5c37caa7085a6d7d627e95364b9e0cb1c8fb40bc855b5f23ee8bac1ec4",
+    "octets": 72782
+  },
+  {
+    "id": "crudites",
+    "nom": "Crudités et trempette",
+    "fichier": "assets/recipes/side-crudites.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de carottes mini",
+        "fruits et légumes"
+      ],
+      [
+        1,
+        "un",
+        "concombre",
+        "fruits et légumes"
+      ],
+      [
+        1,
+        "un",
+        "trempette ranch",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "f6309e5d1661d63267ae19f06238d55257927b596e6191b321b563e59f969d39",
+    "octets": 46134
+  },
+  {
+    "id": "salade_chou",
+    "nom": "Salade de chou",
+    "fichier": "assets/recipes/side-salade_chou.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de salade de chou",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "b9e559e6bbac04ae3f9593c3c501c0008abbc5778ebb2aaebca95aea91859b13",
+    "octets": 57424
+  },
+  {
+    "id": "brocoli",
+    "nom": "Brocoli vapeur",
+    "fichier": "assets/recipes/side-brocoli.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        600,
+        "g",
+        "brocoli",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "55ab0dd30ed71873dd71cf3ae834214f7485be9cf24e337a6f3dd8ac96c303f7",
+    "octets": 59180
+  },
+  {
+    "id": "haricots_verts",
+    "nom": "Haricots verts",
+    "fichier": "assets/recipes/side-haricots_verts.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        500,
+        "g",
+        "haricots verts",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "8fc6d2b62bae578d52288fd84ca3aad0e335556fb77496ec394196b95dc93e01",
+    "octets": 64706
+  },
+  {
+    "id": "salade_cesar",
+    "nom": "Salade César",
+    "fichier": "assets/recipes/side-salade_cesar.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de salade César",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "607c82d45f57367b12e7c064ef4a87a668840e27c50dd435ce2879ad8a9f7b22",
+    "octets": 72188
+  },
+  {
+    "id": "mais",
+    "nom": "Maïs",
+    "fichier": "assets/recipes/side-mais.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de maïs surgelé",
+        "surgelés"
+      ]
+    ],
+    "sha256": "909c5ef301cff48c009fce79fb4a9a70dbaf1db52e95b9ed57e3636f45e0d6ed",
+    "octets": 53022
+  },
+  {
+    "id": "pois",
+    "nom": "Pois verts",
+    "fichier": "assets/recipes/side-pois.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "sac de pois verts",
+        "surgelés"
+      ]
+    ],
+    "sha256": "74c872715661c05fd3c57f2c48ca1575baeb507ec0fa1b68633b57248dbd7b24",
+    "octets": 61734
+  },
+  {
+    "id": "salade_mexicaine",
+    "nom": "Salade mexicaine",
+    "fichier": "assets/recipes/side-salade_mexicaine.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "laitue romaine",
+        "fruits et légumes"
+      ],
+      [
+        3,
+        "un",
+        "tomates",
+        "fruits et légumes"
+      ],
+      [
+        1,
+        "un",
+        "boîte de maïs",
+        "épicerie"
+      ],
+      [
+        1,
+        "un",
+        "boîte de haricots noirs",
+        "épicerie"
+      ]
+    ],
+    "sha256": "9ea24460d42f9359ead72a767915019504a0c51b9a4c97e2074bf91e04fddb84",
+    "octets": 70956
+  },
+  {
+    "id": "salade_grecque",
+    "nom": "Salade grecque",
+    "fichier": "assets/recipes/side-salade_grecque.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        2,
+        "un",
+        "concombres",
+        "fruits et légumes"
+      ],
+      [
+        3,
+        "un",
+        "tomates",
+        "fruits et légumes"
+      ],
+      [
+        200,
+        "g",
+        "feta",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "4e815bf6fb4160c729cd7044bc1348adad60aee88149c4e0c4fea3655b573447",
+    "octets": 65842
+  },
+  {
+    "id": "carottes",
+    "nom": "Carottes rôties",
+    "fichier": "assets/recipes/side-carottes.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        500,
+        "g",
+        "carottes",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "13b249e9ea02284de973f3b3ab5e5615c9f9cfdb8f9108ac1553546a5b6404ac",
+    "octets": 65576
+  },
+  {
+    "id": "legumes_sautes",
+    "nom": "Légumes sautés",
+    "fichier": "assets/recipes/side-legumes_sautes.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        2,
+        "un",
+        "poivrons",
+        "fruits et légumes"
+      ],
+      [
+        300,
+        "g",
+        "brocoli",
+        "fruits et légumes"
+      ],
+      [
+        2,
+        "un",
+        "carottes",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "8cdd79788883c3f3cebdba0c46377c5e89e4d2e0b15127bf93bdafcd803c8e1b",
+    "octets": 68580
+  },
+  {
+    "id": "salade_fruits",
+    "nom": "Salade de fruits",
+    "fichier": "assets/recipes/side-salade_fruits.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "barquette de fruits",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "5364f2298537b32960683185583a74db37b9da43bfccf2792e9feeb23e3408e0",
+    "octets": 55142
+  },
+  {
+    "id": "pain_cheddar",
+    "nom": "Pain croûté et cheddar",
+    "fichier": "assets/recipes/side-pain_cheddar.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "pain croûté",
+        "boulangerie"
+      ],
+      [
+        250,
+        "g",
+        "cheddar fort",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "943eb760b9f7352e0d4db59b092bb863df8b659329e5f37afa414b06238ba8c6",
+    "octets": 75330
+  },
+  {
+    "id": "guacamole",
+    "nom": "Guacamole",
+    "fichier": "assets/recipes/side-guacamole.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        2,
+        "un",
+        "avocats",
+        "fruits et légumes"
+      ]
+    ],
+    "sha256": "7a3c063b4448214a3890bb0b334767a98404afead41b7566a8d2e57db3dc609d",
+    "octets": 44982
+  },
+  {
+    "id": "grilled_cheese",
+    "nom": "Grilled cheese",
+    "fichier": "assets/recipes/side-grilled_cheese.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        12,
+        "un",
+        "tranches de pain",
+        "boulangerie"
+      ],
+      [
+        12,
+        "un",
+        "tranches de cheddar",
+        "produits laitiers"
+      ],
+      [
+        60,
+        "g",
+        "beurre",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "48b13cd93407872373e1def58d5e460f992a0b2ff41c5dc2bc6e39ace364eee8",
+    "octets": 57162
+  },
+  {
+    "id": "sandwichs_jambon",
+    "nom": "Sandwichs jambon-fromage",
+    "fichier": "assets/recipes/side-sandwichs_jambon.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        12,
+        "un",
+        "tranches de pain",
+        "boulangerie"
+      ],
+      [
+        300,
+        "g",
+        "jambon tranché",
+        "viandes"
+      ],
+      [
+        6,
+        "un",
+        "tranches de fromage",
+        "produits laitiers"
+      ]
+    ],
+    "sha256": "5acfb0075284d68bd74a32d866cb61f86ee987c7ddd245bef77329407953c374",
+    "octets": 60122
+  },
+  {
+    "id": "biscuits_soda",
+    "nom": "Biscuits soda",
+    "fichier": "assets/recipes/side-biscuits_soda.webp",
+    "origine": "ImageGen",
+    "ingredients": [
+      [
+        1,
+        "un",
+        "boîte de biscuits soda",
+        "épicerie"
+      ]
+    ],
+    "sha256": "d44c0a4a6e1eea2a446af73080590d35b86f60955b5d9382e0b0ee88b0b9c399",
+    "octets": 55296
+  }
+]

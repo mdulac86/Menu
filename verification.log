@@ -1,5 +1,3 @@
-
-=== unit.cjs ===
 ✓ 407 recettes et identifiants uniques
 ✓ index recettes actualisé après ajout et modification
 ✓ quantités françaises
@@ -16,9 +14,12 @@
 ✓ 407 fiches et modes Cuisiner sans erreur
 ✓ Aujourd’hui : repas illustré et image prioritaire
 ✓ 30 semaines variées : budget, stock, exclusions et portions
-16 vérifications réussies.
-
-=== offline.cjs ===
+✓ familles : chaque recette reste accessible une seule fois
+✓ partage : variantes préservées, préférences exclues
+✓ préparation complète : aucune ancienne étape contradictoire
+✓ 641 variantes : quantités finies et non négatives
+✓ 39 accompagnements illustrés avec préparation lisible
+21 vérifications réussies.
 ✓ installation complète des fichiers de la version
 ✓ rotation des caches, isolation test et conservation des photos
 ✓ application utilisable hors ligne
@@ -28,11 +29,5 @@
 ✓ photo manquante signalée sans faux succès
 ✓ promotions réseau avec secours hors ligne
 8 vérifications hors ligne réussies.
-
-=== assets.cjs ===
-✓ 407 recettes, 407 images distinctes, 41.7 Mo au total
-✓ scripts, PWA et automatisations présents
-
-=== Catalogue final après contrôle visuel ===
-✓ 407 recettes, 407 images distinctes, 41.7 Mo au total
+✓ 407 recettes et 39 accompagnements, 446 images distinctes, 44.0 Mo au total
 ✓ scripts, PWA et automatisations présents

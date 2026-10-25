@@ -12,7 +12,7 @@ check('407 recettes et identifiants uniques',()=>{assert.equal(run('RECIPES.leng
 check('index recettes actualisé après ajout et modification',()=>{run("FAMREC=[];S=DEFAULT();resetCaches();this.before=byName(RECIPES[0].n);S.redit[RECIPES[0].n]={tm:123};resetCaches()");assert.equal(run('byName(RECIPES[0].n).tm'),123);assert.equal(run("byName('recette absente')"),undefined)});
 check('quantités françaises',()=>{assert.equal(run("numIn('1 200,5 $')"),1200.5);assert.equal(run("numIn('-20')"),0);assert.equal(run("fq(1500,'g')"),'1,5 kg')});
 check('migration conserve menus, favoris, stock et recettes personnelles',()=>{run("S=DEFAULT();S.setup=true;S.menu.items=[{r:RECIPES[0].n,v:1,pt:4,lock:true}];S.fav[RECIPES[0].n]=true;S.stock.x={name:'Riz',q:500,u:'g'};S.custom=[{n:'Mon repas',i:[[200,'g','Riz','épicerie']],s:'Cuire',m:[]}];this.original=JSON.stringify(S);S=mergeState(JSON.parse(original));migrer()");assert.equal(run('S.menu.items[0].pt'),4);assert.equal(run('S.menu.items[0].v'),1);assert.equal(run('S.fav[RECIPES[0].n]'),true);assert.equal(run('S.custom[0].n'),'Mon repas');assert.equal(run('Object.values(S.stock)[0].q'),500)});
-check('copie avant mise à jour et secrets hors état',()=>{data.clear();run("localStorage.setItem(KEY,original);loadLocal()");assert.equal(run('readCopies()[0].label'),'Avant la mise à jour');assert.equal(run('S.appv'),'2.3.8');assert.equal(run("'gemini' in S"),false)});
+check('copie avant mise à jour et secrets hors état',()=>{data.clear();run("localStorage.setItem(KEY,original);loadLocal()");assert.equal(run('readCopies()[0].label'),'Avant la mise à jour');assert.equal(run('S.appv'),'2.3.9');assert.equal(run("'gemini' in S"),false)});
 check('copie quotidienne, rotation de cinq copies',()=>{run("save();for(let i=0;i<8;i++)snapshot('Test '+i,JSON.stringify(S))");assert.equal(run('readCopies().length'),5);assert.equal(run('JSON.parse(readCopies()[0].data).custom[0].n'),'Mon repas')});
 check('copies corrompues récupérables',()=>{data.set('menu_epicerie_copies','{}');assert.equal(run('readCopies().length'),0);run("snapshot('Réparation',original)");assert.equal(run('readCopies().length'),1)});
 check('données illisibles mises en secours',()=>{data.clear();run("localStorage.setItem(KEY,'{cassé');loadFailed=false;rescued=false;loadLocal()");assert.equal(data.get('menu_epicerie_secours'),'{cassé');run('save()');assert.equal(data.get('menu_epicerie_v1'),'{cassé')});
@@ -38,4 +38,34 @@ check('30 semaines variées : budget, stock, exclusions et portions',()=>{
     assert.ok(run('S.menu.items.length')>0);assert.equal(run('S.menu.items.some(x=>x.r===RECIPES[0].n)'),false);assert.ok(run('buyList().rows.every(x=>Number.isFinite(x.q)&&x.q>=0)'));assert.ok(run('Number.isFinite(listTotals(buyList().rows).cost)'));
   }
 });
+
+check('familles : chaque recette reste accessible une seule fois',()=>{
+ run('S=DEFAULT();FAMREC=[];resetCaches();this.entries=recipeFamilyEntries(allRecipes());');
+ assert.equal(run('entries.length'),346);
+ assert.equal(run('entries.flatMap(e=>e.members).length'),407);
+ assert.equal(run('new Set(entries.flatMap(e=>e.members).map(r=>r.n)).size'),407);
+ run('S.fav[RECIPES[51].n]=true;S.menu.items=[{r:RECIPES[51].n,v:1,pt:3}];recipeFamilyEntries(allRecipes());');
+ assert.equal(run('S.fav[RECIPES[51].n]'),true);assert.equal(run('S.menu.items[0].v'),1);
+ run('this.filtered=recipeFamilyEntries(allRecipes().filter(r=>r.n===RECIPES[135].n));');
+ assert.equal(run('filtered.length'),1);assert.equal(run('filtered[0].members[0].n'),run('RECIPES[135].n'));
+});
+check('partage : variantes préservées, préférences exclues',()=>{
+ run("S=DEFAULT();FAMREC=[];resetCaches();S.fav.secret=true;S.profil=PROFIL0();S.profil.membres[0].nom='Privé';this.shared=famObj(RECIPES[135]);this.received=famSan(shared);");
+ assert.equal(run('received.v.length'),run('RECIPES[135].v.length'));
+ assert.equal(run("received.v[1][3]"),'replace');
+ for(const key of ['profil','fav','dis','stock','menu','rate','redit','vared','p'])assert.equal(run(`'${key}' in shared`),false);
+});
+check('préparation complète : aucune ancienne étape contradictoire',()=>{
+ run("S=DEFAULT();FAMREC=[];resetCaches();cook={r:RECIPES[394].n,v:1,pt:6,key:'four'};this.html=cookHtml();");
+ assert.equal(run("html.includes('325 °F')"),false);
+ assert.equal(run("html.includes('frites surgelées au four')"),true);
+ assert.ok(run("texteRecette({r:RECIPES[394].n,v:1,pt:6,sf:'',sv:''},0).includes('frites surgelées au four')"));
+ run("this.key='va|'+RECIPES[394].n+'|b|0';varEditor(RECIPES[394],varRows(RECIPES[394])[0]);this.restored=varFromDraft(key).val;");
+ assert.equal(run('restored[3]'),'replace');
+});
+check('641 variantes : quantités finies et non négatives',()=>{
+ run("S=DEFAULT();FAMREC=[];resetCaches();for(const r of RECIPES){for(let i=0;i<=vars(r).length;i++){if(!effective(r,i).every(g=>Number.isFinite(g.q)&&g.q>=0))throw Error(r.n+' variante '+i)}}");
+});
+
+check('39 accompagnements illustrés avec préparation lisible',()=>{run("S=DEFAULT();FAMREC=[];resetCaches();rf.k='acc';rf.q='';this.sidesHtml=sidesSection()");assert.equal(run('Object.keys(SIDE_PHOTOS).length'),39);assert.ok(run("sidesHtml.includes('side-patates_pilees.webp')"));assert.ok(run("sidesHtml.includes(esc(SIDES[2].s))"));});
 console.log(`${count} vérifications réussies.`);
