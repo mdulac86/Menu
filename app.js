@@ -349,6 +349,7 @@ function metaTags(r, souper){
   if(r.nw) t.push('<span class="new">Nouveau</span>');
   if(r.fam) t.push('<span class="liked">Famille</span>');
   if(r.oc) t.push('<span class="long">À l\'occasion</span>');
+  if(estTiktok(r)) t.push('<span class="new">TikTok</span>');
   if(S.fav[r.n]) t.push('<span class="fav">Favori</span>');
   if(souper && isLong(r)) t.push('<span class="long">Fin de semaine</span>');
   methods(r).slice(1).forEach(m => t.push(`<span class="cmt">${esc(m.l)}</span>`));
@@ -3516,12 +3517,16 @@ function readRows(rows){
 const sugBtns = (list, attrs) => list.map(c => `<button type="button" ${attrs} data-c="${esc(c.n)}">${esc(c.n)}<small>${esc(c.ray)}</small></button>`).join('');
 
 let rf = {q:'', k:'', pr:'', st:'', g:'pr', fast:false, fav:false, dis:false}, openRec = new Set();
+/* tendances TikTok : un plat marqué TikTok (r.al) ou une de ses versions « … (TikTok) » */
+const tiktokVi = r => vars(r).findIndex(v => /tiktok/i.test(v[0]));
+const estTiktok = r => (Array.isArray(r.al) && r.al.some(a => /tiktok/i.test(a))) || tiktokVi(r) >= 0;
 function recFiltered(){
   const q = norm(rf.q);
   return allRecipes().filter(r => {
     if(rf.k==='acc') return false;
     if(q && !norm(r.n+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
     if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub') && !styOf(r).includes('poutine')) return false; }
+    else if(rf.k==='tiktok'){ if(!estTiktok(r)) return false; }
     else if(rf.k && kindOf(r)!==rf.k) return false;
     if(rf.pr && prOf(r)!==rf.pr) return false;
     if(rf.st && !styOf(r).includes(rf.st)) return false;
@@ -3656,7 +3661,7 @@ function renderRecettes(){
   const sel = (key, label, opts) => `<label class="f">${label}<select data-rf="${key}">${opts.map(([v,n]) => `<option value="${v}" ${rf[key]===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
   const chk = (key, label) => `<label class="chip"><input type="checkbox" data-rf="${key}" ${rf[key]?'checked':''}>${label}</label>`;
   let h = (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
-    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['match','Repas plaisir (soirs de match, poutines)'],['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
+    <div class="grid2">${sel('k','Genre',[['','Tout'],...Object.entries(KINDS),['match','Repas plaisir (soirs de match, poutines)'],['tiktok','Tendances TikTok'],['acc','Accompagnements']])}${sel('pr','Protéine',[['','Toutes'],...Object.entries(PRS)])}${sel('st','Style',[['','Tous'],...Object.entries(STYS)])}${sel('g','Regrouper par',[['pr','Protéine'],['st','Style'],['k','Genre'],['','Ordre alphabétique']])}</div>
     <div class="chips">${chk('fast','Préparation 30 min ou moins')}${chk('mij','Mijoteuse')}${chk('af','Air fryer')}${chk('spec','En spécial cette semaine')}${chk('aime','Aimés de la famille')}${chk('fav','Favoris')}${chk('dis',"Mis de côté")}</div>
     <p class="small">${list.length} recette${list.length>1?'s':''} sur ${allRecipes().length}.</p></div>`;
   const dn = draftFor('new', () => ({n:'', k:'souper', pr:'', st:[], t:'viande', tm:'30', tp:'20', mj:false, sf:'auto', sv:'auto', fam:false, m:'', s:'', rows:emptyRows(4)}));
@@ -4386,6 +4391,9 @@ async function partagerFrigo(){
 const NUT = [
   [/bouillon|consomme|fond de/,5,.5,.5,.2,0,300,0,1,''],[/sel nitrite|prague/,0,0,0,0,0,38000,0,1.2,''],[/^gros sel|^sel\b/,0,0,0,0,0,38700,0,1.2,''],
   [/flanc de porc/,518,9,0,53,0,32,0,1,'P'],[/semoule de mais/,370,7,79,1.8,7,35,0,.6,'C'],[/brochettes de bois|cure-dents/,0,0,0,0,0,0,0,1,''],[/epices a frotter/,300,5,55,5,10,5000,0,.6,''],[/planches? de cedre/,0,0,0,0,0,0,0,1,''],[/gingembre/,80,1.8,18,.8,2,13,0,1,''],
+  [/cottage/,98,11,3.4,4.3,0,364,0,1.03,''],[/boursin/,400,6,3,40,0,600,150,1,''],[/pain au lait/,290,9,50,6,2,450,30,1,'C'],[/sauce tonkatsu/,130,1,30,.2,.5,2200,0,1.15,''],
+  [/creme de pistache|pistaches?/,560,12,45,38,3,100,0,1,''],[/kataifi|phyllo/,300,8,60,3,2,450,0,1,'C'],[/chocolat au lait/,535,8,59,30,3,80,0,.6,''],[/biscoff|speculoos/,484,5,72,19,1.3,380,0,.5,''],
+  [/pates? a won ?-?ton/,291,10,58,1.5,1.8,570,400,1,'C'],[/piments? (guajillo|ancho)/,320,11,60,6,26,40,6,1,''],
   [/sauce a l.ail|toum/,680,1,.6,75,0,630,0,.92,''],[/trempette/,350,1,15,30,0,700,125,1,''],[/poudre pour creme anglaise/,350,.5,88,.5,0,300,0,.6,''],
   // plats et produits préparés
   [/lasagne surgelee/,140,8,14,6,1.5,400,2500,1,''],[/pate chinois surgele/,110,5,14,4,1.5,300,1800,1,''],[/pates? au poulet surgele/,250,7,23,14,1,450,600,1,''],
@@ -5248,6 +5256,7 @@ function renderAide(){
   + D('12. La banque de recettes', `<ul><li>L'onglet <b>Recettes</b> regroupe les plats par <b>protéine</b>, par <b>style</b> ou par <b>genre</b> (soupers, entrées, desserts). Les filtres combinent recherche, genre, protéine, style, « 30 min ou moins » et favoris.</li>
     <li><b>Je n'aime pas</b> met une recette de côté : elle n'est plus jamais proposée. Coche « Mis de côté » pour les revoir et <b>Remettre dans la banque</b>.</li>
     <li><b>Accompagnements</b> : chaque souper montre son féculent et son légume. « Varié » laisse l'application choisir chaque semaine parmi ceux qui vont avec le plat; choisis-en un pour l'avoir à tout coup, ou « Aucun ». La section <b>Accompagnements</b> (en bas de l'onglet, ou Genre : Accompagnements) montre tous les féculents et légumes avec leurs ingrédients; « Ne plus le proposer » le retire des choix automatiques.</li>
+    <li><b>Tendances TikTok</b> : Recettes → Genre « Tendances TikTok ». La plupart sont des versions de plats que tu connais déjà (poulet « marry me », escalope géante, feta au four, zuppa toscana, tiramisu au yogourt, brownies Dubaï…) : ouvre le plat et choisis la version marquée (TikTok), ou tape son nom dans Menu → « Ajouter un plat de mon choix » : la bonne version est choisie d'office. Les tacos birria et la lasagne aux dumplings sont des plats à part.</li>
     <li><b>Repas plaisir et soirs de match</b> : Recettes → Genre « Repas plaisir » : les poutines gastronomiques, la fondue chinoise et les recettes de soirs de match (bouchées, frites chargées, bombe de bacon, bacon maison…). Ces recettes « À l'occasion » ne sont jamais choisies comme souper ordinaire. Dans le questionnaire de la semaine, « Dont repas plaisir » (0, 1 ou 2) en met au menu, le vendredi ou le samedi d'abord, jamais deux soirs de suite. Les bouchées s'ajoutent à la main (Ajouter au menu de la semaine), ou dans une liste à part avec « Tu reçois ? » dans Menu.</li>
     <li><b>Soupes et potages</b> : une soupe sert de trois façons. <b>Soupe-repas</b> : elle remplace un souper et vient avec son accompagnement (grilled cheese, pain croûté et cheddar, sandwichs, salade). <b>À côté du souper</b> : elle accompagne le souper d'un jour de semaine. <b>Pour les lunchs</b>. Choisis combien de chaque sorte dans le questionnaire de la semaine; dans la carte d'une soupe, « Servie » change son rôle.</li>
     <li><b>Sauces</b> : des compléments, pas des repas. Ouvre un souper du menu et choisis une « Sauce en complément » (sauce au poivre avec un steak, par exemple), ou touche <b>Ajouter à un plat du menu</b> dans la recette de la sauce. Ses ingrédients vont dans la liste d'épicerie.</li>
