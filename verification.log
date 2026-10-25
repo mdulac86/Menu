@@ -1,4 +1,6 @@
-✓ 407 recettes et identifiants uniques
+Version 2.3.10 — vérifications locales
+
+✓ 416 recettes et identifiants uniques
 ✓ index recettes actualisé après ajout et modification
 ✓ quantités françaises
 ✓ migration conserve menus, favoris, stock et recettes personnelles
@@ -11,15 +13,20 @@
 ✓ génération cohérente et liste quantifiée
 ✓ restauration valide et refus copie invalide
 ✓ spéciaux : produits de base et faux amis
-✓ 407 fiches et modes Cuisiner sans erreur
+✓ 416 fiches et modes Cuisiner sans erreur
 ✓ Aujourd’hui : repas illustré et image prioritaire
 ✓ 30 semaines variées : budget, stock, exclusions et portions
 ✓ familles : chaque recette reste accessible une seule fois
 ✓ partage : variantes préservées, préférences exclues
 ✓ préparation complète : aucune ancienne étape contradictoire
-✓ 641 variantes : quantités finies et non négatives
+✓ 670 variantes : quantités finies et non négatives
 ✓ 39 accompagnements illustrés avec préparation lisible
-21 vérifications réussies.
+✓ ajouts : sources, 27 variantes complètes et ingrédients effectifs
+✓ nouveautés : dates bornées, filtre et références échappées
+✓ identités des 407 recettes originales conservées
+✓ ingrédients de pâtisserie et répartition de la trempette
+25 vérifications réussies.
+
 ✓ installation complète des fichiers de la version
 ✓ rotation des caches, isolation test et conservation des photos
 ✓ application utilisable hors ligne
@@ -29,5 +36,6 @@
 ✓ photo manquante signalée sans faux succès
 ✓ promotions réseau avec secours hors ligne
 8 vérifications hors ligne réussies.
-✓ 407 recettes et 39 accompagnements, 446 images distinctes, 44.0 Mo au total
+
+✓ 416 recettes et 39 accompagnements, 455 images distinctes, 45.2 Mo au total
 ✓ scripts, PWA et automatisations présents

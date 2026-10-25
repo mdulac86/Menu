@@ -1,10 +1,14 @@
-# Menu de la semaine — 2.3.8
+# Menu de la semaine — 2.3.10
 
 Planificateur de repas familial : il cherche les spéciaux de la semaine dans les circulaires (Flipp), bâtit un menu varié qui en profite, puis la liste d'épicerie avec un coût estimé, une limite de budget et des suggestions de réserves quand un produit est vraiment en spécial.
 
-**Livraison de refonte :** lire [DEPLOIEMENT.md](DEPLOIEMENT.md) avant toute publication. Les images sont générées, distinctes pour les 407 recettes et incluses localement.
+**Livraison de refonte :** lire [DEPLOIEMENT.md](DEPLOIEMENT.md) avant toute publication. Les images sont générées, distinctes pour les 416 recettes et incluses localement.
 
 Site : <https://mdulac86.github.io/Menu/>. C'est une application web installable (PWA). Elle fonctionne hors ligne et garde les données sur l'appareil.
+
+## Catalogue 2.3.10
+
+416 recettes et 670 variantes ; 39 accompagnements et 455 illustrations. Le filtre **Nouveautés** affiche les ajouts des 45 derniers jours. Les fiches ajoutées affichent leurs références et leur statut de version maison. Voir [AJOUTS_RECETTES.md](AJOUTS_RECETTES.md) pour les corrections apportées à 164 recettes existantes et les limites de la validation culinaire.
 
 ## Fichiers
 
@@ -229,6 +233,6 @@ node tests/offline.cjs
 node tests/assets.cjs
 ```
 
-Les tests couvrent la migration, les favoris, les recettes personnelles, les portions, les sauvegardes, les données corrompues et 30 générations de semaine. Le service worker est testé avec un réseau et un cache simulés, y compris les échecs et la reprise hors ligne. Le catalogue d'images est vérifié intégralement : 407 associations, fichiers WebP distincts et poids limité.
+Les tests couvrent la migration, les favoris, les recettes personnelles, les portions, les sauvegardes, les données corrompues et 30 générations de semaine. Le service worker est testé avec un réseau et un cache simulés, y compris les échecs et la reprise hors ligne. Le catalogue d'images est vérifié intégralement : 416 associations, fichiers WebP distincts et poids limité.
 
 Les contrôles visuels se font dans un navigateur. Les accès réels à Gemini, GitHub et aux épiceries demandent les clés existantes et Internet ; ils ne sont pas simulés comme réussis par ces tests.

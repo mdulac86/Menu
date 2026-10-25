@@ -1,5 +1,5 @@
 {
-  "description": "407 illustrations culinaires générées, une par recette originale. Aucune photographie tierce téléchargée. Variantes : même illustration que la recette de base.",
+  "description": "416 illustrations culinaires générées, une par recette. Aucune photographie tierce téléchargée. Variantes : même illustration que la recette de base.",
   "brief_commun": "Photographie éditoriale réaliste du plat fini, fond clair en pierre ou bois, lumière naturelle, céramique et accents de lin olive ; pas de texte, marque ou filigrane. Le nom et les six premiers ingrédients de chaque recette précisent le sujet.",
   "images": [
     {
@@ -4478,6 +4478,198 @@
       "hauteur": 640,
       "octets": 105004,
       "sha256": "e341a56344eec98c9f907d1ebd5884aa807368f91901d91c66c6cd96b753c30b"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Lemon chicken orzo with baby spinach, small chicken thigh pieces and grated parmesan in a cream ceramic bowl. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Orzo au poulet, citron et épinards en une casserole",
+      "fichier": "assets/recipes/recipe-407-d6e3f14b85.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "hauts de cuisses de poulet désossés",
+        "orzo",
+        "bouillon de poulet",
+        "bébés épinards",
+        "oignon",
+        "gousses d'ail",
+        "citron",
+        "parmesan râpé",
+        "huile d'olive"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 127178,
+      "sha256": "d6e3f14b85e5531c382886b39b18bce40551a71b2ab14c30180adf424c2da024"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Ginger garlic honey glazed pork meatballs topped with scallion, served with white rice and steamed broccoli. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Boulettes au gingembre, miel et ail",
+      "fichier": "assets/recipes/recipe-408-a55bca90d8.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "porc haché",
+        "oeufs",
+        "chapelure panko",
+        "gingembre haché",
+        "gousses d'ail",
+        "miel",
+        "sauce soya réduite en sodium",
+        "bouillon de poulet",
+        "fécule de maïs",
+        "oignons verts"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 138742,
+      "sha256": "a55bca90d86a777443722077dd852c43e0d6f8240c3499a9e6cb870a15b97de8"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: A bowl of roasted sweet potato cubes, browned ground beef, cottage cheese curds, avocado and a light spicy honey drizzle. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Bols de boeuf, patates douces et cottage au miel piquant",
+      "fichier": "assets/recipes/recipe-410-fbb3800b3b.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "patates douces",
+        "boeuf haché",
+        "fromage cottage",
+        "avocats",
+        "huile d'olive",
+        "miel",
+        "sauce sriracha",
+        "assaisonnement à tacos",
+        "lime"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 137990,
+      "sha256": "fbb3800b3bb412f95a6951750eebeac003315985053c9f47863eb6f4c30e3af8"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Turkish inspired fusilli topped with browned ground beef, cold white garlic yogurt, cherry tomatoes, paprika butter and parsley. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Pâtes turques au boeuf et sauce au yogourt",
+      "fichier": "assets/recipes/recipe-409-feb5ad2359.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "fusilli",
+        "boeuf haché",
+        "yogourt grec nature",
+        "tomates cerises",
+        "oignon",
+        "gousses d'ail",
+        "beurre",
+        "paprika",
+        "cumin",
+        "persil haché"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 165528,
+      "sha256": "feb5ad23593c2863a1b20c4fa0bd51758998d72caa91adab13110c54d7de2df6"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Dumplings baked in orange red curry coconut broth with broccoli, baby spinach, scallions and a lime wedge. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Dumplings au cari-coco au four",
+      "fichier": "assets/recipes/recipe-411-ebc7be4233.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "dumplings surgelés au porc et légumes",
+        "lait de coco",
+        "bouillon de légumes",
+        "pâte de cari rouge",
+        "brocoli",
+        "bébés épinards",
+        "sauce soya",
+        "lime",
+        "oignons verts"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 143978,
+      "sha256": "ebc7be42331f13e6e512761c434ee521aa13c6e4f67d8f985873d935f4f6504e"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Chicken shawarma strips in pita bread with diced tomato, cucumber and tzatziki. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Poulet shawarma sur plaque et pitas",
+      "fichier": "assets/recipes/recipe-413-1180d71b7d.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "hauts de cuisses de poulet désossés",
+        "yogourt nature",
+        "citron",
+        "gousses d'ail",
+        "cumin",
+        "paprika",
+        "cannelle",
+        "huile d'olive",
+        "pains pita",
+        "concombre",
+        "tomates",
+        "tzatziki"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 115208,
+      "sha256": "1180d71b7df17bd8a2212cd27afab7494fd564e666b2965dbb2490e2dcfe55de"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Couscous salad with cucumber, cherry tomatoes, red pepper, parsley and golden grilled halloumi slices. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Couscous aux légumes et halloumi grillé",
+      "fichier": "assets/recipes/recipe-412-8ec4517e0d.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "couscous",
+        "bouillon de légumes",
+        "halloumi",
+        "concombre",
+        "tomates cerises",
+        "poivron rouge",
+        "citron",
+        "huile d'olive",
+        "persil haché"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 144694,
+      "sha256": "8ec4517e0dda76dc4ac1bbe03475c9dc076b2324aae1601a2c130ac8e632ba27"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: A golden yogurt lemon loaf cake, sliced to show soft crumb, on a ceramic platter. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Gâteau moelleux au yogourt et citron",
+      "fichier": "assets/recipes/recipe-415-e8ea653e6f.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "farine",
+        "sucre",
+        "oeufs",
+        "yogourt nature",
+        "huile de canola",
+        "poudre à pâte",
+        "citrons",
+        "extrait de vanille"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 101970,
+      "sha256": "e8ea653e6f1a8ef7b44656b75b6c1321fdcf5f0b6ae8d52e2bbe9bfc91bd2141"
+    },
+    {
+      "prompt": "Use case: photorealistic-natural. Recipe card food photography for a French family meal planner. Single finished dish: Cajun chicken cutlet with corn, red pepper, lime and cilantro salsa, served with white rice. Landscape 3:2 composition, all food centered with generous crop margin, soft natural window lighting, warm neutral tabletop, appetizing realistic home cooked textures. No text, labels, watermark, logos, people or collage.",
+      "recette": "Poulet cajun et salsa de maïs",
+      "fichier": "assets/recipes/recipe-414-35ab4af664.webp",
+      "origine": "Image générée avec le générateur intégré OpenAI",
+      "ingredients_du_brief": [
+        "poitrines de poulet",
+        "assaisonnement cajun",
+        "huile d'olive",
+        "maïs en grains surgelé",
+        "poivron rouge",
+        "oignons verts",
+        "limes",
+        "coriandre fraîche"
+      ],
+      "largeur": 960,
+      "hauteur": 640,
+      "octets": 130604,
+      "sha256": "35ab4af6640d5abda55113041ec20b13f3b1df1d31df17b7fd45ec1fa7752c72"
     }
   ]
 }

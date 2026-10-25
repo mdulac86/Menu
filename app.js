@@ -3584,12 +3584,22 @@ let rf = {q:'', k:'', pr:'', st:'', g:'pr', fast:false, fav:false, dis:false}, o
 /* tendances TikTok : un plat marqué TikTok (r.al) ou une de ses versions « … (TikTok) » */
 const tiktokVi = r => vars(r).findIndex(v => /tiktok/i.test(v[0]));
 const estTiktok = r => (Array.isArray(r.al) && r.al.some(a => /tiktok/i.test(a))) || tiktokVi(r) >= 0;
+function isRecentRecipe(r, today=isoToday()){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(r.ajout||'')) return false;
+  const days=(Date.parse(today+'T12:00:00Z')-Date.parse(r.ajout+'T12:00:00Z'))/86400000;
+  return days>=0 && days<=45;
+}
+function recipeReferences(r){
+  const refs=(r.refs||[]).filter(x=>x && /^https:\/\//i.test(x.url||''));
+  return refs.length ? `<div class="note"><p class="small">${esc(r.adaptation||'Version maison inspirée des références suivantes.')}</p><p class="small">${refs.map(x=>`<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.label||'Voir la référence')}</a>`).join('<br>')}</p></div>` : '';
+}
 function recFiltered(){
   const q = norm(rf.q);
   return allRecipes().filter(r => {
     if(rf.k==='acc') return false;
     if(q && !norm(r.n+' '+((RECIPE_FAMILY_BY_NAME.get(r.n)||{}).title||'')+' '+(Array.isArray(r.al) ? r.al.join(' ')+' ' : '')+(r.m||[]).join(' ')+' '+r.i.map(g => g[2]).join(' ')+' '+vars(r).map(v => v[0]).join(' ')).includes(q)) return false;
     if(rf.k==='match'){ if(!r.oc && !styOf(r).includes('pub') && !styOf(r).includes('poutine')) return false; }
+    else if(rf.k==='nouveau'){ if(!isRecentRecipe(r)) return false; }
     else if(rf.k==='tiktok'){ if(!estTiktok(r)) return false; }
     else if(rf.k && kindOf(r)!==rf.k) return false;
     if(rf.pr && prOf(r)!==rf.pr) return false;
@@ -3709,7 +3719,7 @@ function recBody(r, idx){
       <button class="btn s ${S.dis[r.n]?'p':''}" data-a="rdis" data-r="${esc(r.n)}">${S.dis[r.n]?'Remettre dans la banque':"Je n'aime pas"}</button></div>
     <ul class="ing">${r.i.map(g=>`<li><span>${esc(g[2])}</span><span>${fq(g[0],g[1])}</span></li>`).join('')}</ul>
     ${['souper','soupe','dejeuner','entree','dessert'].includes(kd) && !r.nonut ? nutLigne(nutRecette(r, 0), kd==='souper') : ''}
-    ${r.s?`<p class="steps">${esc(r.s)}</p>`:''}
+    ${r.s?`<p class="steps">${esc(r.s)}</p>`:''}${recipeReferences(r)}
     ${(M => M.length ? `<h3 style="font-size:1rem">Autres façons de le cuire</h3><p class="small">Mêmes ingrédients que la recette ci-dessus (${esc(M[0].l.toLowerCase())}).</p>${M.slice(1).map(m => { const pk = 'cm|'+r.n+'|'+m.k; return `<details class="panel" data-pan="${esc(pk)}" ${openPan.has(pk)?'open':''}><summary>${esc(m.l)} · ${esc(tmTxtM(r, m.k))}</summary><p class="steps">${esc(stepsM(r, m.k))}</p><div class="acts"><button class="btn s" data-a="cook" data-r="${esc(r.n)}" data-cm="${m.k}">Cuisiner : ${esc(m.l.toLowerCase())}</button></div></details>`; }).join('')}` : '')(methods(r))}
     <h3 style="font-size:1rem">Variantes <span class="small">${rows.length}</span></h3>
     ${rows.length ? rows.map(row => { const pk = `va|${r.n}|${row.src}|${row.i}`; return `<div class="card" style="background:var(--bg)"><b>${esc(vname(row.v[0]))}${row.edited?' <span class="small">(modifiée)</span>':''}${row.src==='x'?' <span class="small">(ajoutée)</span>':''}</b>${varDetail(row.v)}
@@ -3772,7 +3782,7 @@ function renderRecettes(){
   const sel = (key, label, opts) => `<label class="f">${label}<select data-rf="${key}">${opts.map(([v,n]) => `<option value="${v}" ${rf[key]===v?'selected':''}>${n}</option>`).join('')}</select></label>`;
   const chk = (key, label) => `<label class="chip"><input type="checkbox" data-rf="${key}" ${rf[key]?'checked':''}>${label}</label>`;
   const nf = ['pr','st','fast','mij','af','spec','aime','fav','dis'].filter(k => rf[k]).length + (rf.g!=='pr' ? 1 : 0);
-  const CATR = [['','Tout'],['souper','Soupers'],['match','Repas plaisir'],['tiktok','TikTok'],['soupe','Soupes'],['dejeuner','Déjeuners'],['entree','Entrées'],['dessert','Desserts'],['sauce','Sauces'],['acc','Accompagnements']];
+  const CATR = [['','Tout'],['nouveau','Nouveautés'],['souper','Soupers'],['match','Repas plaisir'],['tiktok','TikTok'],['soupe','Soupes'],['dejeuner','Déjeuners'],['entree','Entrées'],['dessert','Desserts'],['sauce','Sauces'],['acc','Accompagnements']];
   let h = `<div class="page-heading"><p class="eyebrow">À cuisiner, à partager</p><h2>La bibliothèque</h2><p>${allRecipes().length} recettes, réunies par familles pour varier les repas.</p><p class="small">Tes goûts, favoris et modifications restent sur cet appareil. Seules les recettes que tu partages explicitement vont dans la banque familiale.</p>${photoDownloadControl()}</div>` + (recFlash ? `<p class="note">${esc(recFlash)}</p>` : '') + `<div class="card"><input type="text" id="rfilt" placeholder="Chercher (nom ou ingrédient)" value="${esc(rf.q)}" aria-label="Chercher">
     <div class="rf-cats" role="group" aria-label="Catégorie">${CATR.map(([v, t]) => `<button type="button" class="chip${rf.k===v?' on':''}" data-a="rf_k" data-v="${v}" aria-pressed="${rf.k===v}">${t}</button>`).join('')}</div>
     <details class="panel" data-pan="rf_plus" ${openPan.has('rf_plus')?'open':''}><summary>Filtres${nf ? ` <span class="rm">${nf} actif${nf>1?'s':''}</span>` : ''}</summary>
