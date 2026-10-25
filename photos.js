@@ -407,7 +407,16 @@ const RECIPE_PHOTOS = {
   "Poutine au poulet général Tao": "assets/recipes/recipe-403-607e4569fd.webp",
   "Fondue chinoise": "assets/recipes/recipe-404-c5d5863b54.webp",
   "Tacos birria et consommé (mijoteuse)": "assets/recipes/recipe-405-5b09e3d130.webp",
-  "Lasagne aux dumplings (porc, chou nappa et won ton)": "assets/recipes/recipe-406-e341a56344.webp"
+  "Lasagne aux dumplings (porc, chou nappa et won ton)": "assets/recipes/recipe-406-e341a56344.webp",
+  "Orzo au poulet, citron et épinards en une casserole": "assets/recipes/recipe-407-d6e3f14b85.webp",
+  "Boulettes au gingembre, miel et ail": "assets/recipes/recipe-408-a55bca90d8.webp",
+  "Bols de boeuf, patates douces et cottage au miel piquant": "assets/recipes/recipe-410-fbb3800b3b.webp",
+  "Pâtes turques au boeuf et sauce au yogourt": "assets/recipes/recipe-409-feb5ad2359.webp",
+  "Dumplings au cari-coco au four": "assets/recipes/recipe-411-ebc7be4233.webp",
+  "Poulet shawarma sur plaque et pitas": "assets/recipes/recipe-413-1180d71b7d.webp",
+  "Couscous aux légumes et halloumi grillé": "assets/recipes/recipe-412-8ec4517e0d.webp",
+  "Gâteau moelleux au yogourt et citron": "assets/recipes/recipe-415-e8ea653e6f.webp",
+  "Poulet cajun et salsa de maïs": "assets/recipes/recipe-414-35ab4af664.webp"
 };
 const SIDE_PHOTOS = {
   "frites_four": "assets/recipes/side-frites_four.webp",
