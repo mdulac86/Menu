@@ -1,0 +1,38 @@
+
+=== unit.cjs ===
+✓ 407 recettes et identifiants uniques
+✓ index recettes actualisé après ajout et modification
+✓ quantités françaises
+✓ migration conserve menus, favoris, stock et recettes personnelles
+✓ copie avant mise à jour et secrets hors état
+✓ copie quotidienne, rotation de cinq copies
+✓ copies corrompues récupérables
+✓ données illisibles mises en secours
+✓ types invalides corrigés sans perdre les données valides
+✓ portions selon âge et appétit
+✓ génération cohérente et liste quantifiée
+✓ restauration valide et refus copie invalide
+✓ spéciaux : produits de base et faux amis
+✓ 407 fiches et modes Cuisiner sans erreur
+✓ Aujourd’hui : repas illustré et image prioritaire
+✓ 30 semaines variées : budget, stock, exclusions et portions
+16 vérifications réussies.
+
+=== offline.cjs ===
+✓ installation complète des fichiers de la version
+✓ rotation des caches, isolation test et conservation des photos
+✓ application utilisable hors ligne
+✓ fichiers de la même version servis ensemble depuis le cache
+✓ téléchargement hors ligne et refus des URL externes
+✓ photo disponible sans réseau après téléchargement
+✓ photo manquante signalée sans faux succès
+✓ promotions réseau avec secours hors ligne
+8 vérifications hors ligne réussies.
+
+=== assets.cjs ===
+✓ 407 recettes, 407 images distinctes, 41.7 Mo au total
+✓ scripts, PWA et automatisations présents
+
+=== Catalogue final après contrôle visuel ===
+✓ 407 recettes, 407 images distinctes, 41.7 Mo au total
+✓ scripts, PWA et automatisations présents
