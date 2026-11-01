@@ -4,7 +4,7 @@
 importScripts('version.js');
 const PRE = self.APP_TEST ? 'menu-test-' : 'menu-semaine-', C = PRE + self.APP_VERSION;
 const IMAGES = PRE + 'photos-v1';
-const FILES = ['./', 'index.html', 'style.css', 'design.css', 'version.js', 'recettes.js', 'prix-maxi.js', 'photos.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'qr-menu.png'];
+const FILES = ['./', 'index.html', 'style.css', 'design.css', 'version.js', 'recettes.js', 'recette-gnocchis.js', 'prix-maxi.js', 'photos.js', 'app.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'qr-menu.png'];
 const base = new URL('./', self.location.href);
 const shell = new Set(FILES.map(f => new URL(f, base).href));
 self.addEventListener('install', e => e.waitUntil((async()=>{
