@@ -37,3 +37,21 @@ section{gap:18px}.sec{font-style:normal;font-size:1.65rem;margin-top:24px}
 
 /* Familles et accompagnements */
 .recipe-family{border:1px solid var(--line);border-radius:20px;background:var(--card);overflow:hidden;min-width:0;align-self:start}.recipe-family>summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:10px;padding:0 0 16px}.recipe-family>summary>.recipe-title,.recipe-family>summary>.small{padding:0 16px}.family-body{padding:0 12px 12px}.family-body>.row{margin-bottom:12px}.family-body .recipe-cover{max-height:160px}.side-cover{width:84px;height:64px!important;object-fit:cover;border-radius:10px;flex-shrink:0}.cook-sides{display:flex;gap:14px;flex-wrap:wrap;margin:20px 0}.cook-sides figure{margin:0;max-width:160px}.cook-sides .side-cover{width:160px;height:110px!important}.cook-sides figcaption{font-size:.85rem;margin-top:6px}
+
+/* Correctifs iPhone — lecture intégrale des fiches recettes, 2026-11 */
+@media(max-width:700px){
+ html,body{max-width:100%;overflow-x:clip}
+ #tab-recettes,.recipe-grid,.recipe-grid>.row,.recipe-family,.family-body,.rbody{min-width:0;max-width:100%;box-sizing:border-box}
+ .recipe-grid>.row[open],.recipe-family[open]{grid-column:1/-1;width:100%;overflow:visible}
+ .recipe-grid>.row[open] .rbody,.recipe-family[open] .family-body{padding:12px 14px 22px;overflow-wrap:anywhere}
+ .recipe-grid>.row[open]>summary .recipe-cover{display:block;max-height:none;aspect-ratio:16/9;object-fit:cover}
+ .recipe-grid>.row[open]>summary{padding-top:0}
+ .recipe-grid>.row[open]>summary .recipe-title{font-size:1.25rem;line-height:1.35}
+ .recipe-grid>.row[open] .row,.recipe-family[open] .row{min-width:0;max-width:100%;flex-wrap:wrap}
+ .recipe-grid>.row[open] table,.recipe-family[open] table{display:block;max-width:100%;overflow-x:auto}
+ .recipe-grid>.row[open] img,.recipe-family[open] img{max-width:100%}
+ .cookv{width:100%;max-width:100vw;box-sizing:border-box;padding-bottom:calc(110px + env(safe-area-inset-bottom,0px));overflow-x:hidden}
+ .cookv .card,.cookv .row,.cookv .ck-body{min-width:0;max-width:100%;box-sizing:border-box}
+ .cookv button,.cookv input,.cookv select{max-width:100%}
+ .cookv p,.cookv li,.cookv .ck-body{overflow-wrap:anywhere}
+}
