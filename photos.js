@@ -1,6 +1,7 @@
 /* © 2026 mdulac86. Tous droits réservés. */
 /* Manifest keyed by original recipe name; never changes stored recipe identity. */
 const RECIPE_PHOTOS = {
+  "Gnocchis au beurre à l'ail façon poutine italienne": "assets/recipes/recipe-361-010ddc8ab6.webp",
   "Pâté à la viande (tourtière, 2 pâtés)": "assets/recipes/recipe-000-aec3ec9501.webp",
   "Spaghetti boulettes": "assets/recipes/recipe-001-60f732666e.webp",
   "Pâtes poulet sauce Alfredo": "assets/recipes/recipe-002-f89aabed38.webp",
